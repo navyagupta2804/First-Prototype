@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Image, Alert } from 'react-native';
+import {
+  View, Text, StyleSheet, TextInput, TouchableOpacity,
+  FlatList, Image, Alert, ActivityIndicator
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { auth, db, storage } from '../../firebaseConfig';
-import { signOut } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
@@ -10,13 +14,18 @@ import {
 } from 'firebase/firestore';
 import dayjs from 'dayjs';
 
+
 const PROMPT = "What's one comfort food that always makes you smile?";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const user = auth.currentUser;
   const [journalText, setJournalText] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [feed, setFeed] = useState([]);
 
+  // ---- Feed subscription ----
   useEffect(() => {
     const q = query(collection(db, 'feed'), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
@@ -27,12 +36,13 @@ export default function HomeScreen() {
     return unsub;
   }, []);
 
+  // ---- Ensure user profile doc exists ----
   const ensureUserDoc = async () => {
     const uref = doc(db, 'users', user.uid);
     const snap = await getDoc(uref);
     if (!snap.exists()) {
       await setDoc(uref, {
-        displayName: user.displayName || 'New Chef',
+        displayName: user.displayName || 'Pantry Member',
         streak: 0,
         communities: 0,
         photoCount: 0,
@@ -42,8 +52,14 @@ export default function HomeScreen() {
     }
   };
 
+  // ---- Save journal + update streak ----
   const onPostJournal = async () => {
+    if (!journalText.trim()) {
+      Alert.alert('Add a thought', 'Write a quick sentence before saving.');
+      return;
+    }
     try {
+      setSaving(true);
       await ensureUserDoc();
       const uref = doc(db, 'users', user.uid);
       const snap = await getDoc(uref);
@@ -62,7 +78,7 @@ export default function HomeScreen() {
       await updateDoc(uref, { lastJournalDate: today, streak });
       await addDoc(collection(db, 'journals'), {
         uid: user.uid,
-        text: journalText,
+        text: journalText.trim(),
         prompt: PROMPT,
         createdAt: serverTimestamp()
       });
@@ -70,22 +86,30 @@ export default function HomeScreen() {
       Alert.alert('Saved', 'Your thoughts were saved and your streak updated!');
     } catch (e) {
       Alert.alert('Error', e.message);
+    } finally {
+      setSaving(false);
     }
   };
 
+  // ---- Upload photo from gallery ----
   const onUploadImage = async () => {
     try {
+      setUploading(true);
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (perm.status !== 'granted') {
-        Alert.alert('Permission needed', 'Please allow photo access.');
+        setUploading(false);
+        Alert.alert('Permission needed', 'Please allow photo access to upload.');
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.8
+        quality: 0.85
       });
-      if (result.canceled) return;
+      if (result.canceled) {
+        setUploading(false);
+        return;
+      }
 
       const asset = result.assets[0];
       const blob = await (await fetch(asset.uri)).blob();
@@ -97,7 +121,9 @@ export default function HomeScreen() {
         url, createdAt: serverTimestamp()
       });
       await addDoc(collection(db, 'feed'), {
-        type: 'photo', url, userDisplay: user.displayName || 'Chef',
+        type: 'photo',
+        url,
+        userDisplay: user.displayName || 'Pantry Member',
         createdAt: serverTimestamp()
       });
 
@@ -109,76 +135,129 @@ export default function HomeScreen() {
       Alert.alert('Uploaded', 'Photo added to your profile and feed.');
     } catch (e) {
       Alert.alert('Upload failed', e.message);
+    } finally {
+      setUploading(false);
     }
   };
 
+  // ---- UI: Feed card ----
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Text style={{ fontWeight: '600', marginBottom: 6 }}>{item.userDisplay || 'Pantry User'}</Text>
-      {item.type === 'photo' && <Image source={{ uri: item.url }} style={styles.feedImage} />}
-      {item.text && <Text>{item.text}</Text>}
-      <Text style={styles.time}>
-        {item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : ''}
-      </Text>
+      <View style={styles.cardHeader}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>
+            {(item.userDisplay || 'PM').split(' ').map(s => s[0]).join('').slice(0,2)}
+          </Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>{item.userDisplay || 'Pantry Member'}</Text>
+          <Text style={styles.cardTime}>
+            {item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : ''}
+          </Text>
+        </View>
+      </View>
+      {item.type === 'photo' && (
+        <Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />
+      )}
+      {item.text && <Text style={styles.cardBody}>{item.text}</Text>}
     </View>
   );
 
+  // ---- Layout ----
   return (
-    <View style={styles.container}>
+    <View style={styles.screen}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.brand}>pantry</Text>
-        <TouchableOpacity onPress={() => signOut(auth)}><Text style={styles.link}>Sign out</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/(tabs)/profile')}>
+          <Ionicons name="person-circle" size={28} color="#111216" />
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.prompt}>
-        <Text style={styles.promptTitle}>Today's Prompt</Text>
+      {/* Prompt card */}
+      <View style={styles.promptCard}>
+        <Text style={styles.promptKicker}>Today's Prompt</Text>
         <Text style={styles.promptText}>{PROMPT}</Text>
         <TextInput
           value={journalText}
           onChangeText={setJournalText}
-          placeholder="Share your thoughts here..."
+          placeholder="Share your thoughts..."
           style={styles.input}
           multiline
         />
-        <TouchableOpacity style={styles.primary} onPress={onPostJournal}>
-          <Text style={styles.primaryText}>Save</Text>
+        <TouchableOpacity style={styles.primaryBtn} onPress={onPostJournal} disabled={saving}>
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>Save</Text>}
         </TouchableOpacity>
       </View>
 
+      {/* Upload row */}
       <View style={styles.uploadRow}>
-        <Text style={{ fontWeight: '600' }}>Document Today's Cooking</Text>
-        <TouchableOpacity style={styles.uploadBtn} onPress={onUploadImage}>
-          <Text style={styles.uploadText}>Add Entry</Text>
+        <View>
+          <Text style={styles.sectionTitle}>Document Today’s Cooking</Text>
+          <Text style={styles.sectionSub}>Add an entry with a photo</Text>
+        </View>
+        <TouchableOpacity style={styles.addBtn} onPress={onUploadImage} disabled={uploading}>
+          {uploading
+            ? <ActivityIndicator color="#fff" />
+            : (
+              <>
+                <Ionicons name="add" size={18} color="#fff" />
+                <Text style={styles.addBtnText}>Add Entry</Text>
+              </>
+            )
+          }
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.section}>Community Updates</Text>
+      {/* Community updates */}
+      <Text style={styles.feedHeader}>Community Updates</Text>
       <FlatList
         data={feed}
         keyExtractor={(it) => it.id}
         renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 140 }}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 16 },
+  screen: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 16 },
   header: { paddingTop: 56, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  brand: { fontSize: 24, fontWeight: '800', color: '#ff4d2d' },
-  link: { color: '#6b4eff', fontWeight: '600' },
-  prompt: { backgroundColor: '#fff6ea', padding: 14, borderRadius: 12, borderColor: '#ffe3c8', borderWidth: 1, marginBottom: 14 },
-  promptTitle: { fontWeight: '700', marginBottom: 8 },
-  promptText: { marginBottom: 8 },
-  input: { backgroundColor: 'white', borderRadius: 10, borderWidth: 1, borderColor: '#e5e7eb', padding: 12, minHeight: 60 },
-  primary: { backgroundColor: '#111216', padding: 12, marginTop: 10, borderRadius: 10, alignItems: 'center' },
-  primaryText: { color: 'white', fontWeight: '600' },
-  uploadRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },
-  uploadBtn: { backgroundColor: '#111216', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10 },
-  uploadText: { color: 'white', fontWeight: '700' },
-  section: { fontSize: 18, fontWeight: '700', marginVertical: 8 },
-  card: { borderWidth: 1, borderColor: '#eee', borderRadius: 12, padding: 12, marginBottom: 10 },
-  feedImage: { width: '100%', height: 200, borderRadius: 10, backgroundColor: '#f1f1f1' },
-  time: { color: '#666', fontSize: 12, marginTop: 6 }
+  brand: { fontSize: 26, fontWeight: '900', color: '#ff4d2d', letterSpacing: 0.2 },
+  iconBtn: { padding: 6, borderRadius: 999 },
+
+  // Prompt card (warm, friendly)
+  promptCard: {
+    backgroundColor: '#FFF1E6',
+    borderColor: '#FFD4B8',
+    borderWidth: 1,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 14
+  },
+  promptKicker: { fontWeight: '800', fontSize: 12, color: '#A15B2E', marginBottom: 6, textTransform: 'uppercase' },
+  promptText: { fontSize: 14, color: '#4B5563', marginBottom: 8 },
+  input: { backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', padding: 12, minHeight: 64 },
+  primaryBtn: { backgroundColor: '#111216', paddingVertical: 12, borderRadius: 10, alignItems: 'center', marginTop: 10 },
+  primaryText: { color: '#fff', fontWeight: '700' },
+
+  // Upload section
+  uploadRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: 2 },
+  sectionTitle: { fontSize: 16, fontWeight: '800' },
+  sectionSub: { color: '#6B7280', marginTop: 2 },
+  addBtn: { backgroundColor: '#111216', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  addBtnText: { color: '#fff', fontWeight: '800' },
+
+  // Feed
+  feedHeader: { fontSize: 18, fontWeight: '800', marginVertical: 10 },
+  card: { borderWidth: 1, borderColor: '#EEE', borderRadius: 14, padding: 12, marginBottom: 12 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  avatarText: { fontWeight: '800', color: '#111216' },
+  cardTitle: { fontWeight: '700' },
+  cardTime: { color: '#6B7280', fontSize: 12 },
+  feedImage: { width: '100%', height: 220, borderRadius: 10, backgroundColor: '#F3F4F6', marginTop: 6 },
+  cardBody: { marginTop: 8, color: '#111216' }
 });
