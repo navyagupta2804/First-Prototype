@@ -12,7 +12,7 @@ export default function SignInScreen() {
   const onSignIn = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.replace('/(tabs)/home');
+      router.replace('/tabs/home');
     } catch (e) {
       Alert.alert('Sign in failed', e.message);
     }

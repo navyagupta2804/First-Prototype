@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, FlatList } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, FlatList, Alert, TouchableOpacity } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
+import { signOut } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 
 export default function ProfileScreen() {
@@ -14,6 +15,8 @@ export default function ProfileScreen() {
   const [photos, setPhotos] = useState([]);
 
   useEffect(() => {
+    if (!user) return;
+    //console.log('Listening to profile and photos for user:', user.uid);
     const uref = doc(db, 'users', user.uid);
     getDoc(uref).then((snap) => {
       if (snap.exists()) setProfile((p) => ({ ...p, ...snap.data() }));
@@ -29,6 +32,24 @@ export default function ProfileScreen() {
     return unsub;
   }, [user?.uid]);
 
+  const handleLogout = () => {
+    Alert.alert('Log out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOut(auth);
+          } catch (e) {
+            console.warn('Sign out error', e);
+            Alert.alert('Error', 'Unable to sign out. Please try again.');
+          }
+        }
+      }
+    ]);
+  };
+
   const Header = () => (
     <View>
       <View style={styles.headerCard}>
@@ -42,6 +63,9 @@ export default function ProfileScreen() {
           <Text style={styles.subtitle}>Cooking enthusiast • Member since 2024</Text>
           <Text style={styles.subtitle}>24 friends   •   {profile.communities || 0} communities</Text>
         </View>
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Text style={styles.logoutText}>Log out</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.statsRow}>
         <View style={styles.stat}><Text style={styles.statNum}>{photos.length}</Text><Text style={styles.statLabel}>Meals</Text></View>
@@ -78,4 +102,14 @@ const styles = StyleSheet.create({
   statNum: { fontSize: 18, fontWeight: '800' },
   statLabel: { color: '#6b7280' },
   gridImg: { flex: 1, aspectRatio: 1, borderRadius: 8, backgroundColor: '#f1f1f1' }
+  ,
+  logoutBtn: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  logoutText: { color: '#ffffff', fontWeight: '700' }
 });
+
