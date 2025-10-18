@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, FlatList, Alert, TouchableOpacity } from 'react-native';
-import { auth, db } from '../../firebaseConfig';
 import { signOut } from 'firebase/auth';
-import { doc, getDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
+import { collection, doc, getDoc, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { Alert, Image, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { auth, db } from '../../firebaseConfig';
 
 export default function ProfileScreen() {
   const user = auth.currentUser;
@@ -13,23 +13,41 @@ export default function ProfileScreen() {
     photoCount: 0
   });
   const [photos, setPhotos] = useState([]);
+  const [journals, setJournals] = useState([]);
 
   useEffect(() => {
     if (!user) return;
-    //console.log('Listening to profile and photos for user:', user.uid);
-    const uref = doc(db, 'users', user.uid);
+    const uref = doc(db, 'users', user.uid); // listening to profile and photos for user
     getDoc(uref).then((snap) => {
       if (snap.exists()) setProfile((p) => ({ ...p, ...snap.data() }));
     });
-    const unsub = onSnapshot(
+
+    const unsubPhotos = onSnapshot(
       query(collection(db, 'users', user.uid, 'photos'), orderBy('createdAt', 'desc')),
       (snap) => {
-        const arr = [];
-        snap.forEach((d) => arr.push({ id: d.id, ...d.data() }));
-        setPhotos(arr);
+        const photosArr = [];
+        snap.forEach((d) => photosArr.push({ id: d.id, ...d.data() }));
+        setPhotos(photosArr);
       }
     );
-    return unsub;
+    
+    const unsubJournals = onSnapshot(
+      query(collection(db, 'journals'), orderBy('createdAt', 'desc')),
+      (snap) => {
+        const journalsArr = [];
+        snap.forEach((d) => {
+          if (d.data().uid === user.uid) { // only show user's journals on user's page
+            journalsArr.push({ id: d.id, ...d.data() });
+          }
+        });
+        setJournals(journalsArr);
+      }
+    );
+
+    return () => {
+      unsubPhotos;
+      unsubJournals;
+    } 
   }, [user?.uid]);
 
   const handleLogout = () => {
@@ -60,8 +78,8 @@ export default function ProfileScreen() {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{profile.displayName}</Text>
-          <Text style={styles.subtitle}>Cooking enthusiast • Member since 2024</Text>
-          <Text style={styles.subtitle}>24 friends   •   {profile.communities || 0} communities</Text>
+          <Text style={styles.subtitle}>Cooking enthusiast • Member since 2025</Text>
+          <Text style={styles.subtitle}>0 friends   •   {profile.communities || 0} communities</Text>
         </View>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>Log out</Text>
@@ -72,23 +90,41 @@ export default function ProfileScreen() {
         <View style={styles.stat}><Text style={styles.statNum}>{profile.streak || 0}</Text><Text style={styles.statLabel}>Streaks</Text></View>
         <View style={styles.stat}><Text style={styles.statNum}>{profile.photoCount || photos.length}</Text><Text style={styles.statLabel}>Badges</Text></View>
       </View>
-      <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 8 }}>Posts</Text>
     </View>
   );
 
-  const renderItem = ({ item }) => <Image source={{ uri: item.url }} style={styles.gridImg} />;
+  console.log("Journals:", journals);
 
   return (
-    <FlatList
-      data={photos}
-      keyExtractor={(it) => it.id}
-      numColumns={3}
-      renderItem={renderItem}
-      ListHeaderComponent={<Header />}
-      columnWrapperStyle={{ gap: 8 }}
+    <SectionList
+      sections={[
+        { title: 'Journals', data: journals, type: 'text' },
+        { title: 'Posts', data: photos, type: 'image' }
+      ]}
       contentContainerStyle={{ padding: 16, gap: 8 }}
+      renderSectionHeader={({ section }) => (
+        <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 8 }}>{section.title}</Text>
+      )}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item, section }) => {
+        if (section.type === 'image'){
+          return (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              <Image source={{ uri: item.url }} style={styles.gridImg} />
+            </View>
+          )
+        } else {
+          return (
+            <View style={styles.journalEntry}>
+              <Text style={{ fontWeight: 'bold' }}>{item.prompt}</Text>
+              <Text>{item.text}</Text>
+            </View>
+          );
+        }
+      }}
+      ListHeaderComponent={<Header />}
     />
-  );
+  );   
 }
 
 const styles = StyleSheet.create({
@@ -112,4 +148,3 @@ const styles = StyleSheet.create({
   },
   logoutText: { color: '#ffffff', fontWeight: '700' }
 });
-

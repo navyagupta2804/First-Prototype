@@ -1,18 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  FlatList, Image, Alert, ActivityIndicator
-} from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { auth, db, storage } from '../../firebaseConfig';
-import * as ImagePicker from 'expo-image-picker';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import {
-  addDoc, collection, doc, getDoc, setDoc, updateDoc, deleteDoc,
-  onSnapshot, serverTimestamp, query, orderBy, increment
-} from 'firebase/firestore';
 import dayjs from 'dayjs';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import {
+  addDoc, collection,
+  deleteDoc,
+  doc, getDoc,
+  increment,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc, updateDoc
+} from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList, Image,
+  StyleSheet,
+  Text,
+  TextInput, TouchableOpacity,
+  View
+} from 'react-native';
+import { auth, db, storage } from '../../firebaseConfig';
 
 
 const PROMPT = "What's one comfort food that always makes you smile?";
@@ -373,12 +385,13 @@ const styles = StyleSheet.create({
   cardTitle: { fontWeight: '700' },
   cardTime: { color: '#6B7280', fontSize: 12 },
   feedImage: { width: '100%', height: 220, borderRadius: 10, backgroundColor: '#F3F4F6', marginTop: 6 },
-  cardBody: { marginTop: 8, color: '#111216' }
-  ,
+  cardBody: { marginTop: 8, color: '#111216' },
+  
   // Actions (likes/comments)
   actionsRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 10 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   actionText: { marginLeft: 4, fontWeight: '700' },
+  
   // Comments
   commentsSection: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#f1f1f1', paddingTop: 8 },
   commentRow: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f3f3f3' },
