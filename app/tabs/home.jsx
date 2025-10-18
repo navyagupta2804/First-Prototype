@@ -1,18 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  FlatList, Image, Alert, ActivityIndicator
-} from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { auth, db, storage } from '../../firebaseConfig';
-import * as ImagePicker from 'expo-image-picker';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import {
-  addDoc, collection, doc, getDoc, setDoc, updateDoc,
-  onSnapshot, serverTimestamp, query, orderBy
-} from 'firebase/firestore';
 import dayjs from 'dayjs';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import { signOut } from 'firebase/auth';
+import {
+  addDoc, collection, doc, getDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc, updateDoc
+} from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList, Image,
+  StyleSheet,
+  Text,
+  TextInput, TouchableOpacity,
+  View
+} from 'react-native';
+import { auth, db, storage } from '../../firebaseConfig';
 
 
 const PROMPT = "What's one comfort food that always makes you smile?";
@@ -172,6 +182,16 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/(tabs)/profile')}>
           <Ionicons name="person-circle" size={28} color="#111216" />
         </TouchableOpacity>
+
+
+        {/* 👇 Add Logout Button */} {/* delete later */}
+        <TouchableOpacity
+          style={[styles.iconBtn, { marginLeft: 10 }]}
+          onPress={() => signOut(auth)}
+        >
+          <Ionicons name="log-out-outline" size={24} color="#111216" />
+        </TouchableOpacity>
+        {/* delete later */}
       </View>
 
       {/* Prompt card */}

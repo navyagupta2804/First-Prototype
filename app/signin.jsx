@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
 import { Link, useRouter } from 'expo-router';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useState } from 'react';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { auth } from '../firebaseConfig';
 
 export default function SignInScreen() {
   const [email, setEmail] = useState('');
@@ -12,7 +12,7 @@ export default function SignInScreen() {
   const onSignIn = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.replace('/(tabs)/home');
+      router.replace('/tabs/home');
     } catch (e) {
       Alert.alert('Sign in failed', e.message);
     }
