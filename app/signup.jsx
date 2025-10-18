@@ -42,6 +42,7 @@ export default function SignUpScreen() {
       // set the displayName on the auth user
       await updateProfile(cred.user, { displayName: displayName.trim() });
       // create a Firestore profile doc
+      console.log("About to write Firestore doc...");
       await setDoc(doc(db, 'users', cred.user.uid), {
         displayName: displayName.trim(),
         email: email.trim(),
@@ -51,8 +52,9 @@ export default function SignUpScreen() {
         lastJournalDate: null,
         createdAt: serverTimestamp()
       });
+      console.log("Firestore write completed!");
       // go to app tabs
-      router.replace('/(tabs)/home');
+      router.replace('/tabs/home');
     } catch (e) {
       // common Firebase auth error messages are pretty readable
       Alert.alert('Sign up failed', e.message);

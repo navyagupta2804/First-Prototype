@@ -2,9 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { signOut } from 'firebase/auth';
 import {
-  addDoc, collection, doc, getDoc,
+  addDoc, collection,
+  deleteDoc,
+  doc, getDoc,
+  increment,
   onSnapshot,
   orderBy,
   query,
@@ -150,28 +152,142 @@ export default function HomeScreen() {
     }
   };
 
-  // ---- UI: Feed card ----
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {(item.userDisplay || 'PM').split(' ').map(s => s[0]).join('').slice(0,2)}
-          </Text>
+  // PostCard component handles likes/comments per item and embeds comments UI
+  function PostCard({ item }) {
+    const [likesCount, setLikesCount] = useState(item.likesCount || 0);
+    const [commentsCount, setCommentsCount] = useState(item.commentsCount || 0);
+    const [liked, setLiked] = useState(false);
+    const [showComments, setShowComments] = useState(false);
+    const [comments, setComments] = useState([]);
+    const [commentText, setCommentText] = useState('');
+
+    useEffect(() => {
+      // subscribe to counts on the feed doc
+      const dref = doc(db, 'feed', item.id);
+      const unsub = onSnapshot(dref, (snap) => {
+        const data = snap.data() || {};
+        setLikesCount(data.likesCount || 0);
+        setCommentsCount(data.commentsCount || 0);
+      });
+      // check if current user liked
+      const checkLike = async () => {
+        try {
+          if (!auth.currentUser) return setLiked(false);
+          const likeDoc = await getDoc(doc(db, 'feed', item.id, 'likes', auth.currentUser.uid));
+          setLiked(likeDoc.exists());
+        } catch (e) {
+          // noop
+        }
+      };
+      checkLike();
+      return unsub;
+    }, [item.id]);
+
+    // subscribe to comments only when comments pane is open
+    useEffect(() => {
+      if (!showComments) return;
+      const q = query(collection(db, 'feed', item.id, 'comments'), orderBy('createdAt', 'asc'));
+      const unsub = onSnapshot(q, (snap) => {
+        const arr = [];
+        snap.forEach((d) => arr.push({ id: d.id, ...d.data() }));
+        setComments(arr);
+      });
+      return unsub;
+    }, [showComments, item.id]);
+
+    const toggleLike = async () => {
+      if (!auth.currentUser) return Alert.alert('Sign in', 'Please sign in to like posts.');
+      const likeRef = doc(db, 'feed', item.id, 'likes', auth.currentUser.uid);
+      const feedRef = doc(db, 'feed', item.id);
+      try {
+        if (liked) {
+          await deleteDoc(likeRef);
+          await updateDoc(feedRef, { likesCount: increment(-1) });
+          setLiked(false);
+        } else {
+          await setDoc(likeRef, { uid: auth.currentUser.uid, createdAt: serverTimestamp() });
+          await updateDoc(feedRef, { likesCount: increment(1) });
+          setLiked(true);
+        }
+      } catch (e) {
+        console.warn('Like toggle error', e);
+      }
+    };
+
+    const onAddComment = async () => {
+      if (!auth.currentUser) return Alert.alert('Sign in', 'Please sign in to comment.');
+      if (!commentText.trim()) return;
+      const commentsRef = collection(db, 'feed', item.id, 'comments');
+      const feedRef = doc(db, 'feed', item.id);
+      try {
+        await addDoc(commentsRef, {
+          uid: auth.currentUser.uid,
+          text: commentText.trim(),
+          displayName: auth.currentUser.displayName || 'Pantry Member',
+          createdAt: serverTimestamp()
+        });
+        // increment comment count on feed doc
+        await updateDoc(feedRef, { commentsCount: increment(1) });
+        setCommentText('');
+      } catch (e) {
+        console.warn('Add comment error', e);
+        Alert.alert('Error', 'Unable to add comment.');
+      }
+    };
+
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{(item.userDisplay || 'PM').split(' ').map(s => s[0]).join('').slice(0,2)}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardTitle}>{item.userDisplay || 'Pantry Member'}</Text>
+            <Text style={styles.cardTime}>{item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : ''}</Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{item.userDisplay || 'Pantry Member'}</Text>
-          <Text style={styles.cardTime}>
-            {item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : ''}
-          </Text>
+        {item.type === 'photo' && <Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />}
+        {item.text && <Text style={styles.cardBody}>{item.text}</Text>}
+        <View style={styles.actionsRow}>
+          <TouchableOpacity style={styles.actionBtn} onPress={toggleLike}>
+            <Ionicons name={liked ? 'heart' : 'heart-outline'} size={20} color={liked ? '#ef4444' : '#111'} />
+            <Text style={styles.actionText}>{likesCount || 0}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => setShowComments(s => !s)}>
+            <Ionicons name="chatbubble-outline" size={20} color="#111" />
+            <Text style={styles.actionText}>{commentsCount || 0}</Text>
+          </TouchableOpacity>
         </View>
+
+        {showComments && (
+          <View style={styles.commentsSection}>
+            <FlatList
+              data={comments}
+              keyExtractor={(it) => it.id}
+              renderItem={({ item: c }) => (
+                <View style={styles.commentRow}>
+                  <Text style={styles.commentAuthor}>{c.displayName}</Text>
+                  <Text style={styles.commentText}>{c.text}</Text>
+                </View>
+              )}
+              style={{ maxHeight: 240 }}
+            />
+            <View style={styles.commentInputRow}>
+              <TextInput
+                value={commentText}
+                onChangeText={setCommentText}
+                placeholder="Write a comment..."
+                style={styles.commentInput}
+              />
+              <TouchableOpacity style={styles.sendBtn} onPress={onAddComment}><Text style={{color:'#fff'}}>Send</Text></TouchableOpacity>
+            </View>
+          </View>
+        )}
       </View>
-      {item.type === 'photo' && (
-        <Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />
-      )}
-      {item.text && <Text style={styles.cardBody}>{item.text}</Text>}
-    </View>
-  );
+    );
+  }
+
+  const renderItem = ({ item }) => <PostCard item={item} />;
 
   // ---- Layout ----
   return (
@@ -182,16 +298,6 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/(tabs)/profile')}>
           <Ionicons name="person-circle" size={28} color="#111216" />
         </TouchableOpacity>
-
-
-        {/* 👇 Add Logout Button */} {/* delete later */}
-        <TouchableOpacity
-          style={[styles.iconBtn, { marginLeft: 10 }]}
-          onPress={() => signOut(auth)}
-        >
-          <Ionicons name="log-out-outline" size={24} color="#111216" />
-        </TouchableOpacity>
-        {/* delete later */}
       </View>
 
       {/* Prompt card */}
@@ -280,4 +386,17 @@ const styles = StyleSheet.create({
   cardTime: { color: '#6B7280', fontSize: 12 },
   feedImage: { width: '100%', height: 220, borderRadius: 10, backgroundColor: '#F3F4F6', marginTop: 6 },
   cardBody: { marginTop: 8, color: '#111216' }
+  ,
+  // Actions (likes/comments)
+  actionsRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 10 },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  actionText: { marginLeft: 4, fontWeight: '700' },
+  // Comments
+  commentsSection: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#f1f1f1', paddingTop: 8 },
+  commentRow: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f3f3f3' },
+  commentAuthor: { fontWeight: '700' },
+  commentText: { marginTop: 4 },
+  commentInputRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  commentInput: { flex: 1, borderWidth: 1, borderColor: '#eee', borderRadius: 8, padding: 10, marginRight: 8 },
+  sendBtn: { backgroundColor: '#111216', padding: 10, borderRadius: 8 }
 });
