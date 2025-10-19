@@ -4,9 +4,9 @@ import ChallengeCard from './ChallengeCard';
 
 // Example dummy data for testing
 const DUMMY_CHALLENGES = [
-  { id: '1', title: "New User Challenge", description: "Cook a meal today!", participants: 5000, daysLeft: 100, badge: "Beginner Chef Badge"},
-  { id: '2', title: "Fall Comfort Challenge", description: "Cook 3 cozy autumn meals this month", participants: 324, daysLeft: 12, badge: "Seasonal Chef Badge" },
-  { id: '3', title: "Weekend Quick Cook", description: "Prepare a meal in under 30 minutes.", participants: 105, daysLeft: 3, badge: "Speed Chef Badge" },
+  { id: '1', title: "New User Challenge", description: "Cook a meal today!", participants: 5000, daysLeft: 100, badge: "Beginner Chef Badge", initialStatus: "in-progress" },
+  { id: '2', title: "Fall Comfort Challenge", description: "Cook 3 cozy autumn meals this month", participants: 324, daysLeft: 12, badge: "Seasonal Chef Badge", initialStatus: "in-progress" },
+  { id: '3', title: "Weekend Quick Cook", description: "Prepare a meal in under 30 minutes.", participants: 105, daysLeft: 3, badge: "Speed Chef Badge", initialStatus: "in-progress" },
 ];
 
 const ChallengeSection = ({ challenges = DUMMY_CHALLENGES }) => {
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     challengeTitle: { fontSize: 15, fontWeight: '800', color: '#632692', textTransform: 'uppercase' },
     viewAllText: { fontSize: 14, color: '#9333ea', fontWeight: '600' },
     listContainer: { paddingRight: 16 },
-    cardWrapper: { width: 300, marginRight: 12 }
+    cardWrapper: { width: 350, marginRight: 12 }
 });
 
 export default ChallengeSection;

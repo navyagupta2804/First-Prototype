@@ -1,37 +1,40 @@
 
+import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const ChallengeCard = ({ challenge }) => {
     const data = challenge;
+    const [isCompleted, setIsCompleted] = useState(data.initialStatus === 'completed');
+
+    const handleToggleCompletion = () => {
+        // In a real app, you would send this status update to your database (e.g., Firestore)
+        setIsCompleted(prev => !prev);
+    };
+
+    const buttonText = isCompleted ? 'Completed!' : 'In Progress...';
+    const buttonStyle = isCompleted ? styles.completedButton : styles.inProgressButton;
+    const buttonTextStyle = isCompleted ? styles.completedButtonText : styles.inProgressButtonText;
 
     return (
         <View style={styles.challengeContainer}>
             <View style={styles.challengeHeader}>
                 <Text style={styles.challengeTitle}>{data.title}</Text>
                 {/* Trophy Icon (Placeholder) */}
-                {/* <Text style={styles.trophyIcon}>🏆</Text> */}
+                <Text style={styles.trophyIcon}>🏆</Text>
             </View>
             <Text style={styles.challengeDescription}>{data.description}</Text>
-
-            {/* STATS ROW */}
             <View style={styles.statsRow}>
-                {/* 🧑‍🤝‍🧑 Participants */}
                 <Text style={styles.statText}>
                     <Text style={styles.peopleIcon}>🧑‍🤝‍🧑</Text> {data.participants} joined
                 </Text>
                 <Text style={styles.statText}>{data.daysLeft} days left</Text>
             </View>
-
-            {/* BOTTOM ROW (Badge and Join Button) */}
             <View style={styles.footer}>
-                {/* BADGE CHIP */}
                 <View style={styles.badgeChip}>
                     <Text style={styles.badgeText}>{data.badge}</Text>
                 </View>
-                
-                {/* JOIN BUTTON */}
-                <TouchableOpacity style={styles.joinButton} onPress={() => console.log('Join Challenge')}>
-                    <Text style={styles.joinButtonText}>Completed!</Text>
+                <TouchableOpacity style={[styles.completionButtonBase, buttonStyle]} onPress={handleToggleCompletion}>
+                    <Text style={buttonTextStyle}>{buttonText}</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -67,17 +70,19 @@ const styles = StyleSheet.create({
         borderColor: '#e5e7eb',
     },
     badgeText: { fontSize: 12, fontWeight: '600', color: '#374151', },
-    joinButton: {
-        paddingHorizontal: 15,
+
+    completionButtonBase: {
+        paddingHorizontal: 12,
         paddingVertical: 8,
-        backgroundColor: '#632692', 
         borderRadius: 10,
+        minWidth: 120,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    joinButtonText: {
-        color: 'white',
-        fontWeight: '700',
-        fontSize: 12,
-    },
+    inProgressButton: { backgroundColor: 'white', borderColor: '#632692', borderWidth: 1 },
+    inProgressButtonText: { color: '#374151', fontWeight: '700', fontSize: 12 },
+    completedButton: { backgroundColor: '#632692', borderColor: '#632692', borderWidth: 1 },
+    completedButtonText: { color: 'white', fontWeight: '700', fontSize: 12},
 });
 
 export default ChallengeCard;
