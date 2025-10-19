@@ -6,9 +6,10 @@ import {
 import { useState } from 'react';
 import {
   ActivityIndicator, Alert, StyleSheet, Text,
-  TextInput, TouchableOpacity, View
+  TextInput, TouchableOpacity
 } from 'react-native';
 import { auth, db } from '../../../firebaseConfig';
+import CenteredContainer from '../common/CenteredContainer';
 
 const PROMPT = "What's one comfort food that always makes you smile?";
 
@@ -77,7 +78,7 @@ export default function PromptCard() {
   };
 
   return (
-    <View style={styles.promptCard}>
+    <CenteredContainer style={styles.promptCard}>
       <Text style={styles.promptKicker}>Today's Prompt</Text>
       <Text style={styles.promptText}>{PROMPT}</Text>
       <TextInput
@@ -90,7 +91,7 @@ export default function PromptCard() {
       <TouchableOpacity style={styles.primaryBtn} onPress={onPostJournal} disabled={saving}>
         {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>Save</Text>}
       </TouchableOpacity>
-    </View>
+    </CenteredContainer>
   );
 }
 

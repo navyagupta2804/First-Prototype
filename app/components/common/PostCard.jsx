@@ -10,6 +10,7 @@ import {
   TextInput, TouchableOpacity, View
 } from 'react-native';
 import { auth, db } from '../../../firebaseConfig';
+import CenteredContainer from './CenteredContainer';
 
 function CommentInput({ itemId, onCommentAdded }) {
   const [commentText, setCommentText] = useState('');
@@ -143,7 +144,7 @@ export default function PostCard({ item }) {
   const postTime = item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : '';
 
   return (
-    <View style={styles.card}>
+    <CenteredContainer style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{userInitials}</Text>
@@ -166,7 +167,7 @@ export default function PostCard({ item }) {
         </TouchableOpacity>
       </View>
       <CommentsSection itemId={item.id} show={showComments} />
-    </View>
+    </CenteredContainer>
   );
 }
 

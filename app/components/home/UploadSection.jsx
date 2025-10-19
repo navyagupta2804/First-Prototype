@@ -11,6 +11,7 @@ import {
   TouchableOpacity, View
 } from 'react-native';
 import { auth, db, storage } from '../../../firebaseConfig';
+import CenteredContainer from '../common/CenteredContainer';
 
 export default function UploadSection() {
   const user = auth.currentUser;
@@ -70,7 +71,7 @@ export default function UploadSection() {
   };
 
   return (
-    <View style={styles.uploadRow}>
+    <CenteredContainer style={styles.uploadRow}>
       <View>
         <Text style={styles.sectionTitle}>Document Today’s Cooking</Text>
         <Text style={styles.sectionSub}>Add an entry with a photo</Text>
@@ -86,7 +87,7 @@ export default function UploadSection() {
           )
         }
       </TouchableOpacity>
-    </View>
+    </CenteredContainer>
   );
 }
 

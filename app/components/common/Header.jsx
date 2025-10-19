@@ -1,17 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import CenteredContainer from './CenteredContainer';
 
 export default function Header() {
   const router = useRouter();
 
   return (
-    <View style={styles.header}>
+    <CenteredContainer style={styles.header}>
       <Text style={styles.brand}>pantry</Text>
       <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/tabs/profile')}>
         <Ionicons name="person-circle" size={28} color="#111216" />
       </TouchableOpacity>
-    </View>
+    </CenteredContainer>
   );
 }
 

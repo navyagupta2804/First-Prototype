@@ -2,6 +2,7 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { db } from '../../firebaseConfig';
+import CenteredContainer from '../components/common/CenteredContainer';
 import Header from '../components/common/Header';
 import PostCard from '../components/common/PostCard';
 import PromptCard from '../components/home/PromptCard';
@@ -23,18 +24,25 @@ export default function HomeScreen() {
   }, []);
 
   const renderItem = ({ item }) => <PostCard item={item} />;
+  const renderHeader = () => (
+    <>
+      <Header />
+      <PromptCard />
+      <UploadSection />
+      <CenteredContainer>
+        <Text style={styles.feedHeader}>Community Updates</Text>
+      </CenteredContainer>
+    </>
+  );
 
   // ---- Layout ----
   return (
     <View style={styles.screen}>
-      <Header />
-      <PromptCard />
-      <UploadSection />
-      <Text style={styles.feedHeader}>Community Updates</Text>
       <FlatList
         data={feed}
         keyExtractor={(it) => it.id}
         renderItem={renderItem}
+        ListHeaderComponent={renderHeader}
         contentContainerStyle={{ paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
       />
