@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   avatarText: { fontWeight: '800', color: '#111216' },
   cardTitle: { fontWeight: '700' },
   cardTime: { color: '#6B7280', fontSize: 12 },
-  feedImage: { width: '100%', height: 220, borderRadius: 10, backgroundColor: '#F3F4F6', marginTop: 6 },
+  feedImage: { width: '100%', height: 700, borderRadius: 10, backgroundColor: '#F3F4F6', marginTop: 6 },
   cardBody: { marginTop: 8, color: '#111216' },
 
   // Actions (likes/comments)
