@@ -10,7 +10,7 @@ const CenteredContainer = ({ children, style }) => {
 
 const styles = StyleSheet.create({
   wrapper: {
-    maxWidth: 700, // Maximum width for content
+    maxWidth: 650, // Maximum width for content
     width: '100%', // Take up 100% of available space up to maxWidth
     alignSelf: 'center', // Centers the block itself within its parent
     
