@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     challengeTitle: { fontSize: 15, fontWeight: '800', color: '#632692', textTransform: 'uppercase' },
     viewAllText: { fontSize: 14, color: '#9333ea', fontWeight: '600' },
     listContainer: { paddingRight: 16 },
-    cardWrapper: { width: 350, marginRight: 12 }
+    cardWrapper: { width: 325, marginRight: 12 }
 });
 
 export default ChallengeSection;
