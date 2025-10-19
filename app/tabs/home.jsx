@@ -3,13 +3,13 @@ import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
-import Header from '../components/common/Header';
-import PostCard from '../components/common/PostCard';
+import HomeHeader from '../components/home/HomeHeader';
+import PostCard from '../components/home/PostCard';
 import PromptCard from '../components/home/PromptCard';
 import UploadSection from '../components/home/UploadSection';
 
 
-export default function HomeScreen() {
+const HomeScreen = () => {
   const [feed, setFeed] = useState([]);
 
   // ---- Feed subscription (Kept in main component for global feed state) ----
@@ -23,10 +23,10 @@ export default function HomeScreen() {
     return unsub;
   }, []);
 
-  const renderItem = ({ item }) => <PostCard item={item} />;
+  const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <>
-      <Header />
+      <HomeHeader />
       <PromptCard />
       <UploadSection />
       <CenteredContainer>
@@ -37,11 +37,11 @@ export default function HomeScreen() {
 
   // ---- Layout ----
   return (
-    <View style={styles.screen}>
+    <View style={styles.screenContainer}>
       <FlatList
         data={feed}
         keyExtractor={(it) => it.id}
-        renderItem={renderItem}
+        renderItem={renderPosts}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={{ paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
@@ -51,6 +51,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 16 },
+  screenContainer: { flex: 1, backgroundColor: 'white', paddingHorizontal: 16 },
   feedHeader: { fontSize: 18, fontWeight: '800', marginVertical: 10 },
 });
+
+export default HomeScreen;

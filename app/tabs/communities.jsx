@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
+import { collection, deleteDoc, doc, increment, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
+import CenteredContainer from '../components/common/CenteredContainer';
 
 export default function CommunitiesScreen() {
   const user = auth.currentUser;
-  const [items, setItems] = useState([]);
+  const [communities, setCommunities] = useState([]);
   const [myMemberships, setMyMemberships] = useState({});
 
   useEffect(() => {
@@ -17,9 +18,9 @@ export default function CommunitiesScreen() {
         await setDoc(doc(db, 'communities', 'plant'), { name: 'Plant-Based Journey', membersCount: 654 });
         return;
       }
-      const arr = [];
-      snap.forEach((d) => arr.push({ id: d.id, ...d.data() }));
-      setItems(arr);
+      const communityArr = [];
+      snap.forEach((d) => communityArr.push({ id: d.id, ...d.data() }));
+      setCommunities(communityArr);
     });
 
     const unsub2 = onSnapshot(collection(db, 'users', user.uid, 'memberships'), (snap) => {
@@ -51,10 +52,10 @@ export default function CommunitiesScreen() {
     }
   };
 
-  const renderItem = ({ item }) => {
+  const renderCommunities = ({ item }) => {
     const joined = !!myMemberships[item.id];
     return (
-      <View style={styles.card}>
+      <CenteredContainer style={styles.card}>
         <Text style={styles.title}>{item.name}</Text>
         <Text style={styles.meta}>{item.membersCount || 0} members</Text>
         <TouchableOpacity
@@ -65,16 +66,16 @@ export default function CommunitiesScreen() {
             {joined ? 'Leave' : 'Join'}
           </Text>
         </TouchableOpacity>
-      </View>
+      </CenteredContainer>
     );
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 56 }}>
+    <View style={styles.screenContainer}>
       <FlatList
-        data={items}
+        data={communities}
         keyExtractor={(it) => it.id}
-        renderItem={renderItem}
+        renderItem={renderCommunities}
         contentContainerStyle={{ padding: 16, gap: 12 }}
       />
     </View>
@@ -82,6 +83,7 @@ export default function CommunitiesScreen() {
 }
 
 const styles = StyleSheet.create({
+  screenContainer: { flex: 1, backgroundColor: 'white', paddingTop: 56 },
   card: { borderWidth: 1, borderColor: '#eee', padding: 16, borderRadius: 12, marginBottom: 12 },
   title: { fontSize: 16, fontWeight: '700' },
   meta: { color: '#6b7280', marginTop: 4, marginBottom: 8 },
