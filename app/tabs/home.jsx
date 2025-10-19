@@ -9,6 +9,7 @@ import PostCard from '../components/home/PostCard';
 import PromptCard from '../components/home/PromptCard';
 import UploadSection from '../components/home/UploadSection';
 import PersonalGreeting from '../components/home/PersonalGreeting';
+import FriendActivityCard from '../components/home/FriendActivityCard';
 
 const HomeScreen = () => {
   const [feed, setFeed] = useState([]);
@@ -30,8 +31,9 @@ const HomeScreen = () => {
       <HomeHeader />
       <PersonalGreeting/>
       <PromptCard />
-      <ChallengeSection />
       <UploadSection />
+      <ChallengeSection />
+      <FriendActivityCard/>
       <CenteredContainer>
         <Text style={styles.feedHeader}>Community Updates</Text>
       </CenteredContainer>
