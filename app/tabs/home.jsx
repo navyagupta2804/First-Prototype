@@ -8,7 +8,7 @@ import HomeHeader from '../components/home/HomeHeader';
 import PostCard from '../components/home/PostCard';
 import PromptCard from '../components/home/PromptCard';
 import UploadSection from '../components/home/UploadSection';
-
+import PersonalGreeting from '../components/home/PersonalGreeting';
 
 const HomeScreen = () => {
   const [feed, setFeed] = useState([]);
@@ -28,6 +28,7 @@ const HomeScreen = () => {
   const renderHeader = () => (
     <>
       <HomeHeader />
+      <PersonalGreeting/>
       <PromptCard />
       <ChallengeSection />
       <UploadSection />
