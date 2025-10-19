@@ -11,14 +11,15 @@ import {
 import { auth, db } from '../../../firebaseConfig';
 import CenteredContainer from '../common/CenteredContainer';
 
-const PROMPT = "What's one comfort food that always makes you smile?";
-
-export default function PromptCard() {
+const PromptCard = ({ journalPrompt }) => {
   const user = auth.currentUser;
   const [journalText, setJournalText] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // ---- Ensure user profile doc exists (Moved from home.jsx) ----
+  const defaultPrompt = "What's one comfort food that always makes you smile?";
+  const PROMPT = journalPrompt || defaultPrompt;
+
+  // ---- ensure user profile doc exists ----
   const ensureUserDoc = async () => {
     const uref = doc(db, 'users', user.uid);
     const snap = await getDoc(uref);
@@ -34,7 +35,7 @@ export default function PromptCard() {
     }
   };
 
-  // ---- Save journal + update streak (Moved from home.jsx) ----
+  // ---- save journal + update streak ----
   const onPostJournal = async () => {
     if (!journalText.trim()) {
       Alert.alert('Add a thought', 'Write a quick sentence before saving.');
@@ -79,7 +80,7 @@ export default function PromptCard() {
 
   return (
     <CenteredContainer style={styles.promptCard}>
-      <Text style={styles.promptKicker}>Today's Prompt</Text>
+      <Text style={styles.promptHeader}>Today's Prompt</Text>
       <Text style={styles.promptText}>{PROMPT}</Text>
       <TextInput
         value={journalText}
@@ -96,18 +97,20 @@ export default function PromptCard() {
 }
 
 const styles = StyleSheet.create({
-  // Prompt card (warm, friendly)
   promptCard: {
+    width: '100%',
+    marginBottom: 15,
+    padding: 16,
     backgroundColor: '#FFF1E6',
     borderColor: '#FFD4B8',
     borderWidth: 1,
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 14
+    borderRadius: 12,
   },
-  promptKicker: { fontWeight: '800', fontSize: 12, color: '#A15B2E', marginBottom: 6, textTransform: 'uppercase' },
+  promptHeader: { fontWeight: '800', fontSize: 15, color: '#A15B2E', marginBottom: 6, textTransform: 'uppercase' },
   promptText: { fontSize: 14, color: '#4B5563', marginBottom: 8 },
   input: { backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', padding: 12, minHeight: 64 },
   primaryBtn: { backgroundColor: '#111216', paddingVertical: 12, borderRadius: 10, alignItems: 'center', marginTop: 10 },
   primaryText: { color: '#fff', fontWeight: '700' },
 });
+
+export default PromptCard;

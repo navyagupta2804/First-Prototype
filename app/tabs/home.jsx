@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
+import ChallengeSection from '../components/home/ChallengeSection';
 import HomeHeader from '../components/home/HomeHeader';
 import PostCard from '../components/home/PostCard';
 import PromptCard from '../components/home/PromptCard';
@@ -28,6 +29,7 @@ const HomeScreen = () => {
     <>
       <HomeHeader />
       <PromptCard />
+      <ChallengeSection />
       <UploadSection />
       <CenteredContainer>
         <Text style={styles.feedHeader}>Community Updates</Text>
