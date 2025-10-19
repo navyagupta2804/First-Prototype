@@ -1,7 +1,7 @@
 import { signOut } from 'firebase/auth';
 import { collection, doc, getDoc, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { Alert, Image, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Platform, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 
 export default function ProfileScreen() {
@@ -45,28 +45,44 @@ export default function ProfileScreen() {
     );
 
     return () => {
-      unsubPhotos;
-      unsubJournals;
+      unsubPhotos();
+      unsubJournals();
     } 
   }, [user?.uid]);
 
   const handleLogout = () => {
-    Alert.alert('Log out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut(auth);
-          } catch (e) {
-            console.warn('Sign out error', e);
-            Alert.alert('Error', 'Unable to sign out. Please try again.');
-          }
+  // 1. CHECK PLATFORM: If on web, execute sign out immediately (for right now bc the alert is now working on web)
+  if (Platform.OS === 'web') {
+    // Instant logout for web
+    console.log("Web platform detected. Signing out immediately.");
+    (async () => {
+      try {
+        await signOut(auth);
+      } catch (e) {
+        console.warn('Web Sign out error', e);
+      }
+    })();
+    return; // Stop the function here for web
+  }
+
+  // 2. NATIVE PLATFORMS (iOS/Android): Use the reliable Alert for confirmation
+  Alert.alert('Log out', 'Are you sure you want to sign out?', [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: 'Sign Out',
+      style: 'destructive',
+      onPress: async () => {
+        try {
+          await signOut(auth);
+          // Let the _layout.jsx listener handle navigation
+        } catch (e) {
+          console.warn('Native Sign out error', e);
+          Alert.alert('Error', 'Unable to sign out. Please try again.');
         }
       }
-    ]);
-  };
+    }
+  ]);
+};
 
   const Header = () => (
     <View>
@@ -93,8 +109,6 @@ export default function ProfileScreen() {
     </View>
   );
 
-  console.log("Journals:", journals);
-
   return (
     <SectionList
       sections={[
@@ -109,7 +123,7 @@ export default function ProfileScreen() {
       renderItem={({ item, section }) => {
         if (section.type === 'image'){
           return (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            <View style={{ flexDirection: 'row', noWrap: 'wrap', gap: 8 }}>
               <Image source={{ uri: item.url }} style={styles.gridImg} />
             </View>
           )
@@ -137,8 +151,7 @@ const styles = StyleSheet.create({
   stat: { alignItems: 'center', flex: 1 },
   statNum: { fontSize: 18, fontWeight: '800' },
   statLabel: { color: '#6b7280' },
-  gridImg: { flex: 1, aspectRatio: 1, borderRadius: 8, backgroundColor: '#f1f1f1' }
-  ,
+  gridImg: { flex: 1, aspectRatio: 1, borderRadius: 8, backgroundColor: '#f1f1f1' },
   logoutBtn: {
     backgroundColor: '#ef4444',
     paddingHorizontal: 12,
