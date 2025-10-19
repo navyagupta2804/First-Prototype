@@ -1,8 +1,7 @@
-import { Stack } from 'expo-router';
-import { useEffect } from 'react';
+import { Stack, useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useEffect } from 'react';
 import { auth } from '../firebaseConfig';
-import { useRouter } from 'expo-router';
 
 export default function RootLayout() {
   const router = useRouter();
