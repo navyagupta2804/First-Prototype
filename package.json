@@ -4,10 +4,12 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "expo start --clear",
+    "start": "next start -p $PORT",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build": "next build",
+    "dev": "next dev"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
