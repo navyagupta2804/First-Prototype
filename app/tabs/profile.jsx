@@ -117,23 +117,23 @@ export default function ProfileScreen() {
       return (
         <View style={styles.postsGrid}>
           {photos.length === 0 ? (
-            <View style={styles.emptyGrid}>
-              {[...Array(9)].map((_, index) => (
-                <View key={index} style={styles.emptyGridItem}>
-                  <Ionicons name="camera-outline" size={32} color="#d1d5db" />
-                </View>
-              ))}
+            // Empty Posts State
+            <View style={styles.noPostsContainer}>
+              <Ionicons name="camera-off-outline" size={64} color="#9ca3af" />
+              <Text style={styles.noPostsText}>No posts yet!</Text>
+              <Text style={styles.noPostsSubText}>Start your cooking journey by sharing your first meal.</Text>
             </View>
           ) : (
+            // Existing Photo Grid (with placeholder logic for incomplete rows)
             <View style={styles.photoGrid}>
               {photos.map((item) => (
                 <GridPostCard key={item.id} item={item} />
               ))}
-              {/* Add empty placeholders to fill the grid */}
-              {[...Array(Math.max(0, 9 - photos.length))].map((_, index) => (
-                <View key={`empty-${index}`} style={styles.emptyGridItem}>
-                  <Ionicons name="camera-outline" size={32} color="#d1d5db" />
-                </View>
+              {/* Add empty placeholders to fill the last row if needed, but only if photos > 0 */}
+              {[...Array(Math.max(0, 3 - (photos.length % 3)))].map((_, index) => (
+                  index < (photos.length % 3) && photos.length % 3 !== 0 && (
+                      <View key={`empty-${index}`} style={styles.emptyGridItem} />
+                  )
               ))}
             </View>
           )}
@@ -275,24 +275,41 @@ const styles = StyleSheet.create({
   // Posts Grid
   postsGrid: {
     marginBottom: 16,
+    width: '100%', 
+    alignItems: 'center',
   },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 2,
-  },
-  emptyGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 2,
+    width: '100%',
   },
   emptyGridItem: {
-    width: '32.5%',
+    width: '32.8%', 
     aspectRatio: 1,
     backgroundColor: '#f3f4f6',
     borderRadius: 4,
-    justifyContent: 'center',
+  },
+  
+  // Styles for Empty State
+  noPostsContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    width: '100%',
+  },
+  noPostsText: {
+    marginTop: 16,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#374151',
+  },
+  noPostsSubText: {
+    marginTop: 4,
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+    paddingHorizontal: 40,
   },
   
   // Empty Tab Content

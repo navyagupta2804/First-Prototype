@@ -1,33 +1,32 @@
 import { Image, StyleSheet, TouchableOpacity } from 'react-native';
 
-const GridPostCard = ({ item }) => {
-    if (!item || !item.url) return null;
-    
-    const imageUrl = item.url;
-
+const GridPostCard = ({ item, onPress }) => {
     return (
-        <TouchableOpacity style={styles.container}>
+        <TouchableOpacity 
+            style={styles.container} 
+            onPress={() => onPress && onPress(item)}
+            activeOpacity={0.8}
+        >
             <Image 
-                source={{ uri: imageUrl }} 
+                source={{ uri: item.url }} 
                 style={styles.image} 
-                resizeMode="cover"
+                onError={(e) => console.log('Image Load Error:', e.nativeEvent.error)}
             />
         </TouchableOpacity>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { 
-        flex: 1,
+    container: {
+        width: '32.8%', 
         aspectRatio: 1,
-        marginHorizontal: 1,
-    },
-    image: { 
-        width: '100%',
-        height: '100%',
+        overflow: 'hidden',
         borderRadius: 4,
-        backgroundColor: '#f1f1f1',
-    }
+    },
+    image: {
+        flex: 1,
+        resizeMode: 'cover',
+    },
 });
 
 export default GridPostCard;
