@@ -1,12 +1,17 @@
+import { Ionicons } from '@expo/vector-icons';
 import { collection, doc, getDoc, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
 import { auth, db } from '../../firebaseConfig';
+import CenteredContainer from '../components/common/CenteredContainer';
 import GridPostCard from '../components/profile/GridPostCard';
+import JournalSection from '../components/profile/JournalSection';
+import ProfileActivitySection from '../components/profile/ProfileActivitySection';
+import ProfileBadges from '../components/profile/ProfileBadges';
 import ProfileHeader from '../components/profile/ProfileHeader';
+import { calculateBadgeCount } from '../utils/bageCalculations';
 
 export default function ProfileScreen() {
   const user = auth.currentUser;
@@ -108,57 +113,47 @@ export default function ProfileScreen() {
 
 
   const renderTabContent = () => {
-    if (activeTab === 'posts') {
+    if (activeTab === 'posts') { // Posts tab
       return (
         <View style={styles.postsGrid}>
           {photos.length === 0 ? (
-            <View style={styles.emptyGrid}>
-              {[...Array(9)].map((_, index) => (
-                <View key={index} style={styles.emptyGridItem}>
-                  <Ionicons name="camera-outline" size={32} color="#d1d5db" />
-                </View>
-              ))}
+            // Empty Posts State
+            <View style={styles.noPostsContainer}>
+              <Ionicons name="camera-off-outline" size={64} color="#9ca3af" />
+              <Text style={styles.noPostsText}>No posts yet!</Text>
+              <Text style={styles.noPostsSubText}>Start your cooking journey by sharing your first meal.</Text>
             </View>
           ) : (
+            // Existing Photo Grid (with placeholder logic for incomplete rows)
             <View style={styles.photoGrid}>
               {photos.map((item) => (
                 <GridPostCard key={item.id} item={item} />
               ))}
-              {/* Add empty placeholders to fill the grid */}
-              {[...Array(Math.max(0, 9 - photos.length))].map((_, index) => (
-                <View key={`empty-${index}`} style={styles.emptyGridItem}>
-                  <Ionicons name="camera-outline" size={32} color="#d1d5db" />
-                </View>
+              {/* Add empty placeholders to fill the last row if needed, but only if photos > 0 */}
+              {[...Array(Math.max(0, 3 - (photos.length % 3)))].map((_, index) => (
+                  index < (photos.length % 3) && photos.length % 3 !== 0 && (
+                      <View key={`empty-${index}`} style={styles.emptyGridItem} />
+                  )
               ))}
             </View>
           )}
         </View>
       );
-    } else if (activeTab === 'saved') {
+    } else if (activeTab === 'saved') { // Svaed tab
       return (
         <View style={styles.emptyTabContent}>
           <Ionicons name="bookmark-outline" size={48} color="#d1d5db" />
           <Text style={styles.emptyTabText}>No saved recipes yet</Text>
         </View>
       );
-    } else {
-      // Badges tab
-      const badges = getBadges(photos.length, profile.streak, journals.length);
+    } else { // Badges tab
       return (
-        <View style={styles.badgesContainer}>
-          {badges.map((badge, index) => (
-            <View 
-              key={index} 
-              style={[styles.badgeCard, !badge.earned && styles.badgeCardLocked]}
-            >
-              <Text style={[styles.badgeEmoji, !badge.earned && styles.badgeEmojiLocked]}>
-                {badge.emoji}
-              </Text>
-              <Text style={[styles.badgeText, !badge.earned && styles.badgeTextLocked]}>
-                {badge.name}
-              </Text>
-            </View>
-          ))}
+        <View style={styles.badgesTabWrapper}>
+          <ProfileBadges 
+            photoCount={photos.length} 
+            streak={profile.streak || 0}
+            journalCount={journals.length}
+          />
         </View>
       );
     }
@@ -166,7 +161,7 @@ export default function ProfileScreen() {
 
   if (loading || !profile) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#ff4d2d" />
           <Text style={styles.loadingText}>Loading your profile...</Text>
@@ -175,84 +170,72 @@ export default function ProfileScreen() {
     );
   }
 
+  const calculatedBadgeCount = calculateBadgeCount(
+    photos.length, 
+    profile.streak || 0, 
+    journals.length
+  );
+  
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        <ProfileHeader 
-          profile={profile} 
-          photoCount={photos.length}
-          journalCount={journals.length}
-        />
-        
-        {/* Tabs */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'posts' && styles.tabActive]}
-            onPress={() => setActiveTab('posts')}
-          >
-            <Text style={[styles.tabText, activeTab === 'posts' && styles.tabTextActive]}>
-              Posts
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'saved' && styles.tabActive]}
-            onPress={() => setActiveTab('saved')}
-          >
-            <Text style={[styles.tabText, activeTab === 'saved' && styles.tabTextActive]}>
-              Saved
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'badges' && styles.tabActive]}
-            onPress={() => setActiveTab('badges')}
-          >
-            <Text style={[styles.tabText, activeTab === 'badges' && styles.tabTextActive]}>
-              Badges
-            </Text>
-          </TouchableOpacity>
-        </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <CenteredContainer style={styles.content}>
+          <ProfileHeader profile={profile} />
 
-        {renderTabContent()}
+          <ProfileActivitySection
+            profile={profile}
+            photoCount={photos.length}
+            journalCount={journals.length}
+            badgeCount={calculatedBadgeCount}
+          />
+
+          <JournalSection journals={journals} />
+          
+          {/* Tabs/Buttons Container */}
+          <View style={styles.tabsContainer}>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'posts' && styles.tabActive]}
+              onPress={() => setActiveTab('posts')}
+            >
+              <Text style={[styles.tabText, activeTab === 'posts' && styles.tabTextActive]}>
+                Posts
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'saved' && styles.tabActive]}
+              onPress={() => setActiveTab('saved')}
+            >
+              <Text style={[styles.tabText, activeTab === 'saved' && styles.tabTextActive]}>
+                Saved
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'badges' && styles.tabActive]}
+              onPress={() => setActiveTab('badges')}
+            >
+              <Text style={[styles.tabText, activeTab === 'badges' && styles.tabTextActive]}>
+                Badges
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Tab Content Container (This renders the actual grid/badges/saved content) */}
+          <View style={styles.tabContentWrapper}>
+              {renderTabContent()}
+          </View>
+        </CenteredContainer>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// Helper function to get all badges
-function getBadges(photoCount, streak, journalCount) {
-  return [
-    { name: "First Meal", emoji: "🍳", earned: photoCount >= 1 },
-    { name: "10 Meals", emoji: "👨‍🍳", earned: photoCount >= 10 },
-    { name: "50 Meals", emoji: "🍽️", earned: photoCount >= 50 },
-    { name: "3-Day Streak", emoji: "🔥", earned: streak >= 3 },
-    { name: "Week Warrior", emoji: "⭐", earned: streak >= 7 },
-    { name: "Month Master", emoji: "🏆", earned: streak >= 30 },
-  ];
-}
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  content: {
-    padding: 16,
-  },
-  sectionHeader: {
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: 12,
-    marginTop: 8,
-    color: '#111216',
-  },
+
   // Tabs
   tabsContainer: {
     flexDirection: 'row',
@@ -281,24 +264,41 @@ const styles = StyleSheet.create({
   // Posts Grid
   postsGrid: {
     marginBottom: 16,
+    width: '100%', 
+    alignItems: 'center',
   },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 2,
-  },
-  emptyGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 2,
+    width: '100%',
   },
   emptyGridItem: {
-    width: '32.5%',
+    width: '32.8%', 
     aspectRatio: 1,
     backgroundColor: '#f3f4f6',
     borderRadius: 4,
-    justifyContent: 'center',
+  },
+  
+  // Styles for Empty State
+  noPostsContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    width: '100%',
+  },
+  noPostsText: {
+    marginTop: 16,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#374151',
+  },
+  noPostsSubText: {
+    marginTop: 4,
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+    paddingHorizontal: 40,
   },
   
   // Empty Tab Content
@@ -314,44 +314,10 @@ const styles = StyleSheet.create({
   },
   
   // Badges
-  badgesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    paddingBottom: 20,
+  badgesTabWrapper: {
+    marginBottom: 16,
   },
-  badgeCard: {
-    width: '31%',
-    aspectRatio: 1,
-    backgroundColor: '#f0fdf4',
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#10b981',
-  },
-  badgeCardLocked: {
-    backgroundColor: '#f3f4f6',
-    borderColor: '#e5e7eb',
-    opacity: 0.6,
-  },
-  badgeEmoji: {
-    fontSize: 36,
-    marginBottom: 8,
-  },
-  badgeEmojiLocked: {
-    opacity: 0.4,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#111216',
-    textAlign: 'center',
-  },
-  badgeTextLocked: {
-    color: '#9ca3af',
-  },
+
   
   loadingText: {
     marginTop: 12,
