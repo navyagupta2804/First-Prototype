@@ -230,21 +230,10 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  sectionHeader: {
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: 12,
-    marginTop: 8,
-    color: '#111216',
   },
 
   // Tabs
