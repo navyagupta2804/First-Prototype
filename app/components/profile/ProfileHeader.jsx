@@ -2,19 +2,6 @@ import { signOut } from 'firebase/auth';
 import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth } from '../../../firebaseConfig';
 
-// Helper function to calculate badges (same logic as PersonalDashboard)
-function calculateBadges(photoCount, streak, journalCount = 0) {
-  let badges = 0;
-  if (photoCount >= 1) badges++;
-  if (photoCount >= 10) badges++;
-  if (photoCount >= 50) badges++;
-  if (streak >= 3) badges++;
-  if (streak >= 7) badges++;
-  if (streak >= 30) badges++;
-  if (journalCount >= 5) badges++;
-  if (journalCount >= 20) badges++;
-  return badges;
-}
 
 // Helper function to format member since date
 function getMemberSinceDate(createdAt) {
@@ -27,11 +14,10 @@ function getMemberSinceDate(createdAt) {
   return `Member since ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 }
 
-const ProfileHeader = ({ profile, photoCount = 0, journalCount = 0 }) => {
+const ProfileHeader = ({ profile }) => {
     if (!profile) return null;
     
     const user = auth.currentUser;
-    const badgeCount = calculateBadges(photoCount, profile.streak || 0, journalCount);
     const memberSince = getMemberSinceDate(profile.createdAt);
 
     const handleLogout = () => {
@@ -68,28 +54,23 @@ const ProfileHeader = ({ profile, photoCount = 0, journalCount = 0 }) => {
     };
 
     return (
-        <>
-        <View style={styles.header}>
-            <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                    {(profile.displayName || 'JD').split(' ').map((s) => s[0]).join('').slice(0, 2)}
-                </Text>
+        <View style={styles.headerContainer}>
+            <View style={styles.header}>
+                <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>
+                        {(profile.displayName || 'JD').split(' ').map((s) => s[0]).join('').slice(0, 2)}
+                    </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.name}>{profile.displayName}</Text>
+                    <Text style={styles.subtitle}>Cooking enthusiast • {memberSince}</Text>
+                    <Text style={styles.subtitle}>{profile.communities || 0} communities joined</Text>
+                </View>
+                <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                    <Text style={styles.logoutText}>Log out</Text>
+                </TouchableOpacity>
             </View>
-            <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{profile.displayName}</Text>
-                <Text style={styles.subtitle}>Cooking enthusiast • {memberSince}</Text>
-                <Text style={styles.subtitle}>{profile.communities || 0} communities joined</Text>
-            </View>
-            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-                <Text style={styles.logoutText}>Log out</Text>
-            </TouchableOpacity>
         </View>
-        <View style={styles.statsRow}>
-            <View style={styles.stat}><Text style={styles.statNum}>{photoCount}</Text><Text style={styles.statLabel}>Meals</Text></View>
-            <View style={styles.stat}><Text style={styles.statNum}>{profile.streak || 0}</Text><Text style={styles.statLabel}>Streaks</Text></View>
-            <View style={styles.stat}><Text style={styles.statNum}>{badgeCount}</Text><Text style={styles.statLabel}>Badges</Text></View>
-        </View>
-        </>
     );
 }
 
@@ -99,10 +80,7 @@ const styles = StyleSheet.create({
     avatarText: { fontWeight: '800', color: '#111216' },
     name: { fontSize: 20, fontWeight: '800' },
     subtitle: { color: '#6b7280' },
-    statsRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 12 },
-    stat: { alignItems: 'center', flex: 1 },
-    statNum: { fontSize: 18, fontWeight: '800' },
-    statLabel: { color: '#6b7280' },
+   
     logoutBtn: {
         backgroundColor: '#ef4444',
         paddingHorizontal: 12,

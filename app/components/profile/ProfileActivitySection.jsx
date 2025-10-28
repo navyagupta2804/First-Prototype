@@ -1,10 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-const PersonalDashboard = ({ profile, photoCount = 0, journalCount = 0 }) => {
+const ProfileActivitySection = ({ profile, photoCount = 0, journalCount = 0, badgeCount = 0 }) => {
   if (!profile) return null;
   
-  const badgeCount = calculateBadges(photoCount, profile.streak, journalCount);
   const streakMessage = getStreakMessage(profile.streak);
   const currentChallenge = getCurrentChallenge();
 
@@ -80,31 +79,6 @@ const PersonalDashboard = ({ profile, photoCount = 0, journalCount = 0 }) => {
         </View>
       )}
 
-      {/* Milestones & Badges */}
-      <View style={styles.milestonesSection}>
-        <Text style={styles.sectionTitle}>Your Milestones</Text>
-        <View style={styles.badgesGrid}>
-          {getBadges(photoCount, profile.streak, journalCount).map((badge, index) => (
-            <View 
-              key={index} 
-              style={[styles.badgeItem, !badge.earned && styles.badgeLocked]}
-            >
-              <Text style={[styles.badgeEmoji, !badge.earned && styles.badgeEmojiLocked]}>
-                {badge.emoji}
-              </Text>
-              <Text style={[styles.badgeName, !badge.earned && styles.badgeNameLocked]}>
-                {badge.name}
-              </Text>
-              {badge.earned && (
-                <View style={styles.badgeCheck}>
-                  <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-                </View>
-              )}
-            </View>
-          ))}
-        </View>
-      </View>
-
       {/* Motivational Message */}
       {profile.streak > 0 && (
         <View style={styles.motivationCard}>
@@ -129,19 +103,6 @@ const PersonalDashboard = ({ profile, photoCount = 0, journalCount = 0 }) => {
   );
 };
 
-// Helper function to calculate badges
-function calculateBadges(photoCount, streak, journalCount) {
-  let badges = 0;
-  if (photoCount >= 1) badges++;
-  if (photoCount >= 10) badges++;
-  if (photoCount >= 50) badges++;
-  if (streak >= 3) badges++;
-  if (streak >= 7) badges++;
-  if (streak >= 30) badges++;
-  if (journalCount >= 5) badges++;
-  if (journalCount >= 20) badges++;
-  return badges;
-}
 
 // Helper function to get streak message
 function getStreakMessage(streak) {
@@ -170,42 +131,6 @@ function getCurrentChallenge() {
     goal: 3,
     reward: "Weekly Warrior badge"
   };
-}
-
-// Helper function to get all badges
-function getBadges(photoCount, streak, journalCount) {
-  return [
-    {
-      name: "First Meal",
-      emoji: "🍳",
-      earned: photoCount >= 1
-    },
-    {
-      name: "10 Meals",
-      emoji: "👨‍🍳",
-      earned: photoCount >= 10
-    },
-    {
-      name: "3-Day Streak",
-      emoji: "🔥",
-      earned: streak >= 3
-    },
-    {
-      name: "Week Warrior",
-      emoji: "⭐",
-      earned: streak >= 7
-    },
-    {
-      name: "Journal Starter",
-      emoji: "📝",
-      earned: journalCount >= 5
-    },
-    {
-      name: "30-Day Champion",
-      emoji: "🏆",
-      earned: streak >= 30
-    }
-  ];
 }
 
 const styles = StyleSheet.create({
@@ -512,4 +437,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PersonalDashboard;
+export default ProfileActivitySection;

@@ -1,5 +1,5 @@
-import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 const JournalSection = ({ journals = [] }) => {
     if (!journals) return null;
@@ -63,9 +63,6 @@ const JournalSection = ({ journals = [] }) => {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        marginTop: 8,
-    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',

@@ -1,7 +1,4 @@
-import { Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-
-const { width } = Dimensions.get('window');
-const GRID_ITEM_SIZE = (width - 36) / 3; // 16px padding on each side, 2px gap between items
+import { Image, StyleSheet, TouchableOpacity } from 'react-native';
 
 const GridPostCard = ({ item }) => {
     if (!item || !item.url) return null;
@@ -21,9 +18,9 @@ const GridPostCard = ({ item }) => {
 
 const styles = StyleSheet.create({
     container: { 
-        width: GRID_ITEM_SIZE,
-        height: GRID_ITEM_SIZE,
-        marginBottom: 2,
+        flex: 1,
+        aspectRatio: 1,
+        marginHorizontal: 1,
     },
     image: { 
         width: '100%',
