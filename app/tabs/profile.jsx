@@ -5,9 +5,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { auth, db } from '../../firebaseConfig';
-import CenteredContainer from '../components/common/CenteredContainer';
 import GridPostCard from '../components/profile/GridPostCard';
-import JournalSection from '../components/profile/JournalSection';
 import ProfileActivitySection from '../components/profile/ProfileActivitySection';
 import ProfileBadges from '../components/profile/ProfileBadges';
 import ProfileHeader from '../components/profile/ProfileHeader';
@@ -16,7 +14,7 @@ import { calculateBadgeCount } from '../utils/bageCalculations';
 export default function ProfileScreen() {
   const user = auth.currentUser;
   const [profile, setProfile] = useState(null);
-  const [photos, setPhotos] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [journals, setJournals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('posts');
@@ -27,7 +25,7 @@ export default function ProfileScreen() {
       return;
     }
 
-    let unsubPhotos = null;
+    let unsubPosts = null;
     let unsubJournals = null;
 
     // Fetch user profile
@@ -40,7 +38,6 @@ export default function ProfileScreen() {
           setProfile(snap.data());
         } else {
           console.log('No profile found, creating default');
-          // Create default profile if doesn't exist
           setProfile({
             displayName: user.displayName || 'Pantry Member',
             streak: 0,
@@ -50,7 +47,6 @@ export default function ProfileScreen() {
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
-        // Set default profile on error
         setProfile({
           displayName: user.displayName || 'Pantry Member',
           streak: 0,
@@ -60,24 +56,25 @@ export default function ProfileScreen() {
       }
     };
 
-    // Subscribe to user's photos
-    const photosQuery = query(
-      collection(db, 'users', user.uid, 'photos'),
+    // ✅ Subscribe to user's posts from 'posts' collection
+    const postsQuery = query(
+      collection(db, 'posts'),
+      where('uid', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
     
-    unsubPhotos = onSnapshot(
-      photosQuery, 
+    unsubPosts = onSnapshot(
+      postsQuery, 
       (snap) => {
-        console.log('Photos snapshot received, count:', snap.size);
+        console.log('Posts snapshot received, count:', snap.size);
         const arr = [];
         snap.forEach((d) => arr.push({ id: d.id, ...d.data() }));
-        setPhotos(arr);
+        setPosts(arr);
         setLoading(false);
       },
       (error) => {
-        console.error('Error with photos listener:', error);
-        setPhotos([]);
+        console.error('Error with posts listener:', error);
+        setPosts([]);
         setLoading(false);
       }
     );
@@ -106,51 +103,47 @@ export default function ProfileScreen() {
     fetchProfile();
 
     return () => {
-      if (unsubPhotos) unsubPhotos();
+      if (unsubPosts) unsubPosts();
       if (unsubJournals) unsubJournals();
     };
   }, [user]);
 
-
   const renderTabContent = () => {
-    if (activeTab === 'posts') { // Posts tab
+    if (activeTab === 'posts') {
       return (
         <View style={styles.postsGrid}>
-          {photos.length === 0 ? (
+          {posts.length === 0 ? (
             // Empty Posts State
             <View style={styles.noPostsContainer}>
-              <Ionicons name="camera-off-outline" size={64} color="#9ca3af" />
+              <Ionicons name="camera-outline" size={64} color="#d1d5db" />
               <Text style={styles.noPostsText}>No posts yet!</Text>
-              <Text style={styles.noPostsSubText}>Start your cooking journey by sharing your first meal.</Text>
+              <Text style={styles.noPostsSubText}>
+                Start your cooking journey by sharing your first meal.
+              </Text>
             </View>
           ) : (
-            // Existing Photo Grid (with placeholder logic for incomplete rows)
+            // Photo Grid
             <View style={styles.photoGrid}>
-              {photos.map((item) => (
+              {posts.map((item) => (
                 <GridPostCard key={item.id} item={item} />
-              ))}
-              {/* Add empty placeholders to fill the last row if needed, but only if photos > 0 */}
-              {[...Array(Math.max(0, 3 - (photos.length % 3)))].map((_, index) => (
-                  index < (photos.length % 3) && photos.length % 3 !== 0 && (
-                      <View key={`empty-${index}`} style={styles.emptyGridItem} />
-                  )
               ))}
             </View>
           )}
         </View>
       );
-    } else if (activeTab === 'saved') { // Svaed tab
+    } else if (activeTab === 'saved') {
       return (
         <View style={styles.emptyTabContent}>
           <Ionicons name="bookmark-outline" size={48} color="#d1d5db" />
           <Text style={styles.emptyTabText}>No saved recipes yet</Text>
         </View>
       );
-    } else { // Badges tab
+    } else {
+      // Badges tab
       return (
         <View style={styles.badgesTabWrapper}>
           <ProfileBadges 
-            photoCount={photos.length} 
+            photoCount={posts.length} 
             streak={profile.streak || 0}
             journalCount={journals.length}
           />
@@ -161,7 +154,7 @@ export default function ProfileScreen() {
 
   if (loading || !profile) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#ff4d2d" />
           <Text style={styles.loadingText}>Loading your profile...</Text>
@@ -171,27 +164,40 @@ export default function ProfileScreen() {
   }
 
   const calculatedBadgeCount = calculateBadgeCount(
-    photos.length, 
+    posts.length, 
     profile.streak || 0, 
     journals.length
   );
   
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      {/* ✅ Header with pantry branding and icons */}
+      <View style={styles.header}>
+        <Text style={styles.brand}>pantry</Text>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="person-add-outline" size={24} color="#111" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="notifications-outline" size={24} color="#111" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false}>
-        <CenteredContainer style={styles.content}>
+        <View style={styles.container}>
+          {/* ✅ Profile Card */}
           <ProfileHeader profile={profile} />
 
+          {/* ✅ Stats Grid */}
           <ProfileActivitySection
             profile={profile}
-            photoCount={photos.length}
+            photoCount={posts.length}
             journalCount={journals.length}
             badgeCount={calculatedBadgeCount}
           />
 
-          <JournalSection journals={journals} />
-          
-          {/* Tabs/Buttons Container */}
+          {/* ✅ Tabs Container (rounded pill style) */}
           <View style={styles.tabsContainer}>
             <TouchableOpacity 
               style={[styles.tab, activeTab === 'posts' && styles.tabActive]}
@@ -219,53 +225,98 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
           
-          {/* Tab Content Container (This renders the actual grid/badges/saved content) */}
+          {/* ✅ Tab Content */}
           <View style={styles.tabContentWrapper}>
-              {renderTabContent()}
+            {renderTabContent()}
           </View>
-        </CenteredContainer>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // ✅ Header (top bar with brand + icons)
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  brand: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#ff4d2d',
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  iconButton: {
+    padding: 4,
+  },
+
+  // ✅ Container (main content padding)
+  container: {
+    padding: 16,
+  },
+
+  // ✅ Loading State
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: 12,
+    color: '#6b7280',
+    fontSize: 14,
+  },
 
-  // Tabs
+  // ✅ Tabs (rounded pill style like mockup)
   tabsContainer: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 4,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: 'center',
+    borderRadius: 8,
   },
   tabActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#111216',
+    backgroundColor: '#f3f4f6',
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#9ca3af',
+    color: '#6b7280',
   },
   tabTextActive: {
-    color: '#111216',
+    color: '#111',
   },
   
-  // Posts Grid
+  // ✅ Tab Content Wrapper
+  tabContentWrapper: {
+    minHeight: 200,
+  },
+
+  // ✅ Posts Grid
   postsGrid: {
     marginBottom: 16,
     width: '100%', 
-    alignItems: 'center',
   },
   photoGrid: {
     flexDirection: 'row',
@@ -273,35 +324,29 @@ const styles = StyleSheet.create({
     gap: 2,
     width: '100%',
   },
-  emptyGridItem: {
-    width: '32.8%', 
-    aspectRatio: 1,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 4,
-  },
   
-  // Styles for Empty State
+  // ✅ Empty State (no posts)
   noPostsContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: 80,
     width: '100%',
   },
   noPostsText: {
     marginTop: 16,
     fontSize: 18,
     fontWeight: '700',
-    color: '#374151',
+    color: '#111',
   },
   noPostsSubText: {
-    marginTop: 4,
+    marginTop: 8,
     fontSize: 14,
-    color: '#9ca3af',
+    color: '#6b7280',
     textAlign: 'center',
     paddingHorizontal: 40,
   },
   
-  // Empty Tab Content
+  // ✅ Empty Tab Content (saved/badges)
   emptyTabContent: {
     alignItems: 'center',
     paddingVertical: 60,
@@ -309,19 +354,12 @@ const styles = StyleSheet.create({
   emptyTabText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#9ca3af',
+    color: '#6b7280',
     fontWeight: '600',
   },
   
-  // Badges
+  // ✅ Badges Tab
   badgesTabWrapper: {
     marginBottom: 16,
-  },
-
-  
-  loadingText: {
-    marginTop: 12,
-    color: '#6b7280',
-    fontSize: 14,
   },
 });

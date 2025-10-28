@@ -8,7 +8,7 @@ const GridPostCard = ({ item, onPress }) => {
             activeOpacity={0.8}
         >
             <Image 
-                source={{ uri: item.url }} 
+                source={{ uri: item.imageURL }} 
                 style={styles.image} 
                 onError={(e) => console.log('Image Load Error:', e.nativeEvent.error)}
             />
@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
         width: '32.8%', 
         aspectRatio: 1,
         overflow: 'hidden',
-        borderRadius: 4,
+        borderRadius: 8, 
     },
     image: {
         flex: 1,
