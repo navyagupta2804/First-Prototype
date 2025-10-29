@@ -43,7 +43,11 @@ export default function PostScreen() {
     });
 
     if (!result.canceled) {
-      console.log('setting image:', result.assets[0].uri);
+      if (result.assets[0].mimeType && result.assets[0].mimeType.includes('heic')) {
+          Alert.alert("File Not Supported", "HEIC files do not work in this app. Please convert the image before uploading.");
+          return;
+      }
+
       setImage(result.assets[0].uri); // NOTE: this is not setting correctly...
       setAssetMimeType(result.assets[0].mimeType || 'image/jpeg');
     }
