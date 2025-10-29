@@ -2,7 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { collection, doc, increment, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'; // Added 'collection' import
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 import { auth, db, storage } from '../../firebaseConfig';
 import PostForm from '../components/post/PostForm';
 
