@@ -1,64 +1,62 @@
 import * as ImagePicker from 'expo-image-picker';
+import { collection, doc, increment, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'; // Added 'collection' import
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { doc, increment, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  ScrollView
-} from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { auth, db, storage } from '../../firebaseConfig';
+import PostForm from '../components/post/PostForm';
 
 export default function PostScreen() {
   const [image, setImage] = useState(null);
+  const [assetMimeType, setAssetMimeType] = useState(null);
   const [caption, setCaption] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  const pickImage = async () => {
-    // Request permission
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  // --- Image Picker/Camera Logic ---
+  const requestPermissions = async (type) => {
+    const permissionMethod =
+      type === 'camera'
+        ? ImagePicker.requestCameraPermissionsAsync
+        : ImagePicker.requestMediaLibraryPermissionsAsync;
+    
+    const { status } = await permissionMethod();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please allow access to your photos.');
-      return;
+      Alert.alert('Permission needed', `Please allow access to your ${type} to continue.`);
+      return false;
     }
+    return true;
+  };
 
-    // Launch picker
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  const launchPicker = async (type) => {
+    const isGranted = await requestPermissions(type);
+    if (!isGranted) return;
+
+    // Use a conditional to determine which method to call
+    const launchMethod =
+      type === 'camera' ? ImagePicker.launchCameraAsync : ImagePicker.launchImageLibraryAsync;
+    
+    const result = await launchMethod({
+      mediaTypes: 'Images',
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.7 // Compress to save storage
+      quality: 0.7,
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      console.log('setting image:', result.assets[0].uri);
+      setImage(result.assets[0].uri); // NOTE: this is not setting correctly...
+      setAssetMimeType(result.assets[0].mimeType || 'image/jpeg');
     }
   };
 
-  const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please allow camera access.');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.7
-    });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
+  const pickImage = async () => await launchPicker('library');
+  const takePhoto = async () => await launchPicker('camera');
+  const clearImage = () => {
+    setImage(null);
+    setAssetMimeType(null);
   };
 
+  // --- Core Upload Logic ---
   const uploadPost = async () => {
     if (!image) {
       Alert.alert('No image', 'Please select or take a photo first.');
@@ -68,30 +66,49 @@ export default function PostScreen() {
     const user = auth.currentUser;
     if (!user) return;
 
+    // Helper function to safely get the file extension
+    const getFileExtension = (uri, mimeType) => {
+      const match = /\.(\w+)$/.exec(uri);
+      if (match) return match[1].toLowerCase();
+      if (mimeType)return mimeType.split('/').pop().toLowerCase();
+      return 'jpg'; // Default to a safe format
+    };
+
     try {
       setUploading(true);
 
-      // 1. Upload image to Firebase Storage
+      // 1. Prepare unique Post ID and document references
+      const newPhotoRef = doc(collection(db, 'feed'));
+      const postId = newPhotoRef.id; // Define postId BEFORE it is used for the filename
+
+      const extension = getFileExtension(image, assetMimeType)
+      const filename = `users/${user.uid}/photos/${postId}.${extension}`;
+
+      // 2. Upload image to Firebase Storage
       const response = await fetch(image);
-      const blob = await response.blob();
-      const filename = `meals/${user.uid}_${Date.now()}.jpg`;
+      const blob = await response.blob(); // Binary Large Object
       const storageRef = ref(storage, filename);
       await uploadBytes(storageRef, blob);
-      const imageURL = await getDownloadURL(storageRef);
+      const url = await getDownloadURL(storageRef);
 
-      // 2. Create post document
-      const postId = `${user.uid}_${Date.now()}`;
-      await setDoc(doc(db, 'posts', postId), {
+      // 3. Prepare the common post data
+      const postData = {
+        id: postId,
         uid: user.uid,
-        imageURL,
+        url: url,
         caption: caption.trim() || '',
         createdAt: serverTimestamp(),
-        likes: 0
-      });
+        likes: 0,
+      };
 
-      // 3. Increment user's photoCount
+      // 4. Dual Write
+      await setDoc(doc(db, 'users', user.uid, 'photos', postId), postData); // Write 1: To the user's subcollection (for Profile)
+      await setDoc(newPhotoRef, postData); // Write 2: To the global 'feed' collection (for Home Feed)
+
+      // 5. Increment user's photoCount
       await updateDoc(doc(db, 'users', user.uid), {
-        photoCount: increment(1)
+        photoCount: increment(1),
+        lastPostAt: serverTimestamp(),
       });
 
       // Success!
@@ -114,56 +131,16 @@ export default function PostScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.brand}>pantry</Text>
       <Text style={styles.title}>Log a Meal</Text>
-
-      {/* Image Preview or Picker Buttons */}
-      {!image ? (
-        <View style={styles.pickerContainer}>
-          <TouchableOpacity style={styles.pickerButton} onPress={takePhoto}>
-            <Text style={styles.pickerIcon}>📷</Text>
-            <Text style={styles.pickerText}>Take Photo</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.pickerButton} onPress={pickImage}>
-            <Text style={styles.pickerIcon}>🖼️</Text>
-            <Text style={styles.pickerText}>Choose from Library</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: image }} style={styles.imagePreview} />
-          <TouchableOpacity style={styles.changeImageBtn} onPress={() => setImage(null)}>
-            <Text style={styles.changeImageText}>Change Photo</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Caption Input */}
-      <Text style={styles.label}>Caption (optional)</Text>
-      <TextInput
-        style={styles.captionInput}
-        value={caption}
-        onChangeText={setCaption}
-        placeholder="What did you make today?"
-        multiline
-        maxLength={280}
+      <PostForm 
+        image={image}
+        caption={caption}
+        uploading={uploading}
+        setCaption={setCaption}
+        pickImage={pickImage}
+        takePhoto={takePhoto}
+        uploadPost={uploadPost}
+        clearImage={clearImage}
       />
-      <Text style={styles.charCount}>{caption.length}/280</Text>
-
-      {/* Upload Button */}
-      <TouchableOpacity
-        style={[styles.uploadButton, (!image || uploading) && styles.uploadButtonDisabled]}
-        onPress={uploadPost}
-        disabled={!image || uploading}
-      >
-        {uploading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.uploadButtonText}>Post Meal</Text>
-        )}
-      </TouchableOpacity>
-
-      <Text style={styles.hint}>
-        📸 Tip: Good lighting makes your meals look delicious!
-      </Text>
     </ScrollView>
   );
 }
@@ -173,42 +150,4 @@ const styles = StyleSheet.create({
   content: { padding: 24, paddingTop: 60 },
   brand: { fontSize: 28, fontWeight: '800', color: '#ff4d2d', marginBottom: 8 },
   title: { fontSize: 20, fontWeight: '700', marginBottom: 24 },
-  pickerContainer: { gap: 12, marginBottom: 24 },
-  pickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-    borderStyle: 'dashed'
-  },
-  pickerIcon: { fontSize: 32, marginRight: 16 },
-  pickerText: { fontSize: 16, fontWeight: '600', color: '#374151' },
-  imageContainer: { marginBottom: 24 },
-  imagePreview: { width: '100%', height: 300, borderRadius: 12, marginBottom: 12 },
-  changeImageBtn: { alignSelf: 'center' },
-  changeImageText: { color: '#6b4eff', fontWeight: '600' },
-  label: { fontSize: 14, fontWeight: '600', marginBottom: 8, color: '#374151' },
-  captionInput: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    minHeight: 80,
-    textAlignVertical: 'top'
-  },
-  charCount: { textAlign: 'right', color: '#6b7280', fontSize: 12, marginTop: 4, marginBottom: 16 },
-  uploadButton: {
-    backgroundColor: '#111216',
-    padding: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 8
-  },
-  uploadButtonDisabled: { backgroundColor: '#d1d5db' },
-  uploadButtonText: { color: 'white', fontWeight: '700', fontSize: 16 },
-  hint: { color: '#6b7280', fontSize: 14, textAlign: 'center', marginTop: 16 }
 });

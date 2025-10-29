@@ -24,6 +24,7 @@ const renderEmptyState = (iconName, title, text) => (
 
 const ProfileTabContent = ({ activeTab, posts }) => {
     if (activeTab === 'Posts') {
+        console.log(posts);
         return posts.length > 0 ? (
             <FlatList
                 data={posts}
