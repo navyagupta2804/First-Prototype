@@ -43,9 +43,16 @@ export default function PostScreen() {
     });
 
     if (!result.canceled) {
-      if (result.assets[0].mimeType && result.assets[0].mimeType.includes('heic')) {
-          Alert.alert("File Not Supported", "HEIC files do not work in this app. Please convert the image before uploading.");
-          return;
+
+      // If the image is HEIC/TIFF after the picker returns (on web), don't allow upload
+      if (Platform.OS === 'web') {
+          if (asset.mimeType && (asset.mimeType.includes('heic') || asset.mimeType.includes('tiff'))) {
+              Alert.alert(
+                  "File Conversion Failed", 
+                  "This file type cannot be displayed in the web browser. Please convert the image to JPEG or PNG externally before uploading."
+              );
+              return;
+          }
       }
 
       setImage(result.assets[0].uri); // NOTE: this is not setting correctly...
@@ -122,6 +129,9 @@ export default function PostScreen() {
           setCaption('');
         }}
       ]);
+
+      setImage(null);
+      setCaption('');
 
     } catch (e) {
       console.error('Upload error:', e);
