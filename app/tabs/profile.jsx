@@ -1,5 +1,5 @@
 import { signOut } from 'firebase/auth';
-import { collection, doc, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { collection, doc, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -55,8 +55,7 @@ export default function ProfileScreen() {
     // Listen to user's posts in real-time
     const unsubPosts = onSnapshot(
       query(
-        collection(db, 'posts'),
-        where('uid', '==', user.uid),
+        collection(db, 'users', user.uid, 'photos'),
         orderBy('createdAt', 'desc')
       ),
       (snapshot) => {

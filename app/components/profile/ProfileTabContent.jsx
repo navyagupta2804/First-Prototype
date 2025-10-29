@@ -7,7 +7,7 @@ const ITEM_SIZE = (width - 48) / 3; // 3 columns with padding
 const renderGridItem = ({ item }) => (
     <TouchableOpacity style={styles.gridItem} activeOpacity={0.8}>
       <Image 
-        source={{ uri: item.imageURL }} 
+        source={{ uri: item.url }} 
         style={styles.gridImage}
         onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
       />
