@@ -25,7 +25,6 @@ const HomeScreen = () => {
     return unsub;
   }, []);
 
-  console.log(feed);
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <>
