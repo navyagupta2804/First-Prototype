@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 /**
@@ -10,6 +10,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function SettingsScreen({ onSignOut, onClose }) {
   // Function to handle the press and confirmation
   const confirmSignOut = () => {
+    // Alerts don't work on web, so if on web, just sign out  
+    if (Platform.OS === 'web') {
+        onSignOut();
+    }
+
     Alert.alert('Sign Out', 'Are you sure you want to log out of your account?', [
       { text: 'Cancel', style: 'cancel' },
       {
