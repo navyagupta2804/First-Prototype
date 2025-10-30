@@ -9,7 +9,8 @@ import AppHeader from '../components/common/AppHeader';
 import ProfileCard from '../components/profile/ProfileCard';
 import ProfileTabContent from '../components/profile/ProfileTabContent';
 import ProfileTabs from '../components/profile/ProfileTabs';
-import SettingsScreen from '../components/profile/SettingsScreen';
+import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
+import SettingsScreen from '../components/profile/screens/SettingsScreen';
 
 export default function ProfileScreen() {
   const [userData, setUserData] = useState(null);
@@ -17,6 +18,7 @@ export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState('Posts');
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
 
   const user = auth.currentUser;
 
@@ -76,24 +78,6 @@ export default function ProfileScreen() {
     };
   }, [user]);
 
-  // const handleSignOut = () => {
-  //   Alert.alert('Sign Out', 'Are you sure?', [
-  //     { text: 'Cancel', style: 'cancel' },
-  //     {
-  //       text: 'Sign Out',
-  //       style: 'destructive',
-  //       onPress: async () => {
-  //         try {
-  //           await signOut(auth);
-  //         } catch (e) {
-  //           console.error('Sign out error:', e);
-  //           Alert.alert('Error', 'Failed to sign out. Please try again.');
-  //         }
-  //       }
-  //     }
-  //   ]);
-  // };
-
   const handleSignOut = async () => {
     try {
       await signOut(auth);
@@ -111,6 +95,16 @@ export default function ProfileScreen() {
         <ActivityIndicator size="large" color="#ff4d2d" />
         <Text style={styles.loadingText}>Loading your profile...</Text>
       </SafeAreaView>
+    );
+  }
+
+  if (selectedPost) {
+    return (
+      <PostDetailScreen 
+        posts={posts} 
+        postId={selectedPost.id}
+        onClose={() => setSelectedPost(null)} 
+      />
     );
   }
 
@@ -147,6 +141,7 @@ export default function ProfileScreen() {
         <ProfileTabContent 
           activeTab={activeTab} 
           posts={posts} 
+          onPostPress={setSelectedPost}
         />
 
         {/* Bottom Spacing */}

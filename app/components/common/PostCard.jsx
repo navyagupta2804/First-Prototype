@@ -9,7 +9,7 @@ import {
   TextInput, TouchableOpacity, View
 } from 'react-native';
 import { auth, db } from '../../../firebaseConfig';
-import CenteredContainer from '../common/CenteredContainer';
+import CenteredContainer from './CenteredContainer';
 
 function CommentInput({ itemId, onCommentAdded }) {
   const [commentText, setCommentText] = useState('');
