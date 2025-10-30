@@ -4,8 +4,8 @@ import { Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View }
 const { width } = Dimensions.get('window');
 const ITEM_SIZE = (width - 48) / 3; // 3 columns with padding
 
-const renderGridItem = ({ item }) => (
-    <TouchableOpacity style={styles.gridItem} activeOpacity={0.8}>
+const renderGridItem = ({ item, onPostPress }) => (
+    <TouchableOpacity style={styles.gridItem} activeOpacity={0.8} onPress={() => onPostPress(item)}>
       <Image 
         source={{ uri: item.url }} 
         style={styles.gridImage}
@@ -22,13 +22,12 @@ const renderEmptyState = (iconName, title, text) => (
     </View>
 );
 
-const ProfileTabContent = ({ activeTab, posts }) => {
+const ProfileTabContent = ({ activeTab, posts, onPostPress }) => {
     if (activeTab === 'Posts') {
-        console.log(posts);
         return posts.length > 0 ? (
             <FlatList
                 data={posts}
-                renderItem={renderGridItem}
+                renderItem={({ item }) => renderGridItem({ item, onPostPress })}
                 keyExtractor={(item) => item.id}
                 numColumns={3}
                 scrollEnabled={false} // Important: keep this false inside a parent ScrollView
@@ -64,28 +63,12 @@ const ProfileTabContent = ({ activeTab, posts }) => {
 
 const styles = StyleSheet.create({
     // Grid
-    grid: { 
-        paddingHorizontal: 16, 
-        paddingBottom: 20 
-    },
-    gridItem: {
-        width: ITEM_SIZE,
-        height: ITEM_SIZE,
-        padding: 2
-    },
-    gridImage: {
-        width: '100%',
-        height: '100%',
-        borderRadius: 8,
-        backgroundColor: '#f3f4f6'
-    },
+    grid: { paddingHorizontal: 16,  paddingBottom: 20 },
+    gridItem: { width: ITEM_SIZE, height: ITEM_SIZE, padding: 2 },
+    gridImage: { width: '100%', height: '100%', borderRadius: 8, backgroundColor: '#f3f4f6' },
     
     // Empty States
-    emptyState: {
-        alignItems: 'center',
-        paddingVertical: 80,
-        paddingHorizontal: 40
-    },
+    emptyState: { alignItems: 'center', paddingVertical: 80, paddingHorizontal: 40 },
     emptyStateTitle: {
         fontSize: 18,
         fontWeight: '700',
@@ -93,12 +76,7 @@ const styles = StyleSheet.create({
         marginTop: 16,
         marginBottom: 8
     },
-    emptyStateText: {
-        fontSize: 14,
-        color: '#6b7280',
-        textAlign: 'center',
-        marginTop: 8
-    }
+    emptyStateText: { fontSize: 14, color: '#6b7280', textAlign: 'center', marginTop: 8 }
 });
 
 export default ProfileTabContent;

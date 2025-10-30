@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
-  addDoc, collection, deleteDoc, doc, getDoc,
-  increment, onSnapshot, orderBy, query,
-  serverTimestamp, setDoc, updateDoc
+  addDoc, collection, deleteDoc, doc, getDoc, increment,
+  onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import {
@@ -10,7 +9,7 @@ import {
   TextInput, TouchableOpacity, View
 } from 'react-native';
 import { auth, db } from '../../../firebaseConfig';
-import CenteredContainer from '../common/CenteredContainer';
+import CenteredContainer from './CenteredContainer';
 
 function CommentInput({ itemId, onCommentAdded }) {
   const [commentText, setCommentText] = useState('');
@@ -84,12 +83,12 @@ function CommentsSection({ itemId, show }) {
           </View>
         )}
         style={{ maxHeight: 240 }}
+        ListEmptyComponent={<Text style={{ padding: 10, color: '#6B7280' }}>No comments yet. Be the first!</Text>}
       />
       <CommentInput itemId={itemId} />
     </View>
   );
 }
-
 
 export default function PostCard({ item }) {
   const [likesCount, setLikesCount] = useState(item.likesCount || 0);
@@ -113,7 +112,7 @@ export default function PostCard({ item }) {
         const likeDoc = await getDoc(doc(db, 'feed', item.id, 'likes', user.uid));
         setLiked(likeDoc.exists());
       } catch (e) {
-        // noop
+        console.warn('Error checking initial like state:', e);
       }
     };
     checkLike();
@@ -140,7 +139,7 @@ export default function PostCard({ item }) {
   };
 
 
-  const userInitials = (item.userDisplay || 'PM').split(' ').map(s => s[0]).join('').slice(0, 2);
+  const userInitials = (item.displayName || 'PM').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
   const postTime = item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : '';
 
   return (
@@ -150,12 +149,25 @@ export default function PostCard({ item }) {
           <Text style={styles.avatarText}>{userInitials}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{item.userDisplay || 'Pantry Member'}</Text>
+          <Text style={styles.cardTitle}>{item.displayName || 'Pantry Member'}</Text>
           <Text style={styles.cardTime}>{postTime}</Text>
         </View>
       </View>
-      {item.type === 'photo' && <Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />}
-      {item.text && <Text style={styles.cardBody}>{item.text}</Text>}
+
+      {/* Post Image */}
+      {<Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />}
+      
+      {/* Caption Display */}
+      {(item.caption && item.caption.trim()) ? (
+        <View style={styles.captionContainer}>
+            <Text style={styles.captionText}>
+              <Text style={styles.captionAuthor}>{item.displayName || 'Pantry Member'}</Text>
+              {' '}{item.caption}
+            </Text>
+        </View>
+      ) : null}
+
+      {/* Actions Row */}
       <View style={styles.actionsRow}>
         <TouchableOpacity style={styles.actionBtn} onPress={toggleLike}>
           <Ionicons name={liked ? 'heart' : 'heart-outline'} size={20} color={liked ? '#ef4444' : '#111'} />
@@ -166,20 +178,39 @@ export default function PostCard({ item }) {
           <Text style={styles.actionText}>{commentsCount || 0}</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Comments Section */}
       <CommentsSection itemId={item.id} show={showComments} />
     </CenteredContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderColor: '#EEE', borderRadius: 14, padding: 12, marginBottom: 12 },
+  card: { 
+    borderWidth: 1, 
+    borderColor: '#EEE', 
+    borderRadius: 14, 
+    padding: 12,
+    marginBottom: 12 
+  },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   avatarText: { fontWeight: '800', color: '#111216' },
   cardTitle: { fontWeight: '700' },
   cardTime: { color: '#6B7280', fontSize: 12 },
-  feedImage: { width: '100%', height: 650, borderRadius: 10, backgroundColor: '#F3F4F6', marginTop: 6 },
-  cardBody: { marginTop: 8, color: '#111216' },
+  
+  feedImage: { 
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+    marginVertical: 6, 
+    width: '100%',
+    height: 650,
+  },
+
+  // Caption
+  captionContainer: { marginTop: 6, paddingVertical: 8, paddingHorizontal: 4},
+  captionText: { fontSize: 14, color: '#111216'},
+  captionAuthor: { fontWeight: '700', marginRight: 4, color: '#111216'},
 
   // Actions (likes/comments)
   actionsRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 10 },

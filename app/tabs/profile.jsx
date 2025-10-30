@@ -9,12 +9,17 @@ import AppHeader from '../components/common/AppHeader';
 import ProfileCard from '../components/profile/ProfileCard';
 import ProfileTabContent from '../components/profile/ProfileTabContent';
 import ProfileTabs from '../components/profile/ProfileTabs';
+import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
+import SettingsScreen from '../components/profile/screens/SettingsScreen';
 
 export default function ProfileScreen() {
   const [userData, setUserData] = useState(null);
   const [posts, setPosts] = useState([]);
   const [activeTab, setActiveTab] = useState('Posts');
   const [loading, setLoading] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+
   const user = auth.currentUser;
 
   useEffect(() => {
@@ -28,7 +33,6 @@ export default function ProfileScreen() {
       doc(db, 'users', user.uid),
       (docSnap) => {
         if (docSnap.exists()) {
-          console.log('Profile loaded:', docSnap.data());
           setUserData(docSnap.data());
         } else {
           console.log('No profile found');
@@ -60,7 +64,6 @@ export default function ProfileScreen() {
       ),
       (snapshot) => {
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log('Posts loaded:', data.length);
         setPosts(data);
       },
       (error) => {
@@ -75,22 +78,15 @@ export default function ProfileScreen() {
     };
   }, [user]);
 
-  const handleSignOut = () => {
-    Alert.alert('Sign Out', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut(auth);
-          } catch (e) {
-            console.error('Sign out error:', e);
-            Alert.alert('Error', 'Failed to sign out. Please try again.');
-          }
-        }
-      }
-    ]);
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      // Automatically navigate back to the profile (which will likely trigger a redirect to auth screen)
+      setShowSettings(false); 
+    } catch (e) {
+      console.error('Sign out error:', e);
+      Alert.alert('Error', 'Failed to sign out. Please try again.');
+    }
   };
 
   if (loading || !userData) {
@@ -99,6 +95,25 @@ export default function ProfileScreen() {
         <ActivityIndicator size="large" color="#ff4d2d" />
         <Text style={styles.loadingText}>Loading your profile...</Text>
       </SafeAreaView>
+    );
+  }
+
+  if (selectedPost) {
+    return (
+      <PostDetailScreen 
+        posts={posts} 
+        postId={selectedPost.id}
+        onClose={() => setSelectedPost(null)} 
+      />
+    );
+  }
+
+  if (showSettings) {
+    return (
+      <SettingsScreen 
+        onSignOut={handleSignOut} // Pass the sign-out function down
+        onClose={() => setShowSettings(false)} // Pass the function to go back
+      />
     );
   }
 
@@ -113,7 +128,7 @@ export default function ProfileScreen() {
         <ProfileCard
           userData={userData} 
           postsLength={posts.length} 
-          onSignOut={handleSignOut} 
+          onSettingsPress={() => setShowSettings(true)} 
         />
 
         {/* Tabs (Posts, Saved, Badges) */}
@@ -126,6 +141,7 @@ export default function ProfileScreen() {
         <ProfileTabContent 
           activeTab={activeTab} 
           posts={posts} 
+          onPostPress={setSelectedPost}
         />
 
         {/* Bottom Spacing */}

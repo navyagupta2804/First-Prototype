@@ -8,27 +8,21 @@ const getJoinDate = (createdAt) => {
 };
 
 // We pass all necessary data and the sign-out handler as props
-const ProfileCard = ({ userData, postsLength, onSignOut }) => {
+const ProfileCard = ({ userData, postsLength, onSettingsPress }) => {
     const joinDate = getJoinDate(userData?.createdAt);
+    const avatarText = userData?.displayName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'JD';
 
     return (
         <View style={styles.profileCard}>
             {/* Avatar & Name Section */}
             <View style={styles.profileHeader}>
                 <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
-                        {userData?.displayName
-                            ?.split(' ')
-                            .map(n => n[0])
-                            .join('')
-                            .toUpperCase()
-                            .slice(0, 2) || 'JD'}
-                    </Text>
+                    <Text style={styles.avatarText}>{avatarText}</Text>
                 </View>
                 <View style={styles.profileInfo}>
                     <View style={styles.nameRow}>
                         <Text style={styles.displayName}>{userData?.displayName || 'Pantry User'}</Text>
-                        <TouchableOpacity onPress={onSignOut}>
+                        <TouchableOpacity onPress={onSettingsPress}>
                             <Ionicons name="settings-outline" size={24} color="#6b7280" />
                         </TouchableOpacity>
                     </View>
@@ -98,11 +92,7 @@ const styles = StyleSheet.create({
     },
     avatarText: { fontSize: 24, fontWeight: '700', color: '#6b7280' },
     profileInfo: { flex: 1 },
-    nameRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-    },
+    nameRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     displayName: { fontSize: 20, fontWeight: '700', color: '#111' },
     bio: { fontSize: 13, color: '#6b7280', marginTop: 4, marginBottom: 8 },
     socialStats: { flexDirection: 'row', gap: 16 },
@@ -112,12 +102,7 @@ const styles = StyleSheet.create({
     // Stats Grid
     statsGrid: { flexDirection: 'row', gap: 12 },
     statBox: { flex: 1, alignItems: 'center', paddingVertical: 12 },
-    statIconRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        marginBottom: 4
-    },
+    statIconRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
     statNumber: { fontSize: 24, fontWeight: '700', color: '#111' },
     statLabel: { fontSize: 12, color: '#6b7280' },
 });
