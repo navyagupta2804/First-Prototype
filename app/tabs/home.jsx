@@ -4,12 +4,12 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
 import ChallengeSection from '../components/home/ChallengeSection';
+import FriendActivityCard from '../components/home/FriendActivityCard';
 import HomeHeader from '../components/home/HomeHeader';
+import PersonalGreeting from '../components/home/PersonalGreeting';
 import PostCard from '../components/home/PostCard';
 import PromptCard from '../components/home/PromptCard';
 import UploadSection from '../components/home/UploadSection';
-import PersonalGreeting from '../components/home/PersonalGreeting';
-import FriendActivityCard from '../components/home/FriendActivityCard';
 
 const HomeScreen = () => {
   const [feed, setFeed] = useState([]);
@@ -25,6 +25,7 @@ const HomeScreen = () => {
     return unsub;
   }, []);
 
+  console.log(feed);
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <>

@@ -140,7 +140,7 @@ export default function PostCard({ item }) {
   };
 
 
-  const userInitials = (item.userDisplay || 'PM').split(' ').map(s => s[0]).join('').slice(0, 2);
+  const userInitials = (item.displayName || 'PM').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
   const postTime = item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : '';
 
   return (
@@ -150,12 +150,11 @@ export default function PostCard({ item }) {
           <Text style={styles.avatarText}>{userInitials}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>{item.userDisplay || 'Pantry Member'}</Text>
+          <Text style={styles.cardTitle}>{item.displayName || 'Pantry Member'}</Text>
           <Text style={styles.cardTime}>{postTime}</Text>
         </View>
       </View>
-      {item.type === 'photo' && <Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />}
-      {item.text && <Text style={styles.cardBody}>{item.text}</Text>}
+      {<Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />}
       <View style={styles.actionsRow}>
         <TouchableOpacity style={styles.actionBtn} onPress={toggleLike}>
           <Ionicons name={liked ? 'heart' : 'heart-outline'} size={20} color={liked ? '#ef4444' : '#111'} />

@@ -46,7 +46,7 @@ export default function PostScreen() {
 
       // If the image is HEIC/TIFF after the picker returns (on web), don't allow upload
       if (Platform.OS === 'web') {
-          if (asset.mimeType && (asset.mimeType.includes('heic') || asset.mimeType.includes('tiff'))) {
+          if (result.assets[0].mimeType && (result.assets[0].mimeType.includes('heic') || result.assets[0].mimeType.includes('tiff'))) {
               Alert.alert(
                   "File Conversion Failed", 
                   "This file type cannot be displayed in the web browser. Please convert the image to JPEG or PNG externally before uploading."
@@ -107,6 +107,7 @@ export default function PostScreen() {
         id: postId,
         uid: user.uid,
         url: url,
+        displayName: user.displayName,
         caption: caption.trim() || '',
         createdAt: serverTimestamp(),
         likes: 0,

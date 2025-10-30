@@ -34,10 +34,6 @@ export default function PostForm({
   // --- Image Picker/Preview Section ---
   const ImageSection = () => {
     if (image) {
-      // --- DIAGNOSTIC LOG ---
-      console.log("Image Preview State (image):", image);
-      // console.log("Image Preview Styles:", styles.imagePreview); // Can uncomment if needed
-      // --- END DIAGNOSTIC LOG --
       return (
         <View style={styles.imageContainer}>
           <Image key={image} source={{ uri: image }} style={styles.imagePreview} />
