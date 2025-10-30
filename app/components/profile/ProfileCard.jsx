@@ -39,7 +39,6 @@ const ProfileCard = ({ userData, postsLength, onSettingsPress }) => {
                     </View>
                 </View>
             </View>
-
             {/* Stats Grid */}
             <View style={styles.statsGrid}>
                 <View style={styles.statBox}>

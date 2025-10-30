@@ -89,6 +89,32 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleSaveProfile = async ({ displayName, photoURL }) => {
+    if (!user) return; // Must be signed in to save
+
+    try {
+      // 1. Update the core Firebase Auth profile (for user.displayName, user.photoURL)
+      await updateProfile(user, { 
+        displayName, 
+        photoURL: photoURL || null // Use null if empty string to clear the photo
+      });
+
+      // 2. Update the Firestore user document (to ensure our userData state reflects changes)
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, { 
+        displayName, 
+        photoURL: photoURL || null
+      });
+
+      // Because we have the onSnapshot listener, the profile data will refresh automatically.
+      Alert.alert("Success", "Your profile changes have been saved!");
+
+    } catch (e) {
+      console.error("Error saving profile:", e);
+      Alert.alert("Error", `Failed to save changes: ${e.message}`);
+    }
+  };
+
   if (loading || !userData) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -113,6 +139,8 @@ export default function ProfileScreen() {
       <SettingsScreen 
         onSignOut={handleSignOut} // Pass the sign-out function down
         onClose={() => setShowSettings(false)} // Pass the function to go back
+        userData={userData} // Pass current data
+        onSave={handleSaveProfile} // Pass the new save handler
       />
     );
   }
