@@ -20,7 +20,6 @@ export default function PostDetailScreen({ posts, postId, onClose }) {
         <Text style={styles.headerTitle}>your posts</Text>
         <View style={{ width: 40 }} /> {/* Spacer */}
       </View>
-
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}

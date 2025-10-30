@@ -35,7 +35,6 @@ export default function SettingsScreen({ onSignOut, onClose }) {
         <Text style={styles.title}>Settings</Text>
         <View style={{ width: 40 }} /> {/* Spacer to center title */}
       </View>
-
       <View style={styles.container}>
         {/* Example Setting Item (Placeholder for future features) */}
         <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Coming Soon', 'Profile editing feature is under development.')}>
@@ -43,7 +42,6 @@ export default function SettingsScreen({ onSignOut, onClose }) {
           <Text style={styles.settingText}>Account Information</Text>
           <Ionicons name="chevron-forward" size={20} color="#6b7280" style={styles.chevron} />
         </TouchableOpacity>
-
         {/* The dedicated Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={confirmSignOut}>
           <Ionicons name="log-out-outline" size={24} color="#ef4444" />
