@@ -64,7 +64,7 @@ export default function SignUpScreen() {
 
       // 3. CREATE FIRESTORE DOC (with the critical path fix and photoURL)
       // Using 'profile' as the collection name for the user's own profile doc.
-      const userProfileRef = doc(db, 'users', cred.user.uid, 'profile', cred.user.uid);
+      const userProfileRef = doc(db, 'users', cred.user.uid);
       console.log("About to write Firestore doc to:", userProfileRef.path);
       await setDoc(userProfileRef, {
         displayName: trimmedName,
