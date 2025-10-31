@@ -13,14 +13,14 @@ import { auth, db } from '../firebaseConfig';
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const [displayName, setDisplayName] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
-    if (!displayName.trim()) return 'Please enter your name.';
+    if (!name.trim()) return 'Please enter your name.';
     if (!email.trim()) return 'Please enter your email.';
     // very light e-mail check
     if (!/^\S+@\S+\.\S+$/.test(email)) return 'Please enter a valid email.';
@@ -34,29 +34,52 @@ export default function SignUpScreen() {
 
   const onSignUp = async () => {
     const err = validate();
-    if (err) { Alert.alert('Fix and try again', err); return; }
+ 
+    if (err) { 
+      console.log('Fix and try again', err);
+      Alert.alert(err); 
+      return; 
+    };
 
     try {
       setLoading(true);
-      const cred = await createUserWithEmailAndPassword(auth, email.trim(), pw);
-      // set the displayName on the auth user
-      await updateProfile(cred.user, { displayName: displayName.trim() });
-      // create a Firestore profile doc
-      console.log("About to write Firestore doc...");
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        displayName: displayName.trim(),
-        email: email.trim(),
+
+      const trimmedName = name.trim();
+      const trimmedEmail = email.trim();
+
+      console.log('creating avatar');
+      // 1. CREATE A DEFAULT PHOTO URL
+      // used ui-avatars.com to generate a simple avatar
+      const defaultPhotoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmedName)}&background=random&color=fff`;
+
+      console.log('created avatar');
+      const cred = await createUserWithEmailAndPassword(auth, trimmedEmail, pw);
+      
+      // 2. UPDATE AUTH PROFILE (now with displayName AND photoURL)
+      await updateProfile(cred.user, { 
+        displayName: trimmedName,
+        photoURL: defaultPhotoURL 
+      });
+
+
+      // 3. CREATE FIRESTORE DOC (with the critical path fix and photoURL)
+      // Using 'profile' as the collection name for the user's own profile doc.
+      const userProfileRef = doc(db, 'users', cred.user.uid, 'profile', cred.user.uid);
+      console.log("About to write Firestore doc to:", userProfileRef.path);
+      await setDoc(userProfileRef, {
+        displayName: trimmedName,
+        email: trimmedEmail,
+        photoURL: defaultPhotoURL, // <-- ADDED
         streak: 0,
         communities: 0,
         photoCount: 0,
         lastJournalDate: null,
         createdAt: serverTimestamp()
       });
+
       console.log("Firestore write completed!");
-      // go to app tabs
-      router.replace('/tabs/home');
+      router.replace('/tabs/home'); // go to app tabs
     } catch (e) {
-      // common Firebase auth error messages are pretty readable
       Alert.alert('Sign up failed', e.message);
     } finally {
       setLoading(false);
@@ -71,8 +94,8 @@ export default function SignUpScreen() {
       <Text style={styles.label}>Full name</Text>
       <TextInput
         style={styles.input}
-        value={displayName}
-        onChangeText={setDisplayName}
+        value={name}
+        onChangeText={setName}
         placeholder="Jordan Davis"
       />
 
@@ -92,7 +115,7 @@ export default function SignUpScreen() {
         style={styles.input}
         value={pw}
         onChangeText={setPw}
-        placeholder="At least 8 chars, letters & numbers"
+        placeholder="At least 8 characters. Must included letters and numbers."
         secureTextEntry
         textContentType="newPassword"
       />
