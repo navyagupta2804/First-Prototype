@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const getJoinDate = (createdAt) => {
     if (!createdAt) return 'Recently';
@@ -10,15 +10,12 @@ const getJoinDate = (createdAt) => {
 // We pass all necessary data and the sign-out handler as props
 const ProfileCard = ({ userData, postsLength, onSettingsPress }) => {
     const joinDate = getJoinDate(userData?.createdAt);
-    const avatarText = userData?.displayName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'JD';
 
     return (
         <View style={styles.profileCard}>
             {/* Avatar & Name Section */}
             <View style={styles.profileHeader}>
-                <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{avatarText}</Text>
-                </View>
+                <Image source={{ uri: userData.photoURL }} style={styles.avatar} />
                 <View style={styles.profileInfo}>
                     <View style={styles.nameRow}>
                         <Text style={styles.displayName}>{userData?.displayName || 'Pantry User'}</Text>
@@ -39,7 +36,6 @@ const ProfileCard = ({ userData, postsLength, onSettingsPress }) => {
                     </View>
                 </View>
             </View>
-
             {/* Stats Grid */}
             <View style={styles.statsGrid}>
                 <View style={styles.statBox}>
@@ -85,12 +81,8 @@ const styles = StyleSheet.create({
         width: 70,
         height: 70,
         borderRadius: 35,
-        backgroundColor: '#e5e7eb',
-        justifyContent: 'center',
-        alignItems: 'center',
         marginRight: 16
     },
-    avatarText: { fontSize: 24, fontWeight: '700', color: '#6b7280' },
     profileInfo: { flex: 1 },
     nameRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     displayName: { fontSize: 20, fontWeight: '700', color: '#111' },

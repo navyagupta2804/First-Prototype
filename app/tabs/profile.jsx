@@ -1,5 +1,5 @@
-import { signOut } from 'firebase/auth';
-import { collection, doc, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { signOut, updateProfile } from 'firebase/auth';
+import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import ProfileTabContent from '../components/profile/ProfileTabContent';
 import ProfileTabs from '../components/profile/ProfileTabs';
 import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
 import SettingsScreen from '../components/profile/screens/SettingsScreen';
+import { uploadImageToFirebase } from '../utils/imageUpload';
 
 export default function ProfileScreen() {
   const [userData, setUserData] = useState(null);
@@ -89,6 +90,51 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleSaveProfile = async ({ displayName, newPhotoAsset, currentPhotoURL }) => {
+    if (!user) return; // Must be signed in to save
+     
+    let finalPhotoURL = currentPhotoURL;
+    const trimmedName = displayName.trim();
+
+    try {
+      // 1. CONDITIONAL IMAGE UPLOAD
+      // If there's a new asset, upload it first
+      if (newPhotoAsset) {
+        const storagePath = `users/${user.uid}/profile/photo`; 
+        finalPhotoURL = await uploadImageToFirebase(
+          newPhotoAsset.uri, 
+          newPhotoAsset.mimeType, 
+          storagePath
+        );
+        console.log("Photo uploaded successfully:", finalPhotoURL);
+      }
+
+      // 2. DEFINE FALLBACK/DEFAULT URL
+      // If photo was changed, finalPhotoURL is the new URL. 
+      // If photo was NOT changed, finalPhotoURL is currentPhotoURL.
+      // If no photo URL exists at all, generate the avatar based on the (possibly new) displayName.
+      if (!finalPhotoURL) {
+          finalPhotoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmedName)}&background=e5e7eb&color=6b7280z&length=1&bold=true`;
+      }
+
+      // 3. UPDATE FIREBASE AUTH AND FIRESTORE
+      // Data to update in both places
+      const updateData = { 
+        displayName: trimmedName, 
+        photoURL: finalPhotoURL
+      };
+
+      await updateProfile(user, updateData);
+      await updateDoc(doc(db, 'users', user.uid), updateData);
+
+      Alert.alert("Success", "Your profile changes have been saved!");
+
+    } catch (e) {
+      console.error("Error saving profile:", e);
+      Alert.alert("Error", `Failed to save changes: ${e.message}`);
+    }
+  };
+
   if (loading || !userData) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -111,8 +157,10 @@ export default function ProfileScreen() {
   if (showSettings) {
     return (
       <SettingsScreen 
-        onSignOut={handleSignOut} // Pass the sign-out function down
-        onClose={() => setShowSettings(false)} // Pass the function to go back
+        onSignOut={handleSignOut} 
+        onClose={() => setShowSettings(false)} 
+        userData={userData} 
+        onSave={handleSaveProfile}
       />
     );
   }
