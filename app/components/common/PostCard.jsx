@@ -138,16 +138,12 @@ export default function PostCard({ item }) {
     }
   };
 
-
-  const userInitials = (item.displayName || 'PM').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
   const postTime = item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : '';
 
   return (
     <CenteredContainer style={styles.card}>
       <View style={styles.cardHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{userInitials}</Text>
-        </View>
+        <Image source={{ uri: item.displayPhoto }} style={styles.avatar} />
         <View style={{ flex: 1 }}>
           <Text style={styles.cardTitle}>{item.displayName || 'Pantry Member'}</Text>
           <Text style={styles.cardTime}>{postTime}</Text>
@@ -194,8 +190,7 @@ const styles = StyleSheet.create({
     marginBottom: 12 
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  avatarText: { fontWeight: '800', color: '#111216' },
+  avatar: { width: 36, height: 36, borderRadius: 18, marginRight: 10 },
   cardTitle: { fontWeight: '700' },
   cardTime: { color: '#6B7280', fontSize: 12 },
   

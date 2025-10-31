@@ -57,14 +57,15 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <AppHeader />
-      <View style={styles.pageTitle}>
-        <TouchableOpacity onPress={onClose}>
-          <Ionicons name="arrow-back" size={16} color="#111" />  
-        </TouchableOpacity>
-        <Text style={styles.title}>Settings</Text>
-      </View>
-
+  
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+        <View style={styles.pageTitle}>
+          <TouchableOpacity onPress={onClose}>
+            <Ionicons name="arrow-back" size={16} color="#111" />  
+          </TouchableOpacity>
+          <Text style={styles.title}>Settings</Text>
+        </View>
         
         {/* 1. Profile Photo & Display Name */}
         <View style={styles.sectionCard}>
@@ -72,13 +73,7 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
           <View style={styles.profileInfoLayout}>
             {/* Profile Photo (Left Side) */}
             <View style={styles.avatarWrapper}>
-              {photoURL ? (
-                <Image source={{ uri: photoURL }} style={styles.largeAvatar} />
-              ) : (
-                <View style={styles.largeAvatarPlaceholder}>
-                  <Text style={styles.avatarText}>{userInitials}</Text>
-                </View>
-              )}
+              <Image source={{ uri: photoURL }} style={styles.largeAvatar} />
                             
               {/* Change Photo Button - Aligned with the avatar */}
               <TouchableOpacity style={styles.changePhotoButton}
@@ -201,16 +196,8 @@ const styles = StyleSheet.create({
     width: 160, 
     height: 160, 
     borderRadius: 100, 
-    backgroundColor: '#f3f4f6', 
     marginBottom: 10,
   },
-  largeAvatarPlaceholder: {
-    width: 160, height: 160, borderRadius: 100,
-    backgroundColor: '#e5e7eb',
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: 10,
-  },
-  avatarText: { fontWeight: '500', fontSize: 75, color: '#4b5563' },
   changePhotoButton: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#f3f4f6',

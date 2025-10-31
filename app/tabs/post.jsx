@@ -108,6 +108,7 @@ export default function PostScreen() {
         uid: user.uid,
         url: url,
         displayName: user.displayName,
+        displayPhoto: user.photoURL,
         caption: caption.trim() || '',
         createdAt: serverTimestamp(),
         likes: 0,
