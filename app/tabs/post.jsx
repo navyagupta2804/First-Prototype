@@ -1,10 +1,9 @@
-import * as ImagePicker from 'expo-image-picker';
-import { collection, doc, increment, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'; // Added 'collection' import
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { collection, doc, increment, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, Text } from 'react-native';
-import { auth, db, storage } from '../../firebaseConfig';
+import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
+import { auth, db } from '../../firebaseConfig';
 import PostForm from '../components/post/PostForm';
+import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload'; // New import
 
 export default function PostScreen() {
   const [image, setImage] = useState(null);
@@ -12,51 +11,12 @@ export default function PostScreen() {
   const [caption, setCaption] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  // --- Image Picker/Camera Logic ---
-  const requestPermissions = async (type) => {
-    const permissionMethod =
-      type === 'camera'
-        ? ImagePicker.requestCameraPermissionsAsync
-        : ImagePicker.requestMediaLibraryPermissionsAsync;
-    
-    const { status } = await permissionMethod();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', `Please allow access to your ${type} to continue.`);
-      return false;
-    }
-    return true;
-  };
-
+  // --- Image Picker/Camera Logic (Simplified) ---
   const launchPicker = async (type) => {
-    const isGranted = await requestPermissions(type);
-    if (!isGranted) return;
-
-    // Use a conditional to determine which method to call
-    const launchMethod =
-      type === 'camera' ? ImagePicker.launchCameraAsync : ImagePicker.launchImageLibraryAsync;
-    
-    const result = await launchMethod({
-      mediaTypes: 'Images',
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-
-      // If the image is HEIC/TIFF after the picker returns (on web), don't allow upload
-      if (Platform.OS === 'web') {
-          if (result.assets[0].mimeType && (result.assets[0].mimeType.includes('heic') || result.assets[0].mimeType.includes('tiff'))) {
-              Alert.alert(
-                  "File Conversion Failed", 
-                  "This file type cannot be displayed in the web browser. Please convert the image to JPEG or PNG externally before uploading."
-              );
-              return;
-          }
-      }
-
-      setImage(result.assets[0].uri); // NOTE: this is not setting correctly...
-      setAssetMimeType(result.assets[0].mimeType || 'image/jpeg');
+    const asset = await launchImagePicker(type); 
+    if (asset) {
+      setImage(asset.uri);
+      setAssetMimeType(asset.mimeType);
     }
   };
 
@@ -77,30 +37,16 @@ export default function PostScreen() {
     const user = auth.currentUser;
     if (!user) return;
 
-    // Helper function to safely get the file extension
-    const getFileExtension = (uri, mimeType) => {
-      const match = /\.(\w+)$/.exec(uri);
-      if (match) return match[1].toLowerCase();
-      if (mimeType)return mimeType.split('/').pop().toLowerCase();
-      return 'jpg'; // Default to a safe format
-    };
-
     try {
       setUploading(true);
 
       // 1. Prepare unique Post ID and document references
       const newPhotoRef = doc(collection(db, 'feed'));
-      const postId = newPhotoRef.id; // Define postId BEFORE it is used for the filename
-
-      const extension = getFileExtension(image, assetMimeType)
-      const filename = `users/${user.uid}/photos/${postId}.${extension}`;
-
+      const postId = newPhotoRef.id; // Define postId BEFORE it is used for the storagePath
+      const storagePath = `users/${user.uid}/photos/${postId}`; 
+      
       // 2. Upload image to Firebase Storage
-      const response = await fetch(image);
-      const blob = await response.blob(); // Binary Large Object
-      const storageRef = ref(storage, filename);
-      await uploadBytes(storageRef, blob);
-      const url = await getDownloadURL(storageRef);
+      const url = await uploadImageToFirebase(image, assetMimeType, storagePath);
 
       // 3. Prepare the common post data
       const postData = {
@@ -115,8 +61,8 @@ export default function PostScreen() {
       };
 
       // 4. Dual Write
-      await setDoc(doc(db, 'users', user.uid, 'photos', postId), postData); // Write 1: To the user's subcollection (for Profile)
-      await setDoc(newPhotoRef, postData); // Write 2: To the global 'feed' collection (for Home Feed)
+      await setDoc(doc(db, 'users', user.uid, 'photos', postId), postData); // Write 1
+      await setDoc(newPhotoRef, postData); // Write 2
 
       // 5. Increment user's photoCount
       await updateDoc(doc(db, 'users', user.uid), {
@@ -142,8 +88,7 @@ export default function PostScreen() {
       setUploading(false);
     }
   };
-
-  return (
+ return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.brand}>pantry</Text>
       <Text style={styles.title}>Log a Meal</Text>

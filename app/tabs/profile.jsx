@@ -1,5 +1,5 @@
 import { signOut, updateProfile } from 'firebase/auth';
-import { collection, doc, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import ProfileTabContent from '../components/profile/ProfileTabContent';
 import ProfileTabs from '../components/profile/ProfileTabs';
 import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
 import SettingsScreen from '../components/profile/screens/SettingsScreen';
+import { uploadImageToFirebase } from '../utils/imageUpload';
 
 export default function ProfileScreen() {
   const [userData, setUserData] = useState(null);
@@ -89,24 +90,43 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleSaveProfile = async ({ displayName, photoURL }) => {
+  const handleSaveProfile = async ({ displayName, newPhotoAsset, currentPhotoURL }) => {
     if (!user) return; // Must be signed in to save
+     
+    let finalPhotoURL = currentPhotoURL;
+    const trimmedName = displayName.trim();
 
     try {
-      // 1. Update the core Firebase Auth profile (for user.displayName, user.photoURL)
-      await updateProfile(user, { 
-        displayName, 
-        photoURL: photoURL || null // Use null if empty string to clear the photo
-      });
+      // 1. CONDITIONAL IMAGE UPLOAD
+      // If there's a new asset, upload it first
+      if (newPhotoAsset) {
+        const storagePath = `users/${user.uid}/profile/photo`; 
+        finalPhotoURL = await uploadImageToFirebase(
+          newPhotoAsset.uri, 
+          newPhotoAsset.mimeType, 
+          storagePath
+        );
+        console.log("Photo uploaded successfully:", finalPhotoURL);
+      }
 
-      // 2. Update the Firestore user document (to ensure our userData state reflects changes)
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, { 
-        displayName, 
-        photoURL: photoURL || null
-      });
+      // 2. DEFINE FALLBACK/DEFAULT URL
+      // If photo was changed, finalPhotoURL is the new URL. 
+      // If photo was NOT changed, finalPhotoURL is currentPhotoURL.
+      // If no photo URL exists at all, generate the avatar based on the (possibly new) displayName.
+      if (!finalPhotoURL) {
+          finalPhotoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmedName)}&background=e5e7eb&color=6b7280z&length=1&bold=true`;
+      }
 
-      // Because we have the onSnapshot listener, the profile data will refresh automatically.
+      // 3. UPDATE FIREBASE AUTH AND FIRESTORE
+      // Data to update in both places
+      const updateData = { 
+        displayName: trimmedName, 
+        photoURL: finalPhotoURL
+      };
+
+      await updateProfile(user, updateData);
+      await updateDoc(doc(db, 'users', user.uid), updateData);
+
       Alert.alert("Success", "Your profile changes have been saved!");
 
     } catch (e) {
@@ -137,10 +157,10 @@ export default function ProfileScreen() {
   if (showSettings) {
     return (
       <SettingsScreen 
-        onSignOut={handleSignOut} // Pass the sign-out function down
-        onClose={() => setShowSettings(false)} // Pass the function to go back
-        userData={userData} // Pass current data
-        onSave={handleSaveProfile} // Pass the new save handler
+        onSignOut={handleSignOut} 
+        onClose={() => setShowSettings(false)} 
+        userData={userData} 
+        onSave={handleSaveProfile}
       />
     );
   }

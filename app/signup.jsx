@@ -47,12 +47,10 @@ export default function SignUpScreen() {
       const trimmedName = name.trim();
       const trimmedEmail = email.trim();
 
-      console.log('creating avatar');
       // 1. CREATE A DEFAULT PHOTO URL
       // used ui-avatars.com to generate a simple avatar
       const defaultPhotoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmedName)}&background=e5e7eb&color=6b7280z&length=1&bold=true`;
 
-      console.log('created avatar');
       const cred = await createUserWithEmailAndPassword(auth, trimmedEmail, pw);
       
       // 2. UPDATE AUTH PROFILE (now with displayName AND photoURL)

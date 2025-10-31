@@ -2,18 +2,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { launchImagePicker } from '../../../utils/imageUpload';
 import AppHeader from '../../common/AppHeader';
 
 /**
  * Settings Screen component.
  * @param {function} onSignOut - The function to execute the Firebase sign-out.
  * @param {function} onClose - The function to navigate back to the Profile screen.
+ * @param {function} onSave - The function to save profile changes (display name/photoURL string).
  */
 export default function SettingsScreen({ onSignOut, onClose, userData, onSave }) {
-    const [displayName, setDisplayName] = useState(userData.displayName || '');
-    const [realName, setRealName] =  useState(userData.displayName || '');
-    const [photoURL, setPhotoURL] = useState(userData.photoURL || '');
-    const [isSaving, setIsSaving] = useState(false);
+  const [displayName, setDisplayName] = useState(userData.displayName || '');
+  const [photoURL, setPhotoURL] = useState(userData.photoURL || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [newPhotoAsset, setNewPhotoAsset] = useState(null);
 
   const confirmSignOut = () => {
     // Alerts don't work on web, so if on web, just sign out  
@@ -31,27 +33,42 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
     ]);
   };
 
+  const handleChangePhoto = async (type) => {
+    const asset = await launchImagePicker(type, [1, 1]); 
+    if (asset) {
+      setPhotoURL(asset.uri);  // 1. Set the photoURL state to the local URI for preview
+      setNewPhotoAsset(asset); // 2. Store the full asset for upload upon 'Save'
+    }
+  };
+
   const handleSave = async () => {
     if (isSaving) return;
         
-    // Basic validation: Check if fields have actually changed
-    if (displayName === userData.displayName && photoURL === userData.photoURL) {
+    // 1. Basic Validation: Determine if anything has actually changed
+    const displayNameChanged = displayName.trim() !== userData.displayName;
+    const photoChanged = newPhotoAsset !== null; // Check if we have a new asset to upload
+
+    if (!displayNameChanged && !photoChanged) {
+      console.log("No Changes", "You haven't made any changes to save.");
       Alert.alert("No Changes", "You haven't made any changes to save.");
       return;
     }
 
     if (!displayName.trim()) {
+      console.log("Error", "Display Name cannot be empty.");
       Alert.alert("Error", "Display Name cannot be empty.");
       return;
     }
 
     setIsSaving(true);
-    // Pass the new data up to the parent handler
-    await onSave({ displayName: displayName.trim(), photoURL: photoURL.trim() });
+
+    // 2. Pass the new data up to the parent handler
+    await onSave({ displayName: displayName.trim(), newPhotoAsset: newPhotoAsset, currentPhotoURL: userData.photoURL});
+    
+    // 3. Clear the asset after a successful save
+    setNewPhotoAsset(null); 
     setIsSaving(false);
   };
-
-  const userInitials = (userData.displayName || 'PM').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -77,7 +94,7 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
                             
               {/* Change Photo Button - Aligned with the avatar */}
               <TouchableOpacity style={styles.changePhotoButton}
-                onPress={() => Alert.alert("Change Photo", "Currently, paste the Photo URL in the input field below.")}
+                onPress={() => handleChangePhoto('library')}
               >
                 <Ionicons name="camera-outline" size={18} color="#111" />
                 <Text style={styles.changePhotoText}>Change Photo</Text>
@@ -100,17 +117,6 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
         {/* 2. User Information */}
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>User Information</Text>
-          
-          {/* User Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.settingText}>Name</Text>
-              <TextInput
-                style={styles.input}
-                value={realName}
-                onChangeText={setRealName}
-                placeholder="Your name"
-              />
-          </View>
 
           {/* Email (Read Only) */}
           <View style={styles.inputGroup}>
@@ -128,7 +134,6 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
               <TextInput
                 style={styles.readOnlyInput}
                 value={'••••••••'}
-                onChangeText={setDisplayName}
                 secureTextEntry={true}
                 editable={false}
               />
@@ -215,6 +220,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111',
     marginBottom: 8,
+    fontWeight: '500',
   },
   usernameLabel: { marginLeft: 5, fontSize: 14, color: '#6b7280' },
 
@@ -228,6 +234,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     color: '#111',
+    fontWeight: '500',
   },
   readOnlyInput: {
     backgroundColor: '#f3f4f6', // Lighter background for read-only
@@ -237,7 +244,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginLeft: 10,
     fontSize: 16,
-    color: '#4b5563', // Grayed text
+    color: '#939497ff', // Grayed text
     fontWeight: '500',
   },
   
