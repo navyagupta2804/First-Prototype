@@ -1,30 +1,22 @@
+// A Cloud Function that updates denormalized user data across all posts and comments.
+const functions = require("firebase-functions/v1");
 const admin = require("firebase-admin");
-const {onDocumentUpdated} = require("firebase-functions/v2/firestore");
 
-// Initialize the Firebase Admin SDK
+// Initialize the Firebase Admin SDK once
 admin.initializeApp();
 const db = admin.firestore();
 
 /**
  * Triggered when a user's document in the 'users' collection is updated.
- * It updates the denormalized displayName and photoURL across all posts and comments.
+ * It updates the denormalized displayName and photoURL in all their posts (feed and user subcollection)
+ * and comments across the application.
  */
-exports.updateDenormalizedUserData = onDocumentUpdated(
-    // Path to the document we are watching
-    {
-      document: "users/{userId}",
-    },
-
-    async (event) => {
-      // Check if the event contains data (it should, for an update)
-      if (!event.data) {
-        console.log("No data found in the event.");
-        return null;
-      }
-
-      const userId = event.params.userId;
-      const newData = event.data.after.data();
-      const previousData = event.data.before.data();
+exports.updateDenormalizedUserData = functions.firestore
+    .document("users/{userId}")
+    .onUpdate(async (change, context) => {
+      const userId = context.params.userId;
+      const newData = change.after.data();
+      const previousData = change.before.data();
 
       // 1. Identify what changed
       const newDisplayName = newData.displayName;
@@ -56,6 +48,7 @@ exports.updateDenormalizedUserData = onDocumentUpdated(
       let documentsUpdated = 0;
 
       // --- 2. Update the User's Posts in the Global 'feed' Collection ---
+      // Query for all documents in 'feed' where the 'uid' matches the user ID
       const feedPostsSnapshot = await db.collection("feed")
           .where("uid", "==", userId)
           .get();
@@ -65,7 +58,8 @@ exports.updateDenormalizedUserData = onDocumentUpdated(
         documentsUpdated++;
       });
 
-      // --- 3. Update the User's Posts in their Subcollection ('users/{userId}/photos') ---
+      // --- 3. Update the User's Posts in their Subcollection ---
+      // Query for all documents in 'users/{userId}/photos'
       const userPostsSnapshot = await db.collection("users").doc(userId).collection("photos")
           .get();
 
@@ -74,18 +68,17 @@ exports.updateDenormalizedUserData = onDocumentUpdated(
         documentsUpdated++;
       });
 
-      // --- 4. Update the User's Comments in all Post Subcollections (Collection Group Query) ---
+      // --- 4. Update the User's Comments in all Post Subcollections ---
+      // This is the most complex step as it requires a Collection Group Query.
+      // NOTE: This requires a Firestore index. See next section.
       const commentsSnapshot = await db.collectionGroup("comments")
           .where("uid", "==", userId)
           .get();
 
       commentsSnapshot.forEach((doc) => {
-        // Comments only need displayName (and potentially displayPhoto)
-        batch.update(doc.ref, {
-          displayName: newDisplayName,
-          // If you decide to add photoURL to comments, uncomment:
-          // displayPhoto: newPhotoURL
-        });
+      // NOTE: Comments only need displayName (or displayPhoto, if you want avatars in comments)
+      // We assume comments only need displayName
+        batch.update(doc.ref, {displayName: newDisplayName});
         documentsUpdated++;
       });
 
