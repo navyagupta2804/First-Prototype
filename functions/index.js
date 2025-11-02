@@ -11,7 +11,9 @@ const db = admin.firestore();
  * It updates the denormalized displayName and photoURL in all their posts (feed and user subcollection)
  * and comments across the application.
  */
-exports.updateDenormalizedUserData = functions.firestore
+exports.updateDenormalizedUserData = functions
+    .region("us-central1")
+    .firestore
     .document("users/{userId}")
     .onUpdate(async (change, context) => {
       const userId = context.params.userId;
