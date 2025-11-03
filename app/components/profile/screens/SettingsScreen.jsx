@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImagePicker } from '../../../utils/imageUpload';
+import CenteredContainer from '../../common/CenteredContainer';
 import AppHeader from '../../common/PageHeader';
 
 /**
@@ -74,9 +75,8 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <AppHeader />
-  
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
+      <CenteredContainer>
         <View style={styles.pageTitle}>
           <TouchableOpacity onPress={onClose}>
             <Ionicons name="arrow-back" size={16} color="#111" />  
@@ -159,6 +159,7 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
             <Ionicons name="log-out-outline" size={24} color="#ef4444" />
             <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
+        </CenteredContainer>
       </ScrollView>
     </SafeAreaView>
   );
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 16 },
   sectionCard: { 
     backgroundColor: 'white', 
-    margin: 16,
+    marginVertical: 16,
     borderRadius: 16, 
     padding: 20,
     borderColor: '#e5e7eb', 
@@ -253,9 +254,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    margin: 16,
+    marginVertical: 16,
     borderRadius: 16,
-    padding: 20,
+    padding: 15,
     borderWidth: 1,
     borderColor: '#a2decaff',
     shadowColor: '#000',
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    margin: 16,
+    marginVertical: 16,
     borderRadius: 16,
     padding: 15,
     borderWidth: 1,
