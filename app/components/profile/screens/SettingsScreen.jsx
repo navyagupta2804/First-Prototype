@@ -4,7 +4,6 @@ import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImagePicker } from '../../../utils/imageUpload';
 import CenteredContainer from '../../common/CenteredContainer';
-import AppHeader from '../../common/PageHeader';
 
 /**
  * Settings Screen component.
@@ -74,8 +73,6 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
-      <AppHeader />
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
       <CenteredContainer>
         <View style={styles.pageTitle}>
           <TouchableOpacity onPress={onClose}>
@@ -83,84 +80,84 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
           </TouchableOpacity>
           <Text style={styles.title}>Settings</Text>
         </View>
-        
-        {/* 1. Profile Photo & Display Name */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Profile Information</Text>
-          <View style={styles.profileInfoLayout}>
-            {/* Profile Photo (Left Side) */}
-            <View style={styles.avatarWrapper}>
-              <Image source={{ uri: photoURL }} style={styles.largeAvatar} />
-                            
-              {/* Change Photo Button - Aligned with the avatar */}
-              <TouchableOpacity style={styles.changePhotoButton}
-                onPress={() => handleChangePhoto('library')}
-              >
-                <Ionicons name="camera-outline" size={18} color="#111" />
-                <Text style={styles.changePhotoText}>Change Photo</Text>
-              </TouchableOpacity>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* 1. Profile Photo & Display Name */}
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Profile Information</Text>
+            <View style={styles.profileInfoLayout}>
+              {/* Profile Photo (Left Side) */}
+              <View style={styles.avatarWrapper}>
+                <Image source={{ uri: photoURL }} style={styles.largeAvatar} />
+                              
+                {/* Change Photo Button - Aligned with the avatar */}
+                <TouchableOpacity style={styles.changePhotoButton}
+                  onPress={() => handleChangePhoto('library')}
+                >
+                  <Ionicons name="camera-outline" size={18} color="#111" />
+                  <Text style={styles.changePhotoText}>Change Photo</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {/* Display Name / Username (Right Side) */}
+              <View style={styles.displayNameBlock}>
+                <TextInput
+                  style={styles.nameInput}
+                  value={displayName}
+                  onChangeText={setDisplayName}
+                  placeholder="Display name"
+                />
+                <Text style={styles.usernameLabel}>Username</Text>
+              </View>
             </View>
-            
-            {/* Display Name / Username (Right Side) */}
-            <View style={styles.displayNameBlock}>
-              <TextInput
-                style={styles.nameInput}
-                value={displayName}
-                onChangeText={setDisplayName}
-                placeholder="Display name"
-              />
-              <Text style={styles.usernameLabel}>Username</Text>
+          </View>
+
+          {/* 2. User Information */}
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>User Information</Text>
+
+            {/* Email (Read Only) */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.settingText}>Email</Text>
+                <TextInput
+                  style={styles.readOnlyInput}
+                  value={userData.email} // CHANGE TO USER EMAIL
+                  editable={false}
+                />
+            </View>
+
+            {/* Password */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.settingText}>Password</Text>
+                <TextInput
+                  style={styles.readOnlyInput}
+                  value={'••••••••'}
+                  secureTextEntry={true}
+                  editable={false}
+                />
             </View>
           </View>
-        </View>
-
-        {/* 2. User Information */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>User Information</Text>
-
-          {/* Email (Read Only) */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.settingText}>Email</Text>
-              <TextInput
-                style={styles.readOnlyInput}
-                value={userData.email} // CHANGE TO USER EMAIL
-                editable={false}
-              />
-          </View>
-
-          {/* Password */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.settingText}>Password</Text>
-              <TextInput
-                style={styles.readOnlyInput}
-                value={'••••••••'}
-                secureTextEntry={true}
-                editable={false}
-              />
-          </View>
-        </View>
-        {/* Save Button */}
-        <TouchableOpacity
-          style={[styles.saveButton, isSaving && { opacity: 0.6 }]}
-          onPress={handleSave}
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-          <> 
-            <Ionicons name="save-outline" size={24} color="#10b981" />
-            <Text style={styles.saveButtonText}>Save Changes</Text>
-          </>
-          )}
-        </TouchableOpacity>
-        {/*Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={confirmSignOut}>
-            <Ionicons name="log-out-outline" size={24} color="#ef4444" />
-            <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-        </CenteredContainer>
-      </ScrollView>
+          {/* Save Button */}
+          <TouchableOpacity
+            style={[styles.saveButton, isSaving && { opacity: 0.6 }]}
+            onPress={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+            <> 
+              <Ionicons name="save-outline" size={24} color="#10b981" />
+              <Text style={styles.saveButtonText}>Save Changes</Text>
+            </>
+            )}
+          </TouchableOpacity>
+          {/*Logout Button */}
+          <TouchableOpacity style={styles.logoutButton} onPress={confirmSignOut}>
+              <Ionicons name="log-out-outline" size={24} color="#ef4444" />
+              <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </CenteredContainer>
     </SafeAreaView>
   );
 }
@@ -168,12 +165,11 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'f9fafb' },
   pageTitle: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'left',
-    paddingHorizontal: 16, paddingVertical: 12,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'left', 
+    paddingVertical: 20, marginTop: 20,  
   },
   title: { paddingLeft: 10, fontSize: 16, fontWeight: '500', color: '#111' },
   
-  scrollContent: { padding: 16 },
   sectionCard: { 
     backgroundColor: 'white', 
     marginVertical: 16,
