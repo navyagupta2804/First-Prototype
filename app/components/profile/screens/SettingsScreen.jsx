@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImagePicker } from '../../../utils/imageUpload';
-import AppHeader from '../../common/AppHeader';
+import AppHeader from '../../common/PageHeader';
 
 /**
  * Settings Screen component.
