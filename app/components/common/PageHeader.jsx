@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
-import CenteredContainer from '../common/CenteredContainer';
+import CenteredContainer from './CenteredContainer';
 
-const HomeHeader = () => {
+const PageHeader = () => {
   const router = useRouter();
 
   return (
@@ -22,4 +22,4 @@ const styles = StyleSheet.create({
   iconBtn: { padding: 6, borderRadius: 999 },
 });
 
-export default HomeHeader;
+export default PageHeader;
