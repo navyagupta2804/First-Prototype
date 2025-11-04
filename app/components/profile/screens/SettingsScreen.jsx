@@ -163,7 +163,7 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: 'f9fafb' },
+  safeArea: { flex: 1, backgroundColor: '#f9fafb' },
   pageTitle: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'left', 
     paddingVertical: 20, marginTop: 20,  
