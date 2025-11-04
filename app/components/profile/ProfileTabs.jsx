@@ -22,9 +22,9 @@ const styles = StyleSheet.create({
     tabBar: {
         flexDirection: 'row',
         backgroundColor: 'white',
-        marginHorizontal: 16,
         borderRadius: 12,
         padding: 4,
+        marginTop: 16,
         marginBottom: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },

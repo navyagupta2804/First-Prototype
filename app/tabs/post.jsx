@@ -2,8 +2,10 @@ import { collection, doc, increment, serverTimestamp, setDoc, updateDoc } from '
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
+import CenteredContainer from '../components/common/CenteredContainer';
+import PageHeader from '../components/common/PageHeader';
 import PostForm from '../components/post/PostForm';
-import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload'; // New import
+import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
 
 export default function PostScreen() {
   const [image, setImage] = useState(null);
@@ -90,25 +92,27 @@ export default function PostScreen() {
   };
  return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.brand}>pantry</Text>
-      <Text style={styles.title}>Log a Meal</Text>
-      <PostForm 
-        image={image}
-        caption={caption}
-        uploading={uploading}
-        setCaption={setCaption}
-        pickImage={pickImage}
-        takePhoto={takePhoto}
-        uploadPost={uploadPost}
-        clearImage={clearImage}
-      />
+      <PageHeader />
+      <CenteredContainer>
+        <Text style={styles.title}>Log a Meal</Text>
+        <PostForm 
+          image={image}
+          caption={caption}
+          uploading={uploading}
+          setCaption={setCaption}
+          pickImage={pickImage}
+          takePhoto={takePhoto}
+          uploadPost={uploadPost}
+          clearImage={clearImage}
+        />
+      </CenteredContainer>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
-  content: { padding: 24, paddingTop: 60 },
+  content: { paddingHorizontal: 16  },
   brand: { fontSize: 28, fontWeight: '800', color: '#ff4d2d', marginBottom: 8 },
   title: { fontSize: 20, fontWeight: '700', marginBottom: 24 },
 });

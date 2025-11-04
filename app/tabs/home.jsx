@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
+import PageHeader from '../components/common/PageHeader';
 import PostCard from '../components/common/PostCard';
 import ChallengeSection from '../components/home/ChallengeSection';
 import FriendActivityCard from '../components/home/FriendActivityCard';
-import HomeHeader from '../components/home/HomeHeader';
 import PersonalGreeting from '../components/home/PersonalGreeting';
 import PromptCard from '../components/home/PromptCard';
 import UploadSection from '../components/home/UploadSection';
@@ -28,7 +28,7 @@ const HomeScreen = () => {
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <>
-      <HomeHeader />
+      <PageHeader />
       <PersonalGreeting/>
       <PromptCard />
       <UploadSection />

@@ -5,7 +5,8 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../firebaseConfig';
 
-import AppHeader from '../components/common/AppHeader';
+import CenteredContainer from '../components/common/CenteredContainer';
+import PageHeader from '../components/common/PageHeader';
 import ProfileCard from '../components/profile/ProfileCard';
 import ProfileTabContent from '../components/profile/ProfileTabContent';
 import ProfileTabs from '../components/profile/ProfileTabs';
@@ -168,32 +169,33 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        
         {/* AppHeader (Brand, Add Friend, Notifications) */}
-        <AppHeader />
+        <PageHeader />
+        <CenteredContainer>
 
-        {/* Profile Card (Avatar, Stats, Sign Out) */}
-        <ProfileCard
-          userData={userData} 
-          postsLength={posts.length} 
-          onSettingsPress={() => setShowSettings(true)} 
-        />
+          {/* Profile Card (Avatar, Stats, Sign Out) */}
+          <ProfileCard
+            userData={userData} 
+            postsLength={posts.length} 
+            onSettingsPress={() => setShowSettings(true)} 
+          />
 
-        {/* Tabs (Posts, Saved, Badges) */}
-        <ProfileTabs 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-        />
+          {/* Tabs (Posts, Saved, Badges) */}
+          <ProfileTabs 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab} 
+          />
 
-        {/* Content based on active tab */}
-        <ProfileTabContent 
-          activeTab={activeTab} 
-          posts={posts} 
-          onPostPress={setSelectedPost}
-        />
+          {/* Content based on active tab */}
+          <ProfileTabContent 
+            activeTab={activeTab} 
+            posts={posts} 
+            onPostPress={setSelectedPost}
+          />
 
-        {/* Bottom Spacing */}
-        <View style={{ height: 100 }} />
+          {/* Bottom Spacing */}
+          <View style={{ height: 100 }} />
+        </CenteredContainer>
       </ScrollView>
     </SafeAreaView>
   );

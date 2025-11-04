@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CenteredContainer from '../../common/CenteredContainer';
 import PostCard from '../../common/PostCard';
 
 /**
@@ -13,42 +14,47 @@ export default function PostDetailScreen({ posts, postId, onClose }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={28} color="#111" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>your posts</Text>
-        <View style={{ width: 40 }} /> {/* Spacer */}
-      </View>
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (<PostCard item={item} />)}
-        initialScrollIndex={initialIndex >= 0 ? initialIndex : 0}
-        getItemLayout={(data, index) => (
-          // Use a fixed height estimate for performance (800px is safe for the large PostCard)
-          { length: 800, offset: 800 * index, index } 
-        )}
-        showsVerticalScrollIndicator={false}
-      />
+      <CenteredContainer>
+        <View style={styles.pageTitle}>
+          <TouchableOpacity onPress={onClose}>
+            <Ionicons name="arrow-back" size={16} color="#111" />  
+          </TouchableOpacity>
+          <Text style={styles.title}>your post</Text>
+        </View>
+      </CenteredContainer>
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (<PostCard item={item} />)}
+          initialScrollIndex={initialIndex >= 0 ? initialIndex : 0}
+          getItemLayout={(data, index) => (
+            // Use a fixed height estimate for performance (800px is safe for the large PostCard)
+            { length: 800, offset: 800 * index, index } 
+          )}
+          showsVerticalScrollIndicator={false}
+        />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f9fafb' },
+  safeArea: { flex: 1, backgroundColor: 'white' },
+  pageTitle: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'left', 
+    paddingVertical: 20, marginTop: 20,  
+  },
+  title: { paddingLeft: 10, fontSize: 16, fontWeight: '500', color: '#111' },
+  
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 25,
+    paddingVertical: 15,
+    marginBottom: 20,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#111' },
-  backButton: { padding: 5 },
-  scrollViewContent: { padding: 16, paddingBottom: 40 },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }
 });

@@ -45,6 +45,7 @@ function CommentInput({ itemId, onCommentAdded }) {
         value={commentText}
         onChangeText={setCommentText}
         placeholder="Write a comment..."
+        placeholderTextColor="#A9A9A9"
         style={styles.commentInput}
       />
       <TouchableOpacity style={styles.sendBtn} onPress={onAddComment}>

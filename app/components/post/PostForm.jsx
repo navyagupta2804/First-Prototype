@@ -70,10 +70,11 @@ export default function PostForm({
         value={caption}
         onChangeText={setCaption}
         placeholder="What did you make today? Tag a friend or add some details!"
+        placeholderTextColor="#A9A9A9"
         multiline
-        maxLength={280}
+        maxLength={500}
       />
-      <Text style={styles.charCount}>{caption.length}/280</Text>
+      <Text style={styles.charCount}>{caption.length}/500</Text>
 
       {/* Upload Button */}
       <TouchableOpacity
