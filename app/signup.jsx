@@ -103,7 +103,7 @@ export default function SignUpScreen() {
         style={styles.input}
         value={email}
         onChangeText={setEmail}
-        placeholder="you@example.com"
+        placeholder="youremail@example.com"
         placeholderTextColor="#A9A9A9"
         autoCapitalize="none"
         keyboardType="email-address"
@@ -115,7 +115,7 @@ export default function SignUpScreen() {
         style={styles.input}
         value={pw}
         onChangeText={setPw}
-        placeholder="At least 8 characters. Must included letters and numbers."
+        placeholder="At least 8 characters. Include letters and numbers."
         placeholderTextColor="#A9A9A9"
         secureTextEntry
         textContentType="newPassword"
