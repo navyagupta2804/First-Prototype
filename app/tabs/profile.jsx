@@ -12,6 +12,7 @@ import ProfileTabContent from '../components/profile/ProfileTabContent';
 import ProfileTabs from '../components/profile/ProfileTabs';
 import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
 import SettingsScreen from '../components/profile/screens/SettingsScreen';
+import WeeklyProgressBar from '../components/profile/WeeklyProgressBar';
 import { uploadImageToFirebase } from '../utils/imageUpload';
 
 export default function ProfileScreen() {
@@ -179,6 +180,12 @@ export default function ProfileScreen() {
             postsLength={posts.length} 
             onSettingsPress={() => setShowSettings(true)} 
           />
+          
+          {/* Progress bar for user-set weekly goals */}
+          <WeeklyProgressBar
+            currentWeekPosts={userData.currentWeekPosts}
+            weeklyGoal={userData.weeklyGoal}
+          />
 
           {/* Tabs (Posts, Saved, Badges) */}
           <ProfileTabs 
@@ -203,7 +210,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#f9fafb' },
-  container: { flex: 1 },
+  container: { flex: 1, paddingHorizontal: 16 },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
