@@ -11,7 +11,6 @@ import ChallengeSection from '../components/home/ChallengeSection';
 import FriendActivityCard from '../components/home/FriendActivityCard';
 import PersonalGreeting from '../components/home/PersonalGreeting';
 import PromptCard from '../components/home/PromptCard';
-import UploadSection from '../components/home/UploadSection';
 import WeeklyGoalSetter from '../components/home/WeeklyGoalSetter';
 
 
@@ -75,7 +74,6 @@ const HomeScreen = () => {
       ) : (
         <PromptCard />
       )}
-      <UploadSection />
       <ChallengeSection />
       <FriendActivityCard/>
       <CenteredContainer>

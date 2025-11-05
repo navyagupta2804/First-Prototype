@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { updatePostPublishStatus } from '../../../utils/postActions';
 import CenteredContainer from '../../common/CenteredContainer';
 import PostCard from '../../common/PostCard';
 
@@ -12,20 +13,42 @@ import PostCard from '../../common/PostCard';
 export default function PostDetailScreen({ posts, postId, onClose }) {
   const initialIndex = posts.findIndex(p => p.id === postId);
 
+  const handleTogglePublish = async (postItem) => {
+    // Toggle the status based on the current value
+    const newStatus = !postItem.isPublished;
+    const success = await updatePostPublishStatus(postItem.id, newStatus);
+    
+    if (success) {
+        // You might trigger a local UI refresh or rely on the Firestore listener
+        // to automatically update the status displayed on the card.
+        console.log(`Successfully toggled post ${postItem.id} to ${newStatus}`);
+    }
+    // If the post is unpublished (isPublished: false), it will disappear 
+    // from the Profile Grid next time the user views it.
+  };
+
+  const renderPosts = ({ item }) => (
+    <PostCard 
+      item={item} 
+      isProfileView={true} 
+      onTogglePublish={handleTogglePublish}
+    />
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <CenteredContainer>
         <View style={styles.pageTitle}>
-          <TouchableOpacity onPress={onClose}>
-            <Ionicons name="arrow-back" size={16} color="#111" />  
+          <TouchableOpacity style={styles.backButtonContainer} onPress={onClose}>
+            <Ionicons name="arrow-back" size={16} color="#111" /> 
+            <Text style={styles.title}>your post</Text> 
           </TouchableOpacity>
-          <Text style={styles.title}>your post</Text>
         </View>
       </CenteredContainer>
         <FlatList
           data={posts}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (<PostCard item={item} />)}
+          renderItem={renderPosts}
           initialScrollIndex={initialIndex >= 0 ? initialIndex : 0}
           getItemLayout={(data, index) => (
             // Use a fixed height estimate for performance (800px is safe for the large PostCard)
@@ -38,10 +61,15 @@ export default function PostDetailScreen({ posts, postId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: 'white' },
+  safeArea: { flex: 1, backgroundColor: 'white', paddingHorizontal: 16 },
   pageTitle: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'left', 
     paddingVertical: 20, marginTop: 20,  
+  },
+  backButtonContainer: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingRight: 15,
   },
   title: { paddingLeft: 10, fontSize: 16, fontWeight: '500', color: '#111' },
   

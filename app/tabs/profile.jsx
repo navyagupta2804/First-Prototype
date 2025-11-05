@@ -168,49 +168,46 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* AppHeader (Brand, Add Friend, Notifications) */}
-        <PageHeader />
-        <CenteredContainer>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* AppHeader (Brand, Add Friend, Notifications) */}
+      <PageHeader />
+      <CenteredContainer>
 
-          {/* Profile Card (Avatar, Stats, Sign Out) */}
-          <ProfileCard
-            userData={userData} 
-            postsLength={posts.length} 
-            onSettingsPress={() => setShowSettings(true)} 
-          />
-          
-          {/* Progress bar for user-set weekly goals */}
-          <WeeklyProgressBar
-            currentWeekPosts={userData.currentWeekPosts}
-            weeklyGoal={userData.weeklyGoal}
-          />
+        {/* Profile Card (Avatar, Stats, Sign Out) */}
+        <ProfileCard
+          userData={userData} 
+          postsLength={posts.length} 
+          onSettingsPress={() => setShowSettings(true)} 
+        />
+        
+        {/* Progress bar for user-set weekly goals */}
+        <WeeklyProgressBar
+          currentWeekPosts={userData.currentWeekPosts}
+          weeklyGoal={userData.weeklyGoal}
+        />
 
-          {/* Tabs (Posts, Saved, Badges) */}
-          <ProfileTabs 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
-          />
+        {/* Tabs (Posts, Saved, Badges) */}
+        <ProfileTabs 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+        />
 
-          {/* Content based on active tab */}
-          <ProfileTabContent 
-            activeTab={activeTab} 
-            posts={posts} 
-            onPostPress={setSelectedPost}
-          />
+        {/* Content based on active tab */}
+        <ProfileTabContent 
+          activeTab={activeTab} 
+          posts={posts} 
+          onPostPress={setSelectedPost}
+        />
 
-          {/* Bottom Spacing */}
-          <View style={{ height: 100 }} />
-        </CenteredContainer>
-      </ScrollView>
-    </SafeAreaView>
+        {/* Bottom Spacing */}
+        <View style={{ height: 100 }} />
+      </CenteredContainer>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f9fafb' },
-  container: { flex: 1, paddingHorizontal: 16 },
+  container: { flex: 1, paddingHorizontal: 16, backgroundColor: '#f9fafb' },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
