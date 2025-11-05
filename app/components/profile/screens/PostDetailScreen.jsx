@@ -6,29 +6,38 @@ import PostCard from '../../common/PostCard';
 
 /**
  * Full-screen view to display a single post (reusing the PostCard component).
- * @param {object} post - The post data object (item).
+ * @param {object[]} posts - Array of all user posts (for the FlatList).
+ * @param {string} postId - The ID of the currently selected post.
  * @param {function} onClose - Function to navigate back to the profile grid.
+ * @param {function} onTogglePublish - Handler from ProfileScreen to change post status in Firestore.
  */
-export default function PostDetailScreen({ posts, postId, onClose }) {
+export default function PostDetailScreen({ posts, postId, onClose, onTogglePublish }) {
   const initialIndex = posts.findIndex(p => p.id === postId);
+
+  const renderPosts = ({ item }) => (
+    <PostCard 
+      item={item} 
+      isProfileView={true} 
+      onTogglePublish={onTogglePublish}
+    />
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <CenteredContainer>
         <View style={styles.pageTitle}>
-          <TouchableOpacity onPress={onClose}>
-            <Ionicons name="arrow-back" size={16} color="#111" />  
+          <TouchableOpacity style={styles.backButtonContainer} onPress={onClose}>
+            <Ionicons name="arrow-back" size={16} color="#111" /> 
+            <Text style={styles.title}>your post</Text> 
           </TouchableOpacity>
-          <Text style={styles.title}>your post</Text>
         </View>
       </CenteredContainer>
         <FlatList
           data={posts}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (<PostCard item={item} />)}
+          renderItem={renderPosts}
           initialScrollIndex={initialIndex >= 0 ? initialIndex : 0}
           getItemLayout={(data, index) => (
-            // Use a fixed height estimate for performance (800px is safe for the large PostCard)
             { length: 800, offset: 800 * index, index } 
           )}
           showsVerticalScrollIndicator={false}
@@ -38,10 +47,15 @@ export default function PostDetailScreen({ posts, postId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: 'white' },
+  safeArea: { flex: 1, backgroundColor: 'white', paddingHorizontal: 16 },
   pageTitle: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'left', 
     paddingVertical: 20, marginTop: 20,  
+  },
+  backButtonContainer: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingRight: 15,
   },
   title: { paddingLeft: 10, fontSize: 16, fontWeight: '500', color: '#111' },
   

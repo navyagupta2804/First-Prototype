@@ -1,5 +1,5 @@
 import { signOut, updateProfile } from 'firebase/auth';
-import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import ProfileTabContent from '../components/profile/ProfileTabContent';
 import ProfileTabs from '../components/profile/ProfileTabs';
 import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
 import SettingsScreen from '../components/profile/screens/SettingsScreen';
+import WeeklyProgressBar from '../components/profile/WeeklyProgressBar';
 import { uploadImageToFirebase } from '../utils/imageUpload';
 
 export default function ProfileScreen() {
@@ -61,7 +62,8 @@ export default function ProfileScreen() {
     // Listen to user's posts in real-time
     const unsubPosts = onSnapshot(
       query(
-        collection(db, 'users', user.uid, 'photos'),
+        collection(db, 'feed'), // Query the central 'feed'
+        where('uid', '==', user.uid), // Filter: ONLY posts belonging to this user
         orderBy('createdAt', 'desc')
       ),
       (snapshot) => {
@@ -83,7 +85,6 @@ export default function ProfileScreen() {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      // Automatically navigate back to the profile (which will likely trigger a redirect to auth screen)
       setShowSettings(false); 
     } catch (e) {
       console.error('Sign out error:', e);
@@ -136,6 +137,26 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleTogglePublish = async (post) => {
+    if (!user) return;
+    try {
+      const postRef = doc(db, 'feed', post.id);
+      const newStatus = !post.isPublished;
+      
+      await updateDoc(postRef, {
+        isPublished: newStatus,
+        publishedAt: newStatus ? serverTimestamp() : null 
+      });
+
+      const message = newStatus ? 'Post is now PUBLIC on the main feed!' : 'Post is now PRIVATE (archived to your Log).';
+      Alert.alert('Success', message);
+
+    } catch (e) {
+      console.error('Failed to toggle publish status:', e);
+      Alert.alert('Error', 'Could not update post status.');
+    }
+  };
+
   if (loading || !userData) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -151,6 +172,7 @@ export default function ProfileScreen() {
         posts={posts} 
         postId={selectedPost.id}
         onClose={() => setSelectedPost(null)} 
+        onTogglePublish={handleTogglePublish} 
       />
     );
   }
@@ -167,43 +189,46 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* AppHeader (Brand, Add Friend, Notifications) */}
-        <PageHeader />
-        <CenteredContainer>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* AppHeader (Brand, Add Friend, Notifications) */}
+      <PageHeader />
+      <CenteredContainer>
 
-          {/* Profile Card (Avatar, Stats, Sign Out) */}
-          <ProfileCard
-            userData={userData} 
-            postsLength={posts.length} 
-            onSettingsPress={() => setShowSettings(true)} 
-          />
+        {/* Profile Card (Avatar, Stats, Sign Out) */}
+        <ProfileCard
+          userData={userData} 
+          postsLength={posts.length} 
+          onSettingsPress={() => setShowSettings(true)} 
+        />
+        
+        {/* Progress bar for user-set weekly goals */}
+        <WeeklyProgressBar
+          currentWeekPosts={userData.currentWeekPosts}
+          weeklyGoal={userData.weeklyGoal}
+        />
 
-          {/* Tabs (Posts, Saved, Badges) */}
-          <ProfileTabs 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
-          />
+        {/* Tabs (Posts, Saved, Badges) */}
+        <ProfileTabs 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+        />
 
-          {/* Content based on active tab */}
-          <ProfileTabContent 
-            activeTab={activeTab} 
-            posts={posts} 
-            onPostPress={setSelectedPost}
-          />
+        {/* Content based on active tab */}
+        <ProfileTabContent 
+          activeTab={activeTab} 
+          posts={posts} 
+          onPostPress={setSelectedPost}
+        />
 
-          {/* Bottom Spacing */}
-          <View style={{ height: 100 }} />
-        </CenteredContainer>
-      </ScrollView>
-    </SafeAreaView>
+        {/* Bottom Spacing */}
+        <View style={{ height: 100 }} />
+      </CenteredContainer>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f9fafb' },
-  container: { flex: 1 },
+  container: { flex: 1, paddingHorizontal: 16, backgroundColor: '#f9fafb' },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',

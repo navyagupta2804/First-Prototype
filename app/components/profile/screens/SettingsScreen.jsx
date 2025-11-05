@@ -75,10 +75,10 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
       {/* Header */}
       <CenteredContainer>
         <View style={styles.pageTitle}>
-          <TouchableOpacity onPress={onClose}>
+          <TouchableOpacity style={styles.backButtonContainer} onPress={onClose}>
             <Ionicons name="arrow-back" size={16} color="#111" />  
+            <Text style={styles.title}>Settings</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Settings</Text>
         </View>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* 1. Profile Photo & Display Name */}
@@ -163,10 +163,15 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f9fafb' },
+  safeArea: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 16  },
   pageTitle: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'left', 
     paddingVertical: 20, marginTop: 20,  
+  },
+  backButtonContainer: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingRight: 15,
   },
   title: { paddingLeft: 10, fontSize: 16, fontWeight: '500', color: '#111' },
   
