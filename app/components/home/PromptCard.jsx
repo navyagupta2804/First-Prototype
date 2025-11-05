@@ -6,7 +6,7 @@ import {
 import { useState } from 'react';
 import {
   ActivityIndicator, Alert, StyleSheet, Text,
-  TextInput, TouchableOpacity
+  TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { auth, db } from '../../../firebaseConfig';
 import CenteredContainer from '../common/CenteredContainer';
@@ -80,36 +80,76 @@ const PromptCard = ({ journalPrompt }) => {
 
   return (
     <CenteredContainer style={styles.promptCard}>
-      <Text style={styles.promptHeader}>Today's Prompt</Text>
-      <Text style={styles.promptText}>{PROMPT}</Text>
-      <TextInput
+      <View style={styles.headerRow}>
+        <View style={styles.headerColLeft}>
+          <Text style={styles.promptHeader}>Today's Prompt</Text>
+          <Text style={styles.promptText}>{PROMPT}</Text>
+        </View>
+        <TouchableOpacity style={styles.primaryBtn} onPress={onPostJournal} disabled={saving}>
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>Save</Text>}
+        </TouchableOpacity>
+    </View>
+    <TextInput
         value={journalText}
         onChangeText={setJournalText}
         placeholder="Share your thoughts..."
+        placeholderTextColor="#A9A9A9"
         style={styles.input}
         multiline
-      />
-      <TouchableOpacity style={styles.primaryBtn} onPress={onPostJournal} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>Save</Text>}
-      </TouchableOpacity>
-    </CenteredContainer>
+    />
+</CenteredContainer>
   );
 }
 
 const styles = StyleSheet.create({
   promptCard: {
-    width: '100%',
-    marginBottom: 15,
-    padding: 16,
+    marginVertical: 10,
+    paddingHorizontal: 16,
     backgroundColor: '#FFF1E6',
     borderColor: '#FFD4B8',
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 12,
   },
-  promptHeader: { fontWeight: '800', fontSize: 15, color: '#A15B2E', marginBottom: 6, textTransform: 'uppercase' },
-  promptText: { fontSize: 14, color: '#4B5563', marginBottom: 8 },
-  input: { backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', padding: 12, minHeight: 64 },
-  primaryBtn: { backgroundColor: '#111216', paddingVertical: 12, borderRadius: 10, alignItems: 'center', marginTop: 10 },
+  headerRow: {
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'flex-start', 
+    marginBottom: 10, 
+  },
+  headerColLeft: { flex: 1, paddingRight: 10 },
+  promptHeader: { 
+    fontSize: 16,
+    fontWeight: '800',  
+    marginBottom: 6,
+    color: '#f97316',  
+    textAlign: 'left', 
+    width: '100%',
+    textTransform: 'uppercase' 
+  },
+  promptText: { 
+    fontSize: 14, 
+    color: '#4a4a4a', 
+    marginBottom: 15,
+    textAlign: 'left', 
+    width: '100%',
+  },
+  input: { 
+    backgroundColor: '#fff', 
+    borderRadius: 10, 
+    borderWidth: 1, 
+    borderColor: '#E5E7EB', 
+    padding: 12, 
+    marginBottom: 10,
+    minHeight: 120 
+  },
+  primaryBtn: { 
+    backgroundColor: '#111216', 
+    paddingVertical: 10, 
+    paddingHorizontal: 20,
+    borderRadius: 10, 
+    alignSelf: 'center', 
+    alignItems: 'center',
+  },
   primaryText: { color: '#fff', fontWeight: '700' },
 });
 

@@ -79,9 +79,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    inProgressButton: { backgroundColor: 'white', borderColor: '#632692', borderWidth: 1 },
+    inProgressButton: { backgroundColor: 'white', borderColor: '#263d92ff', borderWidth: 1 },
     inProgressButtonText: { color: '#374151', fontWeight: '700', fontSize: 12 },
-    completedButton: { backgroundColor: '#632692', borderColor: '#632692', borderWidth: 1 },
+    completedButton: { backgroundColor: '#263d92ff', borderColor: '#263d92ff', borderWidth: 1 },
     completedButtonText: { color: 'white', fontWeight: '700', fontSize: 12},
 });
 

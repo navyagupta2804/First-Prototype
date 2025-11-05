@@ -42,16 +42,16 @@ const ChallengeSection = ({ challenges = DUMMY_CHALLENGES }) => {
 
 const styles = StyleSheet.create({
     sectionContainer: { 
-      marginBottom: 20, 
+      marginVertical: 10,
       paddingHorizontal: 16,
-      backgroundColor: '#f4f5ff',
-      borderColor: '#d3adefff',
-      borderWidth: 1,
+      backgroundColor: '#f4faffff',
+      borderColor: '#adc2efff',
+      borderWidth: 2,
       borderRadius: 12,
     },
     challengeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-    challengeTitle: { fontSize: 15, fontWeight: '800', color: '#632692', textTransform: 'uppercase' },
-    viewAllText: { fontSize: 14, color: '#9333ea', fontWeight: '600' },
+    challengeTitle: { fontSize: 16, fontWeight: '800', color: '#263d92ff', textTransform: 'uppercase' },
+    viewAllText: { fontSize: 14, color: '#263d92ff', fontWeight: '600' },
     listContainer: { paddingRight: 16 },
     cardWrapper: { width: 325, marginRight: 12 }
 });

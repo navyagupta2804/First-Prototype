@@ -1,7 +1,9 @@
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { db } from '../../firebaseConfig';
+import { auth, db } from '../../firebaseConfig';
+import { requiresGoalSetting } from '../utils/bageCalculations';
+
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
 import PostCard from '../components/common/PostCard';
@@ -10,11 +12,28 @@ import FriendActivityCard from '../components/home/FriendActivityCard';
 import PersonalGreeting from '../components/home/PersonalGreeting';
 import PromptCard from '../components/home/PromptCard';
 import UploadSection from '../components/home/UploadSection';
+import WeeklyGoalSetter from '../components/home/WeeklyGoalSetter';
+
 
 const HomeScreen = () => {
   const [feed, setFeed] = useState([]);
+  const [userData, setUserData] = useState({}); 
+  const userId = auth.currentUser?.uid;
+  
+  // 1. ---- User Data and Streak Status Subscription ----
+  useEffect(() => {
+    if (!userId) return;
 
-  // ---- Feed subscription (Kept in main component for global feed state) ----
+    const userRef = doc(db, 'users', userId);
+    const unsub = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setUserData(docSnap.data());
+      }
+    });
+    return unsub;
+  }, [userId]);
+
+  // 2. ---- Feed subscription ----
   useEffect(() => {
     const q = query(collection(db, 'feed'), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
@@ -25,12 +44,37 @@ const HomeScreen = () => {
     return unsub;
   }, []);
 
+  // ---- Goal Submission Handler ----
+  const handleGoalSubmit = async (goal) => {
+    if (!userId) return;
+
+    const userRef = doc(db, 'users', userId);
+    const now = new Date();
+    
+    try {
+      await updateDoc(userRef, {
+        weeklyGoal: goal,
+        streakStartDate: now, 
+        currentWeekPosts: 0, 
+        streakCount: userData.streakCount || 0
+      });
+      console.log("Weekly goal set successfully!");
+    } catch (error) {
+      console.error("Error setting weekly goal:", error);
+    }
+  };
+
+  const showGoalSetter = requiresGoalSetting(userData);
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <>
       <PageHeader />
       <PersonalGreeting/>
-      <PromptCard />
+      {showGoalSetter ? (
+        <WeeklyGoalSetter onSubmitGoal={handleGoalSubmit} />
+      ) : (
+        <PromptCard />
+      )}
       <UploadSection />
       <ChallengeSection />
       <FriendActivityCard/>
