@@ -1,37 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { updatePostPublishStatus } from '../../../utils/postActions';
 import CenteredContainer from '../../common/CenteredContainer';
 import PostCard from '../../common/PostCard';
 
 /**
  * Full-screen view to display a single post (reusing the PostCard component).
- * @param {object} post - The post data object (item).
+ * @param {object[]} posts - Array of all user posts (for the FlatList).
+ * @param {string} postId - The ID of the currently selected post.
  * @param {function} onClose - Function to navigate back to the profile grid.
+ * @param {function} onTogglePublish - Handler from ProfileScreen to change post status in Firestore.
  */
-export default function PostDetailScreen({ posts, postId, onClose }) {
+export default function PostDetailScreen({ posts, postId, onClose, onTogglePublish }) {
   const initialIndex = posts.findIndex(p => p.id === postId);
-
-  const handleTogglePublish = async (postItem) => {
-    // Toggle the status based on the current value
-    const newStatus = !postItem.isPublished;
-    const success = await updatePostPublishStatus(postItem.id, newStatus);
-    
-    if (success) {
-        // You might trigger a local UI refresh or rely on the Firestore listener
-        // to automatically update the status displayed on the card.
-        console.log(`Successfully toggled post ${postItem.id} to ${newStatus}`);
-    }
-    // If the post is unpublished (isPublished: false), it will disappear 
-    // from the Profile Grid next time the user views it.
-  };
 
   const renderPosts = ({ item }) => (
     <PostCard 
       item={item} 
       isProfileView={true} 
-      onTogglePublish={handleTogglePublish}
+      onTogglePublish={onTogglePublish}
     />
   );
 
@@ -51,7 +38,6 @@ export default function PostDetailScreen({ posts, postId, onClose }) {
           renderItem={renderPosts}
           initialScrollIndex={initialIndex >= 0 ? initialIndex : 0}
           getItemLayout={(data, index) => (
-            // Use a fixed height estimate for performance (800px is safe for the large PostCard)
             { length: 800, offset: 800 * index, index } 
           )}
           showsVerticalScrollIndicator={false}

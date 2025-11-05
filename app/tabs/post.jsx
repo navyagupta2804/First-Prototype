@@ -13,7 +13,7 @@ export default function PostScreen() {
   const [caption, setCaption] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  // --- Image Picker/Camera Logic (Simplified) ---
+  // --- Image Picker/Camera Logic ---
   const launchPicker = async (type) => {
     const asset = await launchImagePicker(type); 
     if (asset) {
@@ -59,12 +59,13 @@ export default function PostScreen() {
         displayPhoto: user.photoURL,
         caption: caption.trim() || '',
         createdAt: serverTimestamp(),
-        likes: 0,
+        likesCount: 0, 
+        commentsCount: 0,
+        isPublished: true, 
       };
 
-      // 4. Dual Write
-      await setDoc(doc(db, 'users', user.uid, 'photos', postId), postData); // Write 1
-      await setDoc(newPhotoRef, postData); // Write 2
+      // 4. Write to database
+      await setDoc(newPhotoRef, postData);
 
       // 5. Increment user's photoCount
       await updateDoc(doc(db, 'users', user.uid), {

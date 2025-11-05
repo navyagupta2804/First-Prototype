@@ -1,4 +1,4 @@
-import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
@@ -34,7 +34,11 @@ const HomeScreen = () => {
 
   // 2. ---- Feed subscription ----
   useEffect(() => {
-    const q = query(collection(db, 'feed'), orderBy('createdAt', 'desc'));
+     const q = query(
+      collection(db, 'feed'), 
+      where('isPublished', '==', true),
+      orderBy('createdAt', 'desc')
+    );
     const unsub = onSnapshot(q, (snap) => {
       const items = [];
       snap.forEach((d) => items.push({ id: d.id, ...d.data() }));

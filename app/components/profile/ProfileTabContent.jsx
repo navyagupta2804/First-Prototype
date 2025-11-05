@@ -7,9 +7,14 @@ const renderGridItem = ({ item, onPostPress }) => (
     <TouchableOpacity style={styles.gridItem} activeOpacity={0.8} onPress={() => onPostPress(item)}>
       <Image 
         source={{ uri: item.url }} 
-        style={styles.gridImage}
+        style={[styles.gridImage, { opacity: item.isPublished === false ? 0.4 : 1 }]}
         onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
       />
+      {item.isPublished === false && (
+        <View style={styles.archiveOverlay}>
+            <Ionicons name="eye-off-outline" size={24} color="#fff" />
+        </View>
+      )}
     </TouchableOpacity>
 );
 

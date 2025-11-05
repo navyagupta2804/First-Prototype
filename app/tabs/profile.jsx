@@ -1,5 +1,5 @@
 import { signOut, updateProfile } from 'firebase/auth';
-import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -62,7 +62,8 @@ export default function ProfileScreen() {
     // Listen to user's posts in real-time
     const unsubPosts = onSnapshot(
       query(
-        collection(db, 'users', user.uid, 'photos'),
+        collection(db, 'feed'), // Query the central 'feed'
+        where('uid', '==', user.uid), // Filter: ONLY posts belonging to this user
         orderBy('createdAt', 'desc')
       ),
       (snapshot) => {
@@ -84,7 +85,6 @@ export default function ProfileScreen() {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      // Automatically navigate back to the profile (which will likely trigger a redirect to auth screen)
       setShowSettings(false); 
     } catch (e) {
       console.error('Sign out error:', e);
@@ -137,6 +137,26 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleTogglePublish = async (post) => {
+    if (!user) return;
+    try {
+      const postRef = doc(db, 'feed', post.id);
+      const newStatus = !post.isPublished;
+      
+      await updateDoc(postRef, {
+        isPublished: newStatus,
+        publishedAt: newStatus ? serverTimestamp() : null 
+      });
+
+      const message = newStatus ? 'Post is now PUBLIC on the main feed!' : 'Post is now PRIVATE (archived to your Log).';
+      Alert.alert('Success', message);
+
+    } catch (e) {
+      console.error('Failed to toggle publish status:', e);
+      Alert.alert('Error', 'Could not update post status.');
+    }
+  };
+
   if (loading || !userData) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -152,6 +172,7 @@ export default function ProfileScreen() {
         posts={posts} 
         postId={selectedPost.id}
         onClose={() => setSelectedPost(null)} 
+        onTogglePublish={handleTogglePublish} 
       />
     );
   }

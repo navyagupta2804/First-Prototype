@@ -256,7 +256,6 @@ const styles = StyleSheet.create({
     marginVertical: 6, 
     width: '100%',
     aspectRatio: 1,
-    resizeMode: "cover",
   },
 
   // Caption
@@ -295,13 +294,12 @@ const styles = StyleSheet.create({
   menuContainer: {
     backgroundColor: 'white',
     borderRadius: 8,
-    minWidth: 180,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  menuItem: {vpaddingVertical: 12, paddingHorizontal: 15 },
+  menuItem: { paddingVertical: 12, paddingHorizontal: 15 },
   menuText: { fontSize: 15, color: '#333' }
 });
