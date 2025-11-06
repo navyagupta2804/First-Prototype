@@ -128,7 +128,7 @@ export default function ProfileScreen() {
 
       await updateProfile(user, updateData);
       await updateDoc(doc(db, 'users', user.uid), updateData);
-
+      console.log("Success", "Your profile changes have been saved!");
       Alert.alert("Success", "Your profile changes have been saved!");
 
     } catch (e) {

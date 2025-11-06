@@ -8,7 +8,6 @@ import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
 import PostCard from '../components/common/PostCard';
 import ChallengeSection from '../components/home/ChallengeSection';
-import FriendActivityCard from '../components/home/FriendActivityCard';
 import PersonalGreeting from '../components/home/PersonalGreeting';
 import PromptCard from '../components/home/PromptCard';
 import WeeklyGoalSetter from '../components/home/WeeklyGoalSetter';
@@ -79,7 +78,7 @@ const HomeScreen = () => {
         <PromptCard />
       )}
       <ChallengeSection />
-      <FriendActivityCard/>
+      {/* <FriendActivityCard/> */}
       <CenteredContainer>
         <Text style={styles.feedHeader}>Community Updates</Text>
       </CenteredContainer>
