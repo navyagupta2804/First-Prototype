@@ -5,7 +5,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 /**
@@ -18,8 +18,10 @@ import {
  * @param {function} props.pickImage - Handler to select image from library.
  * @param {function} props.takePhoto - Handler to take a photo with the camera.
  * @param {function} props.uploadPost - Handler to initiate the post upload.
+ * @param {boolean} props.isPublished - Current published status (maps to isPublished).
+ * @param {function} props.setIsPublished - Handler to toggle published status.
  */
-export default function PostForm({
+export default function LogForm({
   image,
   caption,
   uploading,
@@ -28,6 +30,8 @@ export default function PostForm({
   takePhoto,
   uploadPost,
   clearImage,
+  isPublished,
+  setIsPublished,
 }) {
   const isPostDisabled = !image || uploading;
 
@@ -59,9 +63,51 @@ export default function PostForm({
     );
   };
 
+  const ButtonSelect = () => (
+    <View style={styles.selectContainer}>
+      {/* PUBLIC BUTTON */}
+      <TouchableOpacity
+        style={[
+          styles.selectButton,
+          isPublished && styles.selectButtonActive // Apply active style if selected
+        ]}
+        onPress={() => setIsPublished(true)}
+      >
+        <Text style={[
+          styles.selectButtonText,
+          isPublished && styles.selectButtonTextActive
+        ]}>🌍 Public</Text>
+      </TouchableOpacity>
+
+      {/* PRIVATE BUTTON */}
+      <TouchableOpacity
+        style={[
+          styles.selectButton,
+          !isPublished && styles.selectButtonActive // Apply active style if NOT public (i.e., Private)
+        ]}
+        onPress={() => setIsPublished(false)}
+      >
+        <Text style={[
+          styles.selectButtonText,
+          !isPublished && styles.selectButtonTextActive
+        ]}>🔒 Private</Text>
+      </TouchableOpacity>
+    </View>
+  );
+  
+
   return (
     <View>
       <ImageSection />
+
+      {/* Published/Private Selection */}
+      <ButtonSelect />
+      <Text style={styles.selectHint}>
+        {isPublished 
+          ? 'Your post will appear on the public feed.' 
+          : 'Your post will only be visible to you (private log).'
+        }
+      </Text>
 
       {/* Caption Input */}
       <Text style={styles.label}>Caption (optional)</Text>
@@ -85,7 +131,7 @@ export default function PostForm({
         {uploading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.uploadButtonText}>Post Meal</Text>
+          <Text style={styles.uploadButtonText}>Log Meal</Text>
         )}
       </TouchableOpacity>
 
@@ -151,4 +197,45 @@ const styles = StyleSheet.create({
   },
   uploadButtonText: { color: 'white', fontWeight: '700', fontSize: 16 },
   hint: { color: '#6b7280', fontSize: 14, textAlign: 'center', marginTop: 16 },
+
+  // --- NEW BUTTON GROUP STYLES ---
+  selectContainer: {
+    flexDirection: 'row',
+    height: 50,
+    borderRadius: 10,
+    backgroundColor: '#f3f4f6', // Light gray background for the group
+    marginBottom: 8,
+    overflow: 'hidden', // Ensures buttons are clipped to container border-radius
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  selectButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // The default (inactive) style is the background color of the container
+  },
+  selectButtonActive: {
+    backgroundColor: '#ff4d2d', // Orange background for the selected button
+    // The "inset" visual effect:
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 2,
+  },
+  selectButtonText: {
+    color: '#374151', // Dark text color when inactive
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  selectButtonTextActive: {
+    color: 'white', // White text when active (on the orange background)
+    fontWeight: '700',
+  },
+  selectHint: {
+    color: '#6b7280', 
+    fontSize: 14, 
+    marginBottom: 16,
+  },
 });

@@ -4,13 +4,14 @@ import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
-import PostForm from '../components/post/PostForm';
+import LogForm from '../components/log/LogForm';
 import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
 
-export default function PostScreen() {
+export default function LogScreen() {
   const [image, setImage] = useState(null);
   const [assetMimeType, setAssetMimeType] = useState(null);
   const [caption, setCaption] = useState('');
+  const [isPublished, setIsPublished] = useState(true);
   const [uploading, setUploading] = useState(false);
 
   // --- Image Picker/Camera Logic ---
@@ -61,7 +62,7 @@ export default function PostScreen() {
         createdAt: serverTimestamp(),
         likesCount: 0, 
         commentsCount: 0,
-        isPublished: true, 
+        isPublished: isPublished, 
       };
 
       // 4. Write to database
@@ -78,11 +79,13 @@ export default function PostScreen() {
         { text: 'OK', onPress: () => {
           setImage(null);
           setCaption('');
+          setIsPublished(true);
         }}
       ]);
 
       setImage(null);
       setCaption('');
+      setIsPublished(true);
 
     } catch (e) {
       console.error('Upload error:', e);
@@ -96,11 +99,13 @@ export default function PostScreen() {
       <PageHeader />
       <CenteredContainer>
         <Text style={styles.title}>Log a Meal</Text>
-        <PostForm 
+        <LogForm 
           image={image}
           caption={caption}
+          isPublished={isPublished}
           uploading={uploading}
           setCaption={setCaption}
+          setIsPublished={setIsPublished}
           pickImage={pickImage}
           takePhoto={takePhoto}
           uploadPost={uploadPost}
