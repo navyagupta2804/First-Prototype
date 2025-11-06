@@ -116,6 +116,7 @@ const getStartOfWeek = (date) => {
 };
 
 exports.updateStreakOnNewPost = onDocumentCreated({
+  database: "pantry1",
   document: "feed/{postId}",
   region: "us-central1",
 }, async (event) => {
@@ -160,19 +161,30 @@ exports.updateStreakOnNewPost = onDocumentCreated({
   let newStreakCount = userData.streakCount || 0;
   let newStreakStartDate = userData.streakStartDate;
 
-  if (isNewWeek) {
-    const weeklyGoal = userData.weeklyGoal || 1;
+  let hasMetGoal = userData.hasGoalBeenMetThisWeek || false;
+  const weeklyGoal = userData.weeklyGoal || 1;
+  const oldPosts = newCurrentWeekPosts; // Posts BEFORE this new one is counted
 
-    if (newCurrentWeekPosts >= weeklyGoal) {
-      newStreakCount += 1;
-    } else {
+  if (!hasMetGoal && (oldPosts + 1) >= weeklyGoal) {
+    // Goal is being met with this new post, AND the streak hasn't been incremented yet
+    newStreakCount += 1;
+    hasMetGoal = true; // Set the flag to prevent double-counting this week's goal
+    console.log(`GOAL MET! Streak incremented immediately to ${newStreakCount}.`);
+  }
+
+  if (isNewWeek) {
+    // Check if the goal was missed
+    if (!hasMetGoal) {
       newStreakCount = 0;
+      console.log("WEEK OVER. Goal was missed. Streak reset.");
     }
 
-    // START NEW CALENDAR WEEK
+    // Reset for the new calendar week
     newCurrentWeekPosts = 1;
     newStreakStartDate = admin.firestore.Timestamp.fromDate(getStartOfWeek(now));
+    hasMetGoal = false; // Reset the flag for the new week
   } else {
+    // If NOT a new week, just increment the posts
     newCurrentWeekPosts += 1;
   }
 
@@ -181,6 +193,7 @@ exports.updateStreakOnNewPost = onDocumentCreated({
     currentWeekPosts: newCurrentWeekPosts,
     streakCount: newStreakCount,
     streakStartDate: newStreakStartDate,
+    hasGoalBeenMetThisWeek: hasMetGoal,
   });
 
   console.log(`Streak updated for user ${userId}.`);

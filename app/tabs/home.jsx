@@ -58,7 +58,8 @@ const HomeScreen = () => {
         weeklyGoal: goal,
         streakStartDate: sundayMidnight, 
         currentWeekPosts: 0, 
-        streakCount: userData.streakCount || 0
+        streakCount: userData.streakCount || 0,
+        hasGoalBeenMetThisWeek: false,
       });
       console.log("Weekly goal set successfully!");
     } catch (error) {
