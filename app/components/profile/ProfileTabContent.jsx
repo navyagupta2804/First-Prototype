@@ -1,16 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const { width } = Dimensions.get('window');
-const ITEM_SIZE = (width - 48) / 3; // 3 columns with padding
+const SPACING = 6;
 
 const renderGridItem = ({ item, onPostPress }) => (
     <TouchableOpacity style={styles.gridItem} activeOpacity={0.8} onPress={() => onPostPress(item)}>
       <Image 
         source={{ uri: item.url }} 
-        style={styles.gridImage}
+        style={[styles.gridImage, { opacity: item.isPublished === false ? 0.4 : 1 }]}
         onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
       />
+      {item.isPublished === false && (
+        <View style={styles.archiveOverlay}>
+            <Ionicons name="eye-off-outline" size={24} color="#fff" />
+        </View>
+      )}
     </TouchableOpacity>
 );
 
@@ -63,8 +67,8 @@ const ProfileTabContent = ({ activeTab, posts, onPostPress }) => {
 
 const styles = StyleSheet.create({
     // Grid
-    grid: { paddingHorizontal: 16,  paddingBottom: 20 },
-    gridItem: { width: ITEM_SIZE, height: ITEM_SIZE, padding: 2 },
+    grid: { justifyContent:'center', paddingBottom: 20 },
+    gridItem: { width: '33.333%', padding: SPACING / 2, aspectRatio: 1 },
     gridImage: { width: '100%', height: '100%', borderRadius: 8, backgroundColor: '#f3f4f6' },
     
     // Empty States

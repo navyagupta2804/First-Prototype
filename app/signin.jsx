@@ -21,8 +21,21 @@ export default function SignInScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>pantry</Text>
-      <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="Email" autoCapitalize="none" />
-      <TextInput style={styles.input} value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry />
+      <TextInput 
+        style={styles.input} 
+        value={email} onChangeText={setEmail} 
+        placeholder="Email" 
+        placeholderTextColor="#A9A9A9"
+        autoCapitalize="none" 
+      />
+      <TextInput 
+        style={styles.input} 
+        value={password} 
+        onChangeText={setPassword} 
+        placeholder="Password" 
+        placeholderTextColor="#A9A9A9"
+        secureTextEntry 
+      />
       <TouchableOpacity style={styles.button} onPress={onSignIn}>
         <Text style={styles.buttonText}>Sign In</Text>
       </TouchableOpacity>

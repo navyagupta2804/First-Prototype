@@ -5,7 +5,9 @@ import {
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import {
-  Alert, FlatList, Image, StyleSheet, Text,
+  Alert, FlatList, Image,
+  Modal,
+  StyleSheet, Text,
   TextInput, TouchableOpacity, View
 } from 'react-native';
 import { auth, db } from '../../../firebaseConfig';
@@ -45,6 +47,7 @@ function CommentInput({ itemId, onCommentAdded }) {
         value={commentText}
         onChangeText={setCommentText}
         placeholder="Write a comment..."
+        placeholderTextColor="#A9A9A9"
         style={styles.commentInput}
       />
       <TouchableOpacity style={styles.sendBtn} onPress={onAddComment}>
@@ -90,15 +93,48 @@ function CommentsSection({ itemId, show }) {
   );
 }
 
-export default function PostCard({ item }) {
+// --- Options Menu Component ---
+// This is the menu that pops up when the user clicks the three dots
+const PostOptionsMenu = ({ isVisible, onClose, item, onTogglePublish }) => {
+  const menuActionText = item.isPublished ? 'Hide from Feed (Archive)' : 'Publish to Feed';
+
+  const handleAction = () => {
+    onTogglePublish(item);
+    onClose();
+  };
+
+  return (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={isVisible}
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity 
+        style={styles.modalBackdrop} 
+        activeOpacity={1}
+        onPress={onClose} 
+      >
+        {/* Menu content placed strategically */}
+        <View style={styles.menuContainer}>
+          <TouchableOpacity style={styles.menuItem} onPress={handleAction}>
+            <Text style={styles.menuText}>{menuActionText}</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+};
+
+export default function PostCard({ item, isProfileView = false, onTogglePublish }) {
   const [likesCount, setLikesCount] = useState(item.likesCount || 0);
   const [commentsCount, setCommentsCount] = useState(item.commentsCount || 0);
   const [liked, setLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const user = auth.currentUser;
 
   useEffect(() => {
-    // subscribe to counts on the feed doc
     const dref = doc(db, 'feed', item.id);
     const unsub = onSnapshot(dref, (snap) => {
       const data = snap.data() || {};
@@ -139,15 +175,25 @@ export default function PostCard({ item }) {
   };
 
   const postTime = item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : '';
+  const isAuthorAndInProfile = isProfileView && user && user.uid === item.uid;
 
   return (
     <CenteredContainer style={styles.card}>
+      {/* Header */}
       <View style={styles.cardHeader}>
         <Image source={{ uri: item.displayPhoto }} style={styles.avatar} />
         <View style={{ flex: 1 }}>
           <Text style={styles.cardTitle}>{item.displayName || 'Pantry Member'}</Text>
           <Text style={styles.cardTime}>{postTime}</Text>
         </View>
+        {isAuthorAndInProfile && (
+          <TouchableOpacity 
+            style={styles.optionsButton} 
+            onPress={() => setIsMenuVisible(true)}
+          >
+           <Ionicons name="ellipsis-vertical" size={24} color="#666" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Post Image */}
@@ -177,6 +223,16 @@ export default function PostCard({ item }) {
 
       {/* Comments Section */}
       <CommentsSection itemId={item.id} show={showComments} />
+
+      {/* Options Menu Modal */}
+      {isAuthorAndInProfile && (
+        <PostOptionsMenu 
+          isVisible={isMenuVisible}
+          onClose={() => setIsMenuVisible(false)}
+          item={item}
+          onTogglePublish={onTogglePublish}
+        />
+      )}
     </CenteredContainer>
   );
 }
@@ -199,7 +255,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
     marginVertical: 6, 
     width: '100%',
-    height: 650,
+    aspectRatio: 1,
   },
 
   // Caption
@@ -219,5 +275,31 @@ const styles = StyleSheet.create({
   commentText: { marginTop: 4 },
   commentInputRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   commentInput: { flex: 1, borderWidth: 1, borderColor: '#eee', borderRadius: 8, padding: 10, marginRight: 8 },
-  sendBtn: { backgroundColor: '#111216', padding: 10, borderRadius: 8 }
+  sendBtn: { backgroundColor: '#111216', padding: 10, borderRadius: 8 },
+
+  // Options Button
+  optionsButton: {
+    padding: 8, 
+  },
+  
+  // Options Modal
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-start', 
+    alignItems: 'flex-end',  
+    paddingTop: 100,
+    paddingRight: 20, 
+  },
+  menuContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  menuItem: { paddingVertical: 12, paddingHorizontal: 15 },
+  menuText: { fontSize: 15, color: '#333' }
 });

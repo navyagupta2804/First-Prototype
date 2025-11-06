@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
+import PageHeader from '../components/common/PageHeader';
 
 export default function CommunitiesScreen() {
   const user = auth.currentUser;
@@ -72,6 +73,7 @@ export default function CommunitiesScreen() {
 
   return (
     <View style={styles.screenContainer}>
+      <PageHeader />
       <FlatList
         data={communities}
         keyExtractor={(it) => it.id}
@@ -83,7 +85,7 @@ export default function CommunitiesScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1, backgroundColor: 'white', paddingTop: 56 },
+  screenContainer: { flex: 1, backgroundColor: 'white', paddingHorizontal: 16 },
   card: { borderWidth: 1, borderColor: '#eee', padding: 16, borderRadius: 12, marginBottom: 12 },
   title: { fontSize: 16, fontWeight: '700' },
   meta: { color: '#6b7280', marginTop: 4, marginBottom: 8 },

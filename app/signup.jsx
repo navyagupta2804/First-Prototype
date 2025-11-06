@@ -94,7 +94,8 @@ export default function SignUpScreen() {
         style={styles.input}
         value={name}
         onChangeText={setName}
-        placeholder="Jordan Davis"
+        placeholder="e.g. Jordan Davis"
+        placeholderTextColor="#A9A9A9"
       />
 
       <Text style={styles.label}>Email</Text>
@@ -102,7 +103,8 @@ export default function SignUpScreen() {
         style={styles.input}
         value={email}
         onChangeText={setEmail}
-        placeholder="you@example.com"
+        placeholder="youremail@example.com"
+        placeholderTextColor="#A9A9A9"
         autoCapitalize="none"
         keyboardType="email-address"
         textContentType="emailAddress"
@@ -113,7 +115,8 @@ export default function SignUpScreen() {
         style={styles.input}
         value={pw}
         onChangeText={setPw}
-        placeholder="At least 8 characters. Must included letters and numbers."
+        placeholder="At least 8 characters. Include letters and numbers."
+        placeholderTextColor="#A9A9A9"
         secureTextEntry
         textContentType="newPassword"
       />
@@ -124,6 +127,7 @@ export default function SignUpScreen() {
         value={pw2}
         onChangeText={setPw2}
         placeholder="Re-enter password"
+        placeholderTextColor="#A9A9A9"
         secureTextEntry
         textContentType="newPassword"
       />

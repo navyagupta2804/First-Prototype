@@ -1,7 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CenteredContainer from './CenteredContainer';
 
-const AppHeader = () => {
+const PageHeader = () => {
+  const router = useRouter();
+
   const handleAddFriend = () => {
     // Logic to open Add Friend modal
     console.log("Add Friend tapped");
@@ -13,7 +17,7 @@ const AppHeader = () => {
   };
 
   return (
-    <View style={styles.header}>
+    <CenteredContainer style={styles.header}>
       <Text style={styles.brand}>pantry</Text>
       <View style={styles.headerIcons}>
         <TouchableOpacity style={styles.iconButton} onPress={handleAddFriend}>
@@ -23,33 +27,15 @@ const AppHeader = () => {
           <Ionicons name="notifications-outline" size={24} color="#111" />
         </TouchableOpacity>
       </View>
-    </View>
+    </CenteredContainer>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  brand: { 
-    fontSize: 24, 
-    fontWeight: '800', 
-    color: '#ff4d2d' 
-  },
-  headerIcons: { 
-    flexDirection: 'row', 
-    gap: 16 
-  },
-  iconButton: { 
-    padding: 4 
-  },
+  header: { paddingTop: 56, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  brand: { fontSize: 26, fontWeight: '900', color: '#ff4d2d', letterSpacing: 0.2 },
+  headerIcons: { flexDirection: 'row', gap: 15 },
+  // iconButton: { padding: 4 },
 });
 
-export default AppHeader;
+export default PageHeader;
