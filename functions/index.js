@@ -1,11 +1,9 @@
 // A Cloud Function that updates denormalized user data across all posts and comments.
 const {onDocumentWritten, onDocumentCreated} = require("firebase-functions/v2/firestore");
-const admin = require("firebase-admin");
 const {getFirestore} = require("firebase-admin/firestore");
+const admin = require("firebase-admin");
 
 // Initialize the Admin SDK once for the project
-// admin.initializeApp();
-// const db = admin.firestore("pantry1");
 const app = admin.initializeApp();
 const db = getFirestore(app, "pantry1");
 
@@ -107,6 +105,16 @@ exports.updateDenormalizedUserData = onDocumentWritten({
   return null;
 });
 
+// Helper to determine the start of the calendar week (Sunday 00:00:00)
+const getStartOfWeek = (date) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day;
+  d.setDate(diff); // Set the date to Sunday's date
+  d.setHours(0, 0, 0, 0); // Set time to midnight
+  return d;
+};
+
 exports.updateStreakOnNewPost = onDocumentCreated({
   document: "feed/{postId}",
   region: "us-central1",
@@ -120,8 +128,6 @@ exports.updateStreakOnNewPost = onDocumentCreated({
 
   const postData = snapshot.data();
   const userId = postData.uid;
-
-  // 1. Get the current user data (goal, current progress, streak status)
   const userRef = db.collection("users").doc(userId);
   const userDoc = await userRef.get();
   const userData = userDoc.data();
@@ -132,33 +138,42 @@ exports.updateStreakOnNewPost = onDocumentCreated({
     return null;
   }
 
-  // 2. Perform the streak and post count calculation
+  // 1. Get the current post's time (server's time in UTC)
   const now = new Date();
-  // Ensure streakStartDate is treated as a Date object from a Firestore timestamp
-  const streakStartDateTimestamp = userData.streakStartDate;
-  const currentWeekStart = streakStartDateTimestamp ?
-    streakStartDateTimestamp.toDate() : new Date(0);
 
-  // Check if the current week is over (7 days in milliseconds)
-  const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-  const isNewWeek = now.getTime() >= (currentWeekStart.getTime() + oneWeekMs);
+  // 2. Get the recorded streak start date (the Sunday midnight timestamp set by the client)
+  const lastStartTimestamp = userData.streakStartDate;
+  const lastRecordedStart = lastStartTimestamp ? lastStartTimestamp.toDate() : null;
 
+  // 3. Calculate the Sunday midnight for the time the post was made (in UTC)
+  const currentWeekStart = getStartOfWeek(now).getTime();
+
+  // 4. Calculate the Sunday midnight for the recorded streak start (in UTC)
+  // This value should be the exact Sunday midnight timestamp sent by the client.
+  const lastWeekStart = lastRecordedStart ? getStartOfWeek(lastRecordedStart).getTime() : 0;
+
+  // Check if the current calendar week start is LATER than the recorded week start
+  const isNewWeek = currentWeekStart > lastWeekStart;
+
+  // streak calculation
   let newCurrentWeekPosts = userData.currentWeekPosts || 0;
   let newStreakCount = userData.streakCount || 0;
-  let newStreakStartDate = userData.streakStartDate || admin.firestore.Timestamp.fromDate(now); // Use Timestamp
+  let newStreakStartDate = userData.streakStartDate;
 
   if (isNewWeek) {
-    const weeklyGoal = userData.weeklyGoal || 1; // Use a default goal if none is set
-    // Check if last week's goal was met before resetting
+    const weeklyGoal = userData.weeklyGoal || 1;
+
     if (newCurrentWeekPosts >= weeklyGoal) {
-      newStreakCount += 1; // Goal was met, increment streak
+      newStreakCount += 1;
     } else {
-      newStreakCount = 0; // Goal was missed, reset streak
+      newStreakCount = 0;
     }
-    newCurrentWeekPosts = 1; // Start post count for the new week
-    newStreakStartDate = admin.firestore.Timestamp.fromDate(now); // Reset the week start date
+
+    // START NEW CALENDAR WEEK
+    newCurrentWeekPosts = 1;
+    newStreakStartDate = admin.firestore.Timestamp.fromDate(getStartOfWeek(now));
   } else {
-    newCurrentWeekPosts += 1; // Increment post count for the current week
+    newCurrentWeekPosts += 1;
   }
 
   // 3. Update the user document

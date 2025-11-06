@@ -68,7 +68,7 @@ export default function SignUpScreen() {
         displayName: trimmedName,
         email: trimmedEmail,
         photoURL: defaultPhotoURL, // <-- ADDED
-        streak: 0,
+        streakCount: 0,
         communities: 0,
         photoCount: 0,
         lastJournalDate: null,

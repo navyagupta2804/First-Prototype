@@ -1,10 +1,11 @@
 // utils/badgeCalculations.js (PURE JAVASCRIPT - NO REACT NATIVE IMPORTS)
 
 // Helper to determine the start of the week for a given date
-const getStartOfWeek = (date) => {
+export const getStartOfWeek = (date) => {
   const d = new Date(date);
   const day = d.getDay(); // 0 for Sunday, 1 for Monday, etc.
   const diff = d.getDate() - day;
+  d.setDate(diff);
   d.setHours(0, 0, 0, 0);
   return d;
 };
@@ -19,13 +20,16 @@ export const requiresGoalSetting = (userData) => {
 
     // Condition 1: Goal has never been set (First-time user)
     if (!userData.weeklyGoal || !lastStart) {
-        return true;
+      return true;
     }
 
     // 2. Determine if a new week has started since the last streakStartDate
     // Compare the start of the current calendar week to the start of the recorded week.
     const currentWeekStart = getStartOfWeek(today).getTime();
     const lastWeekStart = getStartOfWeek(lastStart).getTime();
+
+    console.log("currentWeekStart:", currentWeekStart);
+    console.log("lastWeekStart:", lastWeekStart);
     
     // If the current calendar week is after the recorded week, they need to set a goal.
     return currentWeekStart > lastWeekStart;
