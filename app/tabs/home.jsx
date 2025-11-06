@@ -2,7 +2,7 @@ import { collection, doc, onSnapshot, orderBy, query, updateDoc, where } from 'f
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
-import { requiresGoalSetting } from '../utils/bageCalculations';
+import { getStartOfWeek, requiresGoalSetting } from '../utils/bageCalculations';
 
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
@@ -51,14 +51,15 @@ const HomeScreen = () => {
     if (!userId) return;
 
     const userRef = doc(db, 'users', userId);
-    const now = new Date();
+    const sundayMidnight = getStartOfWeek(new Date());
     
     try {
       await updateDoc(userRef, {
         weeklyGoal: goal,
-        streakStartDate: now, 
+        streakStartDate: sundayMidnight, 
         currentWeekPosts: 0, 
-        streakCount: userData.streakCount || 0
+        streakCount: userData.streakCount || 0,
+        hasGoalBeenMetThisWeek: false,
       });
       console.log("Weekly goal set successfully!");
     } catch (error) {

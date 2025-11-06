@@ -26,7 +26,7 @@ const PromptCard = ({ journalPrompt }) => {
     if (!snap.exists()) {
       await setDoc(uref, {
         displayName: user.displayName || 'Pantry Member',
-        streak: 0,
+        streakCount: 0,
         communities: 0,
         photoCount: 0,
         lastJournalDate: null,
@@ -53,7 +53,7 @@ const PromptCard = ({ journalPrompt }) => {
       const data = snap.data() || {};
       const today = dayjs().format('YYYY-MM-DD');
 
-      let streak = data.streak || 0;
+      let streak = data.streakCount || 0;
       if (data.lastJournalDate) {
         const last = dayjs(data.lastJournalDate);
         if (last.add(1, 'day').format('YYYY-MM-DD') === today) streak += 1;

@@ -43,7 +43,7 @@ export default function ProfileScreen() {
           setUserData({
             displayName: user.displayName || 'Pantry User',
             email: user.email,
-            streak: 0,
+            streakCount: 0,
             communities: 0,
             photoCount: 0,
             friends: 0,

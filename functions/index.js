@@ -1,11 +1,9 @@
 // A Cloud Function that updates denormalized user data across all posts and comments.
-const {onDocumentWritten} = require("firebase-functions/v2/firestore");
-const admin = require("firebase-admin");
+const {onDocumentWritten, onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {getFirestore} = require("firebase-admin/firestore");
+const admin = require("firebase-admin");
 
 // Initialize the Admin SDK once for the project
-// admin.initializeApp();
-// const db = admin.firestore("pantry1");
 const app = admin.initializeApp();
 const db = getFirestore(app, "pantry1");
 
@@ -104,5 +102,101 @@ exports.updateDenormalizedUserData = onDocumentWritten({
     console.log("No documents found to update.");
   }
 
+  return null;
+});
+
+// Helper to determine the start of the calendar week (Sunday 00:00:00)
+const getStartOfWeek = (date) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day;
+  d.setDate(diff); // Set the date to Sunday's date
+  d.setHours(0, 0, 0, 0); // Set time to midnight
+  return d;
+};
+
+exports.updateStreakOnNewPost = onDocumentCreated({
+  database: "pantry1",
+  document: "feed/{postId}",
+  region: "us-central1",
+}, async (event) => {
+  const snapshot = event.data;
+
+  if (!snapshot) {
+    console.log("No data found in event snapshot.");
+    return null;
+  }
+
+  const postData = snapshot.data();
+  const userId = postData.uid;
+  const userRef = db.collection("users").doc(userId);
+  const userDoc = await userRef.get();
+  const userData = userDoc.data();
+
+  // Basic check to ensure user data exists
+  if (!userDoc.exists || !userData) {
+    console.log(`User ${userId} not found or has no data. Cannot update streak.`);
+    return null;
+  }
+
+  // 1. Get the current post's time (server's time in UTC)
+  const now = new Date();
+
+  // 2. Get the recorded streak start date (the Sunday midnight timestamp set by the client)
+  const lastStartTimestamp = userData.streakStartDate;
+  const lastRecordedStart = lastStartTimestamp ? lastStartTimestamp.toDate() : null;
+
+  // 3. Calculate the Sunday midnight for the time the post was made (in UTC)
+  const currentWeekStart = getStartOfWeek(now).getTime();
+
+  // 4. Calculate the Sunday midnight for the recorded streak start (in UTC)
+  // This value should be the exact Sunday midnight timestamp sent by the client.
+  const lastWeekStart = lastRecordedStart ? getStartOfWeek(lastRecordedStart).getTime() : 0;
+
+  // Check if the current calendar week start is LATER than the recorded week start
+  const isNewWeek = currentWeekStart > lastWeekStart;
+
+  // streak calculation
+  let newCurrentWeekPosts = userData.currentWeekPosts || 0;
+  let newStreakCount = userData.streakCount || 0;
+  let newStreakStartDate = userData.streakStartDate;
+
+  let hasMetGoal = userData.hasGoalBeenMetThisWeek || false;
+  const weeklyGoal = userData.weeklyGoal || 1;
+  const oldPosts = newCurrentWeekPosts; // Posts BEFORE this new one is counted
+
+  if (!hasMetGoal && (oldPosts + 1) >= weeklyGoal) {
+    // Goal is being met with this new post, AND the streak hasn't been incremented yet
+    newStreakCount += 1;
+    hasMetGoal = true; // Set the flag to prevent double-counting this week's goal
+    console.log(`GOAL MET! Streak incremented immediately to ${newStreakCount}.`);
+  }
+
+  if (isNewWeek) {
+    // Check if the goal was missed
+    if (!hasMetGoal) {
+      newStreakCount = 0;
+      console.log("WEEK OVER. Goal was missed. Streak reset.");
+    }
+
+    // Reset for the new calendar week
+    newCurrentWeekPosts = 1;
+    newStreakStartDate = admin.firestore.Timestamp.fromDate(getStartOfWeek(now));
+    hasMetGoal = false; // Reset the flag for the new week
+  } else {
+    // If NOT a new week, just increment the posts
+    newCurrentWeekPosts += 1;
+  }
+
+  // 3. Update the user document
+  await userRef.update({
+    currentWeekPosts: newCurrentWeekPosts,
+    streakCount: newStreakCount,
+    streakStartDate: newStreakStartDate,
+    hasGoalBeenMetThisWeek: hasMetGoal,
+  });
+
+  console.log(`Streak updated for user ${userId}.`);
+  console.log(`Posts: ${newCurrentWeekPosts}, Streak: ${newStreakCount}`);
   return null;
 });
