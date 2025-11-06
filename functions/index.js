@@ -1,5 +1,5 @@
 // A Cloud Function that updates denormalized user data across all posts and comments.
-const {onDocumentWritten} = require("firebase-functions/v2/firestore");
+const {onDocumentWritten, onDocumentCreated} = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 const {getFirestore} = require("firebase-admin/firestore");
 
@@ -104,5 +104,71 @@ exports.updateDenormalizedUserData = onDocumentWritten({
     console.log("No documents found to update.");
   }
 
+  return null;
+});
+
+exports.updateStreakOnNewPost = onDocumentCreated({
+  document: "feed/{postId}",
+  region: "us-central1",
+}, async (event) => {
+  const snapshot = event.data;
+
+  if (!snapshot) {
+    console.log("No data found in event snapshot.");
+    return null;
+  }
+
+  const postData = snapshot.data();
+  const userId = postData.uid;
+
+  // 1. Get the current user data (goal, current progress, streak status)
+  const userRef = db.collection("users").doc(userId);
+  const userDoc = await userRef.get();
+  const userData = userDoc.data();
+
+  // Basic check to ensure user data exists
+  if (!userDoc.exists || !userData) {
+    console.log(`User ${userId} not found or has no data. Cannot update streak.`);
+    return null;
+  }
+
+  // 2. Perform the streak and post count calculation
+  const now = new Date();
+  // Ensure streakStartDate is treated as a Date object from a Firestore timestamp
+  const streakStartDateTimestamp = userData.streakStartDate;
+  const currentWeekStart = streakStartDateTimestamp ?
+    streakStartDateTimestamp.toDate() : new Date(0);
+
+  // Check if the current week is over (7 days in milliseconds)
+  const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+  const isNewWeek = now.getTime() >= (currentWeekStart.getTime() + oneWeekMs);
+
+  let newCurrentWeekPosts = userData.currentWeekPosts || 0;
+  let newStreakCount = userData.streakCount || 0;
+  let newStreakStartDate = userData.streakStartDate || admin.firestore.Timestamp.fromDate(now); // Use Timestamp
+
+  if (isNewWeek) {
+    const weeklyGoal = userData.weeklyGoal || 1; // Use a default goal if none is set
+    // Check if last week's goal was met before resetting
+    if (newCurrentWeekPosts >= weeklyGoal) {
+      newStreakCount += 1; // Goal was met, increment streak
+    } else {
+      newStreakCount = 0; // Goal was missed, reset streak
+    }
+    newCurrentWeekPosts = 1; // Start post count for the new week
+    newStreakStartDate = admin.firestore.Timestamp.fromDate(now); // Reset the week start date
+  } else {
+    newCurrentWeekPosts += 1; // Increment post count for the current week
+  }
+
+  // 3. Update the user document
+  await userRef.update({
+    currentWeekPosts: newCurrentWeekPosts,
+    streakCount: newStreakCount,
+    streakStartDate: newStreakStartDate,
+  });
+
+  console.log(`Streak updated for user ${userId}.`);
+  console.log(`Posts: ${newCurrentWeekPosts}, Streak: ${newStreakCount}`);
   return null;
 });
