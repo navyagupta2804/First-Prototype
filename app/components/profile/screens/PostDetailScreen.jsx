@@ -28,7 +28,7 @@ export default function PostDetailScreen({ posts, postId, onClose, onTogglePubli
         <View style={styles.pageTitle}>
           <TouchableOpacity style={styles.backButtonContainer} onPress={onClose}>
             <Ionicons name="arrow-back" size={16} color="#111" /> 
-            <Text style={styles.title}>your post</Text> 
+            <Text style={styles.title}>your posts</Text> 
           </TouchableOpacity>
         </View>
       </CenteredContainer>
