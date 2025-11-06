@@ -105,6 +105,7 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
                   value={displayName}
                   onChangeText={setDisplayName}
                   placeholder="Display name"
+                  placeholderTextColor="#A9A9A9"
                 />
                 <Text style={styles.usernameLabel}>Username</Text>
               </View>

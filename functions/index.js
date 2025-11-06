@@ -1,10 +1,13 @@
 // A Cloud Function that updates denormalized user data across all posts and comments.
 const {onDocumentWritten} = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
+const {getFirestore} = require("firebase-admin/firestore");
 
 // Initialize the Admin SDK once for the project
-admin.initializeApp();
-const db = admin.firestore();
+// admin.initializeApp();
+// const db = admin.firestore("pantry1");
+const app = admin.initializeApp();
+const db = getFirestore(app, "pantry1");
 
 exports.updateDenormalizedUserData = onDocumentWritten({
   database: "pantry1",
@@ -69,29 +72,29 @@ exports.updateDenormalizedUserData = onDocumentWritten({
   console.log("finished updating user post");
   console.log("user posts:", feedPostsSnapshot);
 
-  // --- 3. Update the User's Posts in their Subcollection ---
-  // Query for all documents in 'users/{userId}/photos'
-  const userPostsSnapshot = await db.collection("users").doc(userId).collection("photos")
-      .get();
-
-  userPostsSnapshot.forEach((doc) => {
-    batch.update(doc.ref, updatePayload);
-    documentsUpdated++;
-  });
-
-  // --- 4. Update the User's Comments in all Post Subcollections ---
+  // --- 3. Update the User's Comments in all Post Subcollections ---
   // This is the most complex step as it requires a Collection Group Query.
   // NOTE: This requires a Firestore index. See next section.
   const commentsSnapshot = await db.collectionGroup("comments")
       .where("uid", "==", userId)
       .get();
 
+  console.log("about to update comments");
   commentsSnapshot.forEach((doc) => {
-  // NOTE: Comments only need displayName (or displayPhoto, if you want avatars in comments)
-  // We assume comments only need displayName
-    batch.update(doc.ref, {displayName: newDisplayName});
-    documentsUpdated++;
+  // Comments only need displayName
+    const commentUpdate = {};
+    if (displayNameChanged) {
+      commentUpdate.displayName = newDisplayName;
+    }
+    // Only update if there are fields to change
+    if (Object.keys(commentUpdate).length > 0) {
+      batch.update(doc.ref, commentUpdate);
+      documentsUpdated++;
+    }
   });
+
+  console.log("finished updating comments");
+  console.log("comments:", commentsSnapshot);
 
   // --- 5. Commit the batch and return ---
   if (documentsUpdated > 0) {
