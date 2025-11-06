@@ -104,8 +104,8 @@ export default function LogForm({
       <ButtonSelect />
       <Text style={styles.selectHint}>
         {isPublished 
-          ? '🌍 Your post will appear on the public feed.' 
-          : '🔒 Your post will only be visible to you (private log).'
+          ? 'Your post will appear on the public feed.' 
+          : 'Your post will only be visible to you (private log).'
         }
       </Text>
 
