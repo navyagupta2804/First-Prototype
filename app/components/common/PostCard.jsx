@@ -93,7 +93,13 @@ function CommentsSection({ itemId, show }) {
   );
 }
 
-// --- Options Menu Component ---
+// Indicator Component
+const PrivateIndicator = () => (
+  <View style={styles.privateBadge}>
+    <Text style={styles.privateBadgeText}>🔒 PRIVATE LOG</Text>
+  </View>
+);
+
 // This is the menu that pops up when the user clicks the three dots
 const PostOptionsMenu = ({ isVisible, onClose, item, onTogglePublish }) => {
   const menuActionText = item.isPublished ? 'Hide from Feed (Archive)' : 'Publish to Feed';
@@ -126,6 +132,7 @@ const PostOptionsMenu = ({ isVisible, onClose, item, onTogglePublish }) => {
   );
 };
 
+
 export default function PostCard({ item, isProfileView = false, onTogglePublish }) {
   const [likesCount, setLikesCount] = useState(item.likesCount || 0);
   const [commentsCount, setCommentsCount] = useState(item.commentsCount || 0);
@@ -133,6 +140,9 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
   const [showComments, setShowComments] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const user = auth.currentUser;
+
+  const isAuthorAndInProfile = isProfileView && user && user.uid === item.uid;
+  const isPrivate = item.isPublished === false;
 
   useEffect(() => {
     const dref = doc(db, 'feed', item.id);
@@ -175,7 +185,6 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
   };
 
   const postTime = item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : '';
-  const isAuthorAndInProfile = isProfileView && user && user.uid === item.uid;
 
   return (
     <CenteredContainer style={styles.card}>
@@ -186,12 +195,20 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
           <Text style={styles.cardTitle}>{item.displayName || 'Pantry Member'}</Text>
           <Text style={styles.cardTime}>{postTime}</Text>
         </View>
+        
+        {/* Private Indicator */}
+        {isAuthorAndInProfile && isPrivate && (
+          <View style={styles.privateIndicatorRow}>
+            <PrivateIndicator />
+          </View>
+        )}
+
         {isAuthorAndInProfile && (
           <TouchableOpacity 
             style={styles.optionsButton} 
             onPress={() => setIsMenuVisible(true)}
           >
-           <Ionicons name="ellipsis-vertical" size={24} color="#666" />
+           <Ionicons name="ellipsis-vertical" size={24} color="#667" />
           </TouchableOpacity>
         )}
       </View>
@@ -301,5 +318,22 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   menuItem: { paddingVertical: 12, paddingHorizontal: 15 },
-  menuText: { fontSize: 15, color: '#333' }
+  menuText: { fontSize: 15, color: '#333' },
+
+  // privacy indicator
+  privateIndicatorRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  privateBadge: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  privateBadgeText: {
+    color: '#B91C1C',
+    fontWeight: '700',
+    fontSize: 12,
+  }
 });
