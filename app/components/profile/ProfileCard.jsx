@@ -72,7 +72,6 @@ const ProfileCard = ({ userData, postsLength, onSettingsPress }) => {
 const styles = StyleSheet.create({
     profileCard: {
         backgroundColor: 'white',
-        // margin: 16,
         borderRadius: 16,
         padding: 20,
         shadowColor: '#000',
