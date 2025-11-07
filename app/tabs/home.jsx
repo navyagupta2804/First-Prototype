@@ -7,7 +7,6 @@ import { getStartOfWeek, requiresGoalSetting } from '../utils/bageCalculations';
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
 import PostCard from '../components/common/PostCard';
-import ChallengeSection from '../components/home/ChallengeSection';
 import PersonalGreeting from '../components/home/PersonalGreeting';
 import PromptCard from '../components/home/PromptCard';
 import WeeklyGoalSetter from '../components/home/WeeklyGoalSetter';
@@ -67,7 +66,7 @@ const HomeScreen = () => {
     }
   };
 
-  const showGoalSetter = requiresGoalSetting(userData);
+  const showGoalSetter = requiresGoalSetting(userData) && userData.abTestGroup !== 'Group B';
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <>
@@ -78,7 +77,7 @@ const HomeScreen = () => {
       ) : (
         <PromptCard />
       )}
-      <ChallengeSection />
+      {/* <ChallengeSection /> */}
       {/* <FriendActivityCard/> */}
       <CenteredContainer>
         <Text style={styles.feedHeader}>Community Updates</Text>

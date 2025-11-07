@@ -201,16 +201,20 @@ export default function ProfileScreen() {
           onSettingsPress={() => setShowSettings(true)} 
         />
         
+        { /* AB TESTING GROUP */}
         {/* Progress bar for user-set weekly goals */}
-        <WeeklyProgressBar
-          currentWeekPosts={userData.currentWeekPosts}
-          weeklyGoal={userData.weeklyGoal}
-        />
+        {userData.abTestGroup !== 'Group B' && (
+          <WeeklyProgressBar
+            currentWeekPosts={userData.currentWeekPosts}
+            weeklyGoal={userData.weeklyGoal}
+          />
+        )}
 
         {/* Tabs (Posts, Saved, Badges) */}
         <ProfileTabs 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
+          userData={userData}
         />
 
         {/* Content based on active tab */}
