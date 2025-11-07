@@ -27,9 +27,6 @@ export const requiresGoalSetting = (userData) => {
     // Compare the start of the current calendar week to the start of the recorded week.
     const currentWeekStart = getStartOfWeek(today).getTime();
     const lastWeekStart = getStartOfWeek(lastStart).getTime();
-
-    console.log("currentWeekStart:", currentWeekStart);
-    console.log("lastWeekStart:", lastWeekStart);
     
     // If the current calendar week is after the recorded week, they need to set a goal.
     return currentWeekStart > lastWeekStart;

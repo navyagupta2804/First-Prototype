@@ -1,10 +1,11 @@
-import { collection, doc, increment, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, increment, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
 import LogForm from '../components/log/LogForm';
+import { logPostCreation } from '../utils/analyticsHelper';
 import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
 
 export default function LogScreen() {
@@ -73,6 +74,13 @@ export default function LogScreen() {
         photoCount: increment(1),
         lastPostAt: serverTimestamp(),
       });
+
+      const userProfileSnap = await getDoc(doc(db, 'users', user.uid)); 
+      const userGroup = userProfileSnap.data()?.abTestGroup;
+      
+      if (userGroup) {
+        logPostCreation(userGroup); // <-- Log the event with the A/B group!
+      }
 
       // Success!
       Alert.alert('Posted!', 'Your meal has been logged.', [
