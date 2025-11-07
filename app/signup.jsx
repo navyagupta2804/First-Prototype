@@ -1,6 +1,7 @@
 import { Link, useRouter } from 'expo-router';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,7 +10,7 @@ import {
   Text, TextInput, TouchableOpacity,
   View
 } from 'react-native';
-import { auth, db } from '../firebaseConfig';
+import { app, auth, db } from '../firebaseConfig';
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -67,13 +68,32 @@ export default function SignUpScreen() {
       await setDoc(userProfileRef, {
         displayName: trimmedName,
         email: trimmedEmail,
-        photoURL: defaultPhotoURL, // <-- ADDED
+        photoURL: defaultPhotoURL, 
         streakCount: 0,
         communities: 0,
         photoCount: 0,
         lastJournalDate: null,
         createdAt: serverTimestamp()
       });
+
+      // 4. CALL CLOUD FUNCTION TO ASSIGN A/B GROUP (NEW STEP)
+      try {
+        // Need to pass the Firebase App instance (assuming it's exported as 'app' from firebaseConfig)
+        const functions = getFunctions(app); 
+        const assignABGroupCallable = httpsCallable(functions, 'assignABGroup');
+        
+        console.log('Calling Cloud Function to assign A/B group...');
+        const result = await assignABGroupCallable();
+        console.log('A/B Group Assigned:', result.data.group);
+        
+        // Note: The Cloud Function handles updating the user's Firestore doc 
+        // with the 'abTestGroup' field, completing the assignment.
+
+      } catch (fnError) {
+        // Log the error but continuen. The user's account is still created.
+        console.error('Failed to call assignABGroup function:', fnError.message);
+        // You may want to log an event here for users who missed the assignment.
+      }
 
       console.log("Firestore write completed!");
       router.replace('/tabs/home'); // go to app tabs

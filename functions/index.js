@@ -1,6 +1,8 @@
 // A Cloud Function that updates denormalized user data across all posts and comments.
+const functions = require("firebase-functions");
 const {onDocumentWritten, onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {getFirestore} = require("firebase-admin/firestore");
+const {onCall} = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 
 // Initialize the Admin SDK once for the project
@@ -199,4 +201,78 @@ exports.updateStreakOnNewPost = onDocumentCreated({
   console.log(`Streak updated for user ${userId}.`);
   console.log(`Posts: ${newCurrentWeekPosts}, Streak: ${newStreakCount}`);
   return null;
+});
+
+/**
+ * Assigns a new user to Group A or Group B based on which group has fewer members.
+ * This is triggered manually by the client after successful signup.
+ */
+exports.assignABGroup = onCall({
+  region: "us-central1",
+  enforceAppCheck: false, // Set to true if you use App Check
+}, async (request) => {
+  // 1. Get the authenticated user's ID
+  const userId = request.auth.uid;
+  if (!userId) {
+    throw new functions.https.HttpsError(
+        "unauthenticated",
+        "The function must be called while authenticated.",
+    );
+  }
+
+  const countersRef = db.collection("abTestCounters").doc("userSplit");
+  const userProfileRef = db.collection("users").doc(userId);
+  let assignedGroup = null;
+
+  // --- 2. Run Atomic Transaction to Assign Group ---
+  try {
+    await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(countersRef);
+
+      // Initialize counters if the document doesn't exist
+      if (!doc.exists) {
+        // Initialize with 0 and assign the very first user to Group A
+        transaction.set(countersRef, {groupA_count: 0, groupB_count: 0});
+        assignedGroup = "Group A";
+        transaction.update(countersRef, {groupA_count: admin.firestore.FieldValue.increment(1)});
+        return;
+      }
+
+      const data = doc.data();
+      const countA = data.groupA_count || 0;
+      const countB = data.groupB_count || 0;
+
+      // Assign to the group with fewer (or equal) members
+      if (countA <= countB) {
+        assignedGroup = "Group A";
+        transaction.update(countersRef, {groupA_count: admin.firestore.FieldValue.increment(1)});
+      } else {
+        assignedGroup = "Group B";
+        transaction.update(countersRef, {groupB_count: admin.firestore.FieldValue.increment(1)});
+      }
+    });
+
+    // --- 3. Update the User's Profile Outside the Transaction ---
+    if (assignedGroup) {
+      await userProfileRef.set({
+        abTestGroup: assignedGroup,
+        // Merging to ensure we don't overwrite existing profile data
+        abTestAssignmentDate: admin.firestore.FieldValue.serverTimestamp(),
+      }, {merge: true});
+
+      console.log(`User ${userId} assigned to ${assignedGroup}.`);
+
+      return {
+        status: "success",
+        group: assignedGroup,
+        message: `User assigned to ${assignedGroup}.`,
+      };
+    }
+  } catch (error) {
+    console.error("A/B Group Assignment failed:", error);
+    throw new functions.https.HttpsError(
+        "internal",
+        "Failed to assign A/B group due to a server error.",
+    );
+  }
 });
