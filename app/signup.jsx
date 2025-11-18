@@ -20,26 +20,59 @@ export default function SignUpScreen() {
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // error states
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [pwError, setPwError] = useState('');
+  const [confirmPwError, setConfirmPwError] = useState('');
 
   const validate = () => {
-    if (!name.trim()) return 'Please enter your name.';
-    if (!email.trim()) return 'Please enter your email.';
-    // very light e-mail check
-    if (!/^\S+@\S+\.\S+$/.test(email)) return 'Please enter a valid email.';
-    if (pw.length < 8) return 'Password must be at least 8 characters.';
-    if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) {
-      return 'Password must include letters and numbers.';
+    setNameError('');
+    setEmailError('');
+    setPwError('');
+    setConfirmPwError('');
+
+    let isValid = true;
+
+    // --- Name Check ---
+    if (!name.trim()) {
+      setNameError('Please enter your name.');
+      isValid = false;
     }
-    if (pw !== pw2) return 'Passwords do not match.';
-    return null;
+    
+    // --- Email Checks ---
+    if (!email.trim()) {
+      setEmailError('Please enter your email.');
+      isValid = false;
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setEmailError('Please enter a valid email.');
+      isValid = false;
+    }
+    
+    // --- Password Checks ---
+    if (pw.length < 8) {
+      setPwError('Password must be at least 8 characters.');
+      isValid = false;
+    } else if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) {
+      setPwError('Password must include letters and numbers.');
+      isValid = false;
+    }
+
+    // --- Confirmation Check ---
+    if (pw !== pw2) {
+      setConfirmPwError('Passwords do not match.');
+      isValid = false;
+    }
+    
+    return isValid;
   };
 
   const onSignUp = async () => {
-    const err = validate();
+    const isValid = validate();
  
-    if (err) { 
-      console.log('Fix and try again', err);
-      Alert.alert(err); 
+    if (!isValid) { 
+      console.log('Validation failed. Fix errors displayed.');
       return; 
     };
 
@@ -52,7 +85,6 @@ export default function SignUpScreen() {
       // 1. CREATE A DEFAULT PHOTO URL
       // used ui-avatars.com to generate a simple avatar
       const defaultPhotoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmedName)}&background=e5e7eb&color=6b7280z&length=1&bold=true`;
-
       const cred = await createUserWithEmailAndPassword(auth, trimmedEmail, pw);
       
       // 2. UPDATE AUTH PROFILE (now with displayName AND photoURL)
@@ -60,7 +92,6 @@ export default function SignUpScreen() {
         displayName: trimmedName,
         photoURL: defaultPhotoURL 
       });
-
 
       // 3. CREATE FIRESTORE DOC (with the critical path fix and photoURL)
       // Using 'profile' as the collection name for the user's own profile doc.
@@ -77,27 +108,20 @@ export default function SignUpScreen() {
         createdAt: serverTimestamp()
       });
 
-      // 4. CALL CLOUD FUNCTION TO ASSIGN A/B GROUP (NEW STEP)
+      // 4. CALL CLOUD FUNCTION TO ASSIGN A/B GROUP
       try {
         // Need to pass the Firebase App instance (assuming it's exported as 'app' from firebaseConfig)
         const functions = getFunctions(app); 
         const assignABGroupCallable = httpsCallable(functions, 'assignABGroup');
-        
-        console.log('Calling Cloud Function to assign A/B group...');
         const result = await assignABGroupCallable();
         console.log('A/B Group Assigned:', result.data.group);
-        
-        // Note: The Cloud Function handles updating the user's Firestore doc 
-        // with the 'abTestGroup' field, completing the assignment.
 
       } catch (fnError) {
-        // Log the error but continuen. The user's account is still created.
         console.error('Failed to call assignABGroup function:', fnError.message);
-        // You may want to log an event here for users who missed the assignment.
       }
 
       console.log("Firestore write completed!");
-      router.replace('/tabs/home'); // go to app tabs
+      router.replace('/tabs/home'); 
     } catch (e) {
       Alert.alert('Sign up failed', e.message);
     } finally {
@@ -111,18 +135,19 @@ export default function SignUpScreen() {
         <Text style={styles.brand}>pantry</Text>
         <Text style={styles.title}>Create your account</Text>
 
-        <Text style={styles.label}>Full name</Text>
+        <Text style={styles.label}>Full Name</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, nameError ? styles.inputError : {}]}
           value={name}
           onChangeText={setName}
           placeholder="e.g. Jordan Davis"
           placeholderTextColor="#A9A9A9"
         />
+        {nameError && <Text style={styles.errorText}>{nameError}</Text>}
 
         <Text style={styles.label}>Email</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, emailError ? styles.inputError : {}]}
           value={email}
           onChangeText={setEmail}
           placeholder="youremail@example.com"
@@ -131,10 +156,11 @@ export default function SignUpScreen() {
           keyboardType="email-address"
           textContentType="emailAddress"
         />
+        {emailError && <Text style={styles.errorText}>{emailError}</Text>}
 
         <Text style={styles.label}>Password</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, pwError ? styles.inputError : {}]}
           value={pw}
           onChangeText={setPw}
           placeholder="At least 8 characters. Include letters and numbers."
@@ -142,10 +168,11 @@ export default function SignUpScreen() {
           secureTextEntry
           textContentType="newPassword"
         />
+        {pwError ? <Text style={styles.errorText}>{pwError}</Text> : null}
 
-        <Text style={styles.label}>Confirm password</Text>
+        <Text style={styles.label}>Confirm Password</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, confirmPwError ? styles.inputError : {}]}
           value={pw2}
           onChangeText={setPw2}
           placeholder="Re-enter password"
@@ -153,6 +180,7 @@ export default function SignUpScreen() {
           secureTextEntry
           textContentType="newPassword"
         />
+        {confirmPwError ? <Text style={styles.errorText}>{confirmPwError}</Text> : null}
 
         <TouchableOpacity style={styles.button} onPress={onSignUp} disabled={loading}>
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Create account</Text>}
@@ -174,6 +202,20 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
   label: { fontSize: 12, color: '#6b7280', marginTop: 12, marginBottom: 6 },
   input: { borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, padding: 12 },
+  // NEW: Style for error messages
+  errorText: {
+    color: '#dc2626', // Tailwind red-600
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  
+  // NEW: Style to highlight the input field when there's an error
+  inputError: {
+    borderColor: '#dc2626',
+    borderWidth: 2,
+  },
   button: {
     backgroundColor: '#111216', padding: 14, borderRadius: 10, alignItems: 'center',
     marginTop: 18
