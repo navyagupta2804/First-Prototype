@@ -148,6 +148,7 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
     const dref = doc(db, 'feed', item.id);
     const unsub = onSnapshot(dref, (snap) => {
       const data = snap.data() || {};
+      console.log('New Likes Count:', data.likesCount);
       setLikesCount(data.likesCount || 0);
       setCommentsCount(data.commentsCount || 0);
     });
@@ -169,6 +170,7 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
     if (!user) return Alert.alert('Sign in', 'Please sign in to like posts.');
     const likeRef = doc(db, 'feed', item.id, 'likes', user.uid);
     const feedRef = doc(db, 'feed', item.id);
+
     try {
       if (liked) {
         await deleteDoc(likeRef);
