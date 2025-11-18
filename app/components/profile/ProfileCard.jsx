@@ -45,17 +45,13 @@ const ProfileCard = ({ userData, postsLength, onSettingsPress }) => {
                     </View>
                     <Text style={styles.statLabel}>Meals</Text>
                 </View>
-                { /* AB TESTING GROUP */}
-                {userData.abTestGroup !== 'Group B' && (
-                    <View style={styles.statBox}>
-                        <View style={styles.statIconRow}>
-                            <Ionicons name="trending-up" size={20} color="#10b981" />
-                            <Text style={styles.statNumber}>{userData?.streakCount || 0}</Text>
-                        </View>
-                        <Text style={styles.statLabel}>Streaks</Text>
+                <View style={styles.statBox}>
+                    <View style={styles.statIconRow}>
+                        <Ionicons name="trending-up" size={20} color="#10b981" />
+                        <Text style={styles.statNumber}>{userData?.streakCount || 0}</Text>
                     </View>
-                )}
-                {userData.abTestGroup !== 'Group B' && (
+                    <Text style={styles.statLabel}>Streaks</Text>
+                </View>
                 <View style={styles.statBox}>
                     <View style={styles.statIconRow}>
                         <Ionicons name="trophy" size={20} color="#f59e0b" />
@@ -63,7 +59,6 @@ const ProfileCard = ({ userData, postsLength, onSettingsPress }) => {
                     </View>
                     <Text style={styles.statLabel}>Badges</Text>
                 </View>
-                )}
             </View>
         </View>
     );

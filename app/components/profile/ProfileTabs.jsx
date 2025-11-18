@@ -3,11 +3,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 const ProfileTabs = ({ activeTab, setActiveTab, userData }) => {
     
     { /* AB TESTING GROUP */}
-    let tabs = ['Posts', 'Saved']; // Base tabs for everyone
+    let tabs = ['Posts', 'Saved', 'Badges']; // Base tabs for everyone
     
-    if (userData.abTestGroup !== 'Group B') {
-        tabs.push('Badges');
-    }
     return (
         <View style={styles.tabBar}>
             {tabs.map((tab) => (

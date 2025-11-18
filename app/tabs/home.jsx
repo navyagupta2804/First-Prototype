@@ -91,7 +91,7 @@ const HomeScreen = () => {
     }
   };
 
-  const showGoalSetter = requiresGoalSetting(userData) && userData.abTestGroup !== 'Group B';
+  const showGoalSetter = requiresGoalSetting(userData);
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <>
