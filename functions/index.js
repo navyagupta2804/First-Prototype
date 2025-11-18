@@ -165,7 +165,7 @@ exports.updateStreakOnNewPost = onDocumentCreated({
   let newStreakStartDate = userData.streakStartDate;
 
   let hasMetGoal = userData.hasGoalBeenMetThisWeek || false;
-  const weeklyGoal = userData.weeklyGoal || 1;
+  const weeklyGoal = userData.weeklyGoal || 0;
 
   if (isNewWeek) {
     newCurrentWeekPosts = 1;
@@ -228,13 +228,10 @@ exports.resetWeeklyStreak = onSchedule({
     // --- Apply the weekly reset for the NEW week ---
     batch.update(userRef, {
       // Reset the posts and goal status for the new week (Nov 16th week)
+      weeklyGoal: 0,
       currentWeekPosts: 0,
       hasGoalBeenMetThisWeek: false,
-
-      // Update the streak count (0 if missed goal, or the existing count if met goal)
       streakCount: newStreakCount,
-
-      // We don't update streakStartDate here; it is updated by the next post.
     });
 
     batchCount++;
