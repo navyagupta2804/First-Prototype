@@ -11,6 +11,7 @@ import {
   View
 } from 'react-native';
 import { app, auth, db } from '../firebaseConfig';
+import CenteredContainer from './components/common/CenteredContainer';
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -105,63 +106,65 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.brand}>pantry</Text>
-      <Text style={styles.title}>Create your account</Text>
+    <CenteredContainer>
+      <View style={styles.container}>
+        <Text style={styles.brand}>pantry</Text>
+        <Text style={styles.title}>Create your account</Text>
 
-      <Text style={styles.label}>Full name</Text>
-      <TextInput
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-        placeholder="e.g. Jordan Davis"
-        placeholderTextColor="#A9A9A9"
-      />
+        <Text style={styles.label}>Full name</Text>
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          placeholder="e.g. Jordan Davis"
+          placeholderTextColor="#A9A9A9"
+        />
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        placeholder="youremail@example.com"
-        placeholderTextColor="#A9A9A9"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        textContentType="emailAddress"
-      />
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="youremail@example.com"
+          placeholderTextColor="#A9A9A9"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          textContentType="emailAddress"
+        />
 
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        value={pw}
-        onChangeText={setPw}
-        placeholder="At least 8 characters. Include letters and numbers."
-        placeholderTextColor="#A9A9A9"
-        secureTextEntry
-        textContentType="newPassword"
-      />
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          value={pw}
+          onChangeText={setPw}
+          placeholder="At least 8 characters. Include letters and numbers."
+          placeholderTextColor="#A9A9A9"
+          secureTextEntry
+          textContentType="newPassword"
+        />
 
-      <Text style={styles.label}>Confirm password</Text>
-      <TextInput
-        style={styles.input}
-        value={pw2}
-        onChangeText={setPw2}
-        placeholder="Re-enter password"
-        placeholderTextColor="#A9A9A9"
-        secureTextEntry
-        textContentType="newPassword"
-      />
+        <Text style={styles.label}>Confirm password</Text>
+        <TextInput
+          style={styles.input}
+          value={pw2}
+          onChangeText={setPw2}
+          placeholder="Re-enter password"
+          placeholderTextColor="#A9A9A9"
+          secureTextEntry
+          textContentType="newPassword"
+        />
 
-      <TouchableOpacity style={styles.button} onPress={onSignUp} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Create account</Text>}
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={onSignUp} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Create account</Text>}
+        </TouchableOpacity>
 
-      <Text style={styles.hint}>
-        By creating an account, you agree to our community guidelines.
-      </Text>
+        <Text style={styles.hint}>
+          By creating an account, you agree to our community guidelines.
+        </Text>
 
-      <Link href="/signin" style={styles.link}>I already have an account</Link>
-    </View>
+        <Link href="/signin" style={styles.link}>I already have an account</Link>
+      </View>
+    </CenteredContainer>
   );
 }
 

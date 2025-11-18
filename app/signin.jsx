@@ -3,6 +3,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth } from '../firebaseConfig';
+import CenteredContainer from './components/common/CenteredContainer';
 
 export default function SignInScreen() {
   const [email, setEmail] = useState('');
@@ -19,28 +20,30 @@ export default function SignInScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>pantry</Text>
-      <TextInput 
-        style={styles.input} 
-        value={email} onChangeText={setEmail} 
-        placeholder="Email" 
-        placeholderTextColor="#A9A9A9"
-        autoCapitalize="none" 
-      />
-      <TextInput 
-        style={styles.input} 
-        value={password} 
-        onChangeText={setPassword} 
-        placeholder="Password" 
-        placeholderTextColor="#A9A9A9"
-        secureTextEntry 
-      />
-      <TouchableOpacity style={styles.button} onPress={onSignIn}>
-        <Text style={styles.buttonText}>Sign In</Text>
-      </TouchableOpacity>
-      <Link href="/signup" style={styles.link}>Create an account</Link>
-    </View>
+    <CenteredContainer>
+      <View style={styles.container}>
+        <Text style={styles.title}>pantry</Text>
+        <TextInput 
+          style={styles.input} 
+          value={email} onChangeText={setEmail} 
+          placeholder="Email" 
+          placeholderTextColor="#A9A9A9"
+          autoCapitalize="none" 
+        />
+        <TextInput 
+          style={styles.input} 
+          value={password} 
+          onChangeText={setPassword} 
+          placeholder="Password" 
+          placeholderTextColor="#A9A9A9"
+          secureTextEntry 
+        />
+        <TouchableOpacity style={styles.button} onPress={onSignIn}>
+          <Text style={styles.buttonText}>Sign In</Text>
+        </TouchableOpacity>
+        <Link href="/signup" style={styles.link}>Create an account</Link>
+      </View>
+    </CenteredContainer>
   );
 }
 
