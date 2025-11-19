@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const ProfileTabs = ({ activeTab, setActiveTab, userData }) => {
+const ProfileTabs = ({ activeTab, setActiveTab }) => {
     let tabs = ['Posts', 'Saved', 'Badges']; // Base tabs for everyone
     
     return (

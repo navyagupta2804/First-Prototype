@@ -14,8 +14,8 @@ import JournalScreen from '../components/profile/screens/JournalScreen';
 import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
 import SettingsScreen from '../components/profile/screens/SettingsScreen';
 import WeeklyProgressBar from '../components/profile/WeeklyProgressBar';
-import { uploadImageToFirebase } from '../utils/imageUpload';
 import { evaluateUserBadges } from '../utils/badgeCalculations';
+import { uploadImageToFirebase } from '../utils/imageUpload';
 
 
 export default function ProfileScreen() {
@@ -122,7 +122,7 @@ export default function ProfileScreen() {
     if (newlyUnlocked.length > 0) {
       setUserBadges(updatedBadges);
       updateDoc(doc(db, 'users', user.uid), { badges: updatedBadges });
-    }
+    } 
   }, [userData]);
 
   const handleSignOut = async () => {
@@ -265,7 +265,6 @@ export default function ProfileScreen() {
         <ProfileTabs 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
-          userData={userData}
         />
 
         {/* Content based on active tab */}

@@ -68,15 +68,15 @@ export function evaluateUserBadges(userData, currentBadges = {}) {
 
   // --- Journal Badges ---
   if (journalCount >= 5 && !nextBadges.journal_5) {
-    nextBadges.first_journal = true;
+    nextBadges.journal_5 = true;
     newlyUnlocked.push('journal_5');
   }
   if (journalCount >= 10 && !nextBadges.journal_10) {
-    nextBadges.first_journal = true;
+    nextBadges.journal_10 = true;
     newlyUnlocked.push('journal_10');
   }
   if (journalCount >= 20 && !nextBadges.journal_20) {
-    nextBadges.first_journal = true;
+    nextBadges.journal_20 = true;
     newlyUnlocked.push('journal_20');
   }
 

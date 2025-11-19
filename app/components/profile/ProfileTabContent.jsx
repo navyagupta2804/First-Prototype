@@ -27,6 +27,28 @@ const renderEmptyState = (iconName, title, text) => (
     </View>
 );
 
+const BadgesTab = ({ userBadgeState }) => (
+    <View style={styles.badgeGrid}>
+        {BADGE_DEFS.map((badge) => {
+            const unlocked = userBadgeState?.[badge.id] === true;
+            return (
+                <View key={badge.id} style={styles.badgeItem}>
+                    <Image
+                        source={badge.Icon}
+                        style={{
+                            width: 64,
+                            height: 64,
+                            opacity: unlocked ? 1 : 0.3,
+                        }}
+                        resizeMode="contain"
+                    />
+                    <Text style={styles.badgeLabel}>{badge.name}</Text>
+                </View>
+            );
+        })}
+    </View>
+);
+
 const ProfileTabContent = ({ activeTab, posts, onPostPress, userBadges }) => {
     if (activeTab === 'Posts') {
         return posts.length > 0 ? (
@@ -67,29 +89,6 @@ const ProfileTabContent = ({ activeTab, posts, onPostPress, userBadges }) => {
 
     return null;
 };
-
-const BadgesTab = ({ userBadgeState }) => (
-    <View style={styles.badgeGrid}>
-        {BADGE_DEFS.map((badge) => {
-            const unlocked = userBadgeState?.[badge.id] === true;
-
-            return (
-                <View key={badge.id} style={styles.badgeItem}>
-                    <Image
-                        source={badge.Icon}
-                        style={{
-                            width: 64,
-                            height: 64,
-                            opacity: unlocked ? 1 : 0.3,
-                        }}
-                        resizeMode="contain"
-                    />
-                    <Text style={styles.badgeLabel}>{badge.name}</Text>
-                </View>
-            );
-        })}
-    </View>
-);
 
 
 const styles = StyleSheet.create({
