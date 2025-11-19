@@ -1,6 +1,7 @@
 // A Cloud Function that updates denormalized user data across all posts and comments.
 const functions = require("firebase-functions");
 const {onDocumentWritten, onDocumentCreated} = require("firebase-functions/v2/firestore");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {getFirestore} = require("firebase-admin/firestore");
 const {onCall} = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
@@ -164,30 +165,21 @@ exports.updateStreakOnNewPost = onDocumentCreated({
   let newStreakStartDate = userData.streakStartDate;
 
   let hasMetGoal = userData.hasGoalBeenMetThisWeek || false;
-  const weeklyGoal = userData.weeklyGoal || 1;
-  const oldPosts = newCurrentWeekPosts; // Posts BEFORE this new one is counted
-
-  if (!hasMetGoal && (oldPosts + 1) >= weeklyGoal) {
-    // Goal is being met with this new post, AND the streak hasn't been incremented yet
-    newStreakCount += 1;
-    hasMetGoal = true; // Set the flag to prevent double-counting this week's goal
-    console.log(`GOAL MET! Streak incremented immediately to ${newStreakCount}.`);
-  }
+  const weeklyGoal = userData.weeklyGoal || 0;
 
   if (isNewWeek) {
-    // Check if the goal was missed
-    if (!hasMetGoal) {
-      newStreakCount = 0;
-      console.log("WEEK OVER. Goal was missed. Streak reset.");
-    }
-
-    // Reset for the new calendar week
     newCurrentWeekPosts = 1;
     newStreakStartDate = admin.firestore.Timestamp.fromDate(getStartOfWeek(now));
     hasMetGoal = false; // Reset the flag for the new week
   } else {
-    // If NOT a new week, just increment the posts
-    newCurrentWeekPosts += 1;
+    newCurrentWeekPosts += 1; // If NOT a new week, just increment the posts
+  }
+
+  if (!hasMetGoal && newCurrentWeekPosts >= weeklyGoal) {
+    // Goal is being met with this new post, AND the streak hasn't been incremented yet
+    newStreakCount += 1;
+    hasMetGoal = true; // Set the flag to prevent double-counting this week's goal
+    console.log(`GOAL MET! Streak incremented immediately to ${newStreakCount}.`);
   }
 
   // 3. Update the user document
@@ -203,10 +195,65 @@ exports.updateStreakOnNewPost = onDocumentCreated({
   return null;
 });
 
-/**
- * Assigns a new user to Group A or Group B based on which group has fewer members.
- * This is triggered manually by the client after successful signup.
- */
+// check and reset streaks for ALL users weekly.
+exports.resetWeeklyStreak = onSchedule({
+  schedule: "5 0 * * 1", // Runs at 00:05 AM UTC every Monday
+  timeZone: "UTC",
+  region: "us-central1",
+}, async (event) => {
+  console.log("Starting weekly streak reset job.");
+
+  // Query ALL users, regardless of their current goal status
+  const usersRef = db.collection("users");
+  const snapshot = await usersRef.get(); // Fetch ALL users
+
+  let batch = db.batch();
+  let batchCount = 0;
+  let documentsProcessed = 0;
+
+  for (const doc of snapshot.docs) {
+    const userRef = doc.ref;
+    const userData = doc.data();
+
+    // --- Determine if the streak should reset ---
+    let newStreakCount = userData.streakCount || 0;
+    const previousGoalMet = userData.hasGoalBeenMetThisWeek || false;
+
+    if (!previousGoalMet) {
+      // If the goal was NOT met in the last recorded week, reset the streak.
+      newStreakCount = 0;
+      console.log(`User ${doc.id} missed goal. Streak reset.`);
+    }
+
+    // --- Apply the weekly reset for the NEW week ---
+    batch.update(userRef, {
+      // Reset the posts and goal status for the new week (Nov 16th week)
+      weeklyGoal: 0,
+      currentWeekPosts: 0,
+      hasGoalBeenMetThisWeek: false,
+      streakCount: newStreakCount,
+    });
+
+    batchCount++;
+    documentsProcessed++;
+
+    if (batchCount >= 499) {
+      await batch.commit();
+      batchCount = 0;
+      batch = db.batch();
+    }
+  }
+
+  if (batchCount > 0) {
+    await batch.commit();
+  }
+
+  console.log(`Successfully completed streak and progress reset 
+    for ${documentsProcessed} total users.`);
+  return null;
+});
+
+// Assigns a new user to Group A or Group B based on which group has fewer members.
 exports.assignABGroup = onCall({
   region: "us-central1",
   enforceAppCheck: false, // Set to true if you use App Check

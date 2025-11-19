@@ -35,7 +35,7 @@ const PromptCard = ({ journalPrompt }) => {
     }
   };
 
-  // ---- save journal + update streak ----
+  // ---- save journal ----
   const onPostJournal = async () => {
     if (!journalText.trim()) {
       Alert.alert('Add a thought', 'Write a quick sentence before saving.');
@@ -49,20 +49,9 @@ const PromptCard = ({ journalPrompt }) => {
       setSaving(true);
       await ensureUserDoc();
       const uref = doc(db, 'users', user.uid);
-      const snap = await getDoc(uref);
-      const data = snap.data() || {};
       const today = dayjs().format('YYYY-MM-DD');
 
-      let streak = data.streakCount || 0;
-      if (data.lastJournalDate) {
-        const last = dayjs(data.lastJournalDate);
-        if (last.add(1, 'day').format('YYYY-MM-DD') === today) streak += 1;
-        else if (last.format('YYYY-MM-DD') !== today) streak = 1;
-      } else {
-        streak = 1;
-      }
-
-      await updateDoc(uref, { lastJournalDate: today, streak });
+      await updateDoc(uref, { lastJournalDate: today });
       await addDoc(collection(db, 'journals'), {
         uid: user.uid,
         text: journalText.trim(),
@@ -70,7 +59,7 @@ const PromptCard = ({ journalPrompt }) => {
         createdAt: serverTimestamp()
       });
       setJournalText('');
-      Alert.alert('Saved', 'Your thoughts were saved and your streak updated!');
+      Alert.alert('Saved', 'Your thoughts were saved!');
     } catch (e) {
       Alert.alert('Error', e.message);
     } finally {

@@ -1,5 +1,5 @@
 import { signOut, updateProfile } from 'firebase/auth';
-import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import { collection, doc, limit, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import PageHeader from '../components/common/PageHeader';
 import ProfileCard from '../components/profile/ProfileCard';
 import ProfileTabContent from '../components/profile/ProfileTabContent';
 import ProfileTabs from '../components/profile/ProfileTabs';
+import JournalScreen from '../components/profile/screens/JournalScreen';
 import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
 import SettingsScreen from '../components/profile/screens/SettingsScreen';
 import WeeklyProgressBar from '../components/profile/WeeklyProgressBar';
@@ -22,6 +23,8 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [recentJournalEntry, setRecentJournalEntry] = useState(null);
+  const [showJournalScreen, setShowJournalScreen] = useState(false);
 
   const user = auth.currentUser;
 
@@ -76,9 +79,31 @@ export default function ProfileScreen() {
       }
     );
 
+    // Listen to user's journal entries
+    const unsubJournal = onSnapshot(
+      query(
+        collection(db, 'journals'), // Target the top-level 'journals' collection
+        where('uid', '==', user.uid), // Filter: ONLY journals belonging to this user
+        orderBy('createdAt', 'desc'), // Sort by newest first
+        limit(1) // Get only the single most recent one
+      ),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          setRecentJournalEntry({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
+        } else {
+          setRecentJournalEntry(null);
+        }
+      },
+      (error) => {
+        console.error('Error loading recent journal entry:', error);
+        setRecentJournalEntry(null);
+      }
+    );
+
     return () => {
       unsubProfile();
       unsubPosts();
+      unsubJournal();
     };
   }, [user]);
 
@@ -188,6 +213,15 @@ export default function ProfileScreen() {
     );
   }
 
+  if (showJournalScreen) {
+      return (
+        <JournalScreen 
+          onClose={() => setShowJournalScreen(false)} 
+          userId={user.uid}
+        />
+      );
+  }
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* AppHeader (Brand, Add Friend, Notifications) */}
@@ -198,9 +232,11 @@ export default function ProfileScreen() {
         <ProfileCard
           userData={userData} 
           postsLength={posts.length} 
+          recentJournalEntry={recentJournalEntry} 
+          onJournalPress={() => setShowJournalScreen(true)}
           onSettingsPress={() => setShowSettings(true)} 
         />
-        
+  
         {/* Progress bar for user-set weekly goals */}
         <WeeklyProgressBar
           currentWeekPosts={userData.currentWeekPosts}
