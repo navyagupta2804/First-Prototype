@@ -2,7 +2,7 @@
 const functions = require("firebase-functions");
 const {onDocumentWritten, onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
-const {getFirestore} = require("firebase-admin/firestore");
+const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 const {onCall} = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 
@@ -195,7 +195,7 @@ exports.updateStreakOnNewPost = onDocumentCreated({
   return null;
 });
 
-// check and reset streaks for ALL users weekly.
+// Check and reset streaks for ALL users weekly.
 exports.resetWeeklyStreak = onSchedule({
   schedule: "5 0 * * 1", // Runs at 00:05 AM UTC every Monday
   timeZone: "UTC",
@@ -323,3 +323,67 @@ exports.assignABGroup = onCall({
     );
   }
 });
+
+// Journal count trigger
+exports.updateJournalCountOnCreate = onDocumentCreated(
+    "journals/{journalId}",
+    async (event) => {
+      const data = event.data.data();
+      const userId = data.uid;
+
+      if (!userId) {
+        console.log("Journal entry lacks a UID, skipping count update.");
+        return;
+      }
+
+      const userRef = db.collection("users").doc(userId);
+
+      try {
+        await userRef.update({
+          journalCount: FieldValue.increment(1),
+        });
+        console.log(`Journal count incremented for user: ${userId}`);
+      } catch (error) {
+        if (error.code === "not-found" || error.message.includes("No document to update")) {
+          await userRef.set({journalCount: 1}, {merge: true});
+          console.log(`Journal count initialized to 1 for user: ${userId}`);
+        } else {
+          console.error(`Error updating journal count for ${userId}:`, error);
+        }
+      }
+    },
+);
+
+
+// Photo/Post count trigger
+exports.updatePhotoCountOnCreate = onDocumentCreated(
+    // Listen to the 'feed' collection for new posts
+    "feed/{postId}",
+    async (event) => {
+      const data = event.data.data();
+      const userId = data.uid;
+
+      if (!userId) {
+        console.log("Feed post lacks a UID, skipping count update.");
+        return;
+      }
+
+      const userRef = db.collection("users").doc(userId);
+
+      try {
+        // Atomically increment the photoCount field by 1
+        await userRef.update({
+          photoCount: FieldValue.increment(1),
+        });
+        console.log(`Photo count incremented for user: ${userId}`);
+      } catch (error) {
+        // Handle initialization if the field doesn't exist
+        if (error.code === "not-found" || error.message.includes("No document to update")) {
+          await userRef.set({photoCount: 1}, {merge: true});
+          console.log(`Photo count initialized to 1 for user: ${userId}`);
+        } else {
+          console.error(`Error updating photo count for ${userId}:`, error);
+        }
+      }
+    },
+);

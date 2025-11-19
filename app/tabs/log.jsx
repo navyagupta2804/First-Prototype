@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, increment, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
@@ -6,8 +6,8 @@ import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
 import LogForm from '../components/log/LogForm';
 import { logPostCreation } from '../utils/analyticsHelper';
-import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
 import { evaluateUserBadges } from '../utils/badgeCalculations';
+import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
 
 export default function LogScreen() {
   const [image, setImage] = useState(null);
@@ -72,9 +72,8 @@ export default function LogScreen() {
 
       const userRef = doc(db, 'users', user.uid);
 
-      // 5. Increment user's photoCount
+      // 5. Update user's profile with last post time 
       await updateDoc(userRef, {
-        photoCount: increment(1),
         lastPostAt: serverTimestamp(),
       });
 

@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import {
   addDoc, collection, doc, getDoc,
-  serverTimestamp, setDoc, updateDoc
+  serverTimestamp, setDoc
 } from 'firebase/firestore';
 import { useState } from 'react';
 import {
@@ -29,7 +29,6 @@ const PromptCard = ({ journalPrompt }) => {
         streakCount: 0,
         communities: 0,
         photoCount: 0,
-        lastJournalDate: null,
         createdAt: Date.now()
       });
     }
@@ -51,7 +50,6 @@ const PromptCard = ({ journalPrompt }) => {
       const uref = doc(db, 'users', user.uid);
       const today = dayjs().format('YYYY-MM-DD');
 
-      await updateDoc(uref, { lastJournalDate: today });
       await addDoc(collection(db, 'journals'), {
         uid: user.uid,
         text: journalText.trim(),
