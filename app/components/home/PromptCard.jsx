@@ -29,7 +29,6 @@ const PromptCard = ({ journalPrompt }) => {
         streakCount: 0,
         communities: 0,
         photoCount: 0,
-        lastJournalDate: null,
         createdAt: Date.now()
       });
     }
