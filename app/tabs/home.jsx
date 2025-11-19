@@ -3,7 +3,7 @@ import { collection, doc, onSnapshot, orderBy, query, updateDoc, where } from 'f
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { analytics, auth, db } from '../../firebaseConfig';
-import { getStartOfWeek, requiresGoalSetting } from '../utils/bageCalculations';
+import { getStartOfWeek, requiresGoalSetting } from '../utils/badgeCalculations';
 
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';

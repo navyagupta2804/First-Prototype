@@ -7,6 +7,7 @@ import PageHeader from '../components/common/PageHeader';
 import LogForm from '../components/log/LogForm';
 import { logPostCreation } from '../utils/analyticsHelper';
 import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
+import { evaluateUserBadges } from '../utils/badgeCalculations';
 
 export default function LogScreen() {
   const [image, setImage] = useState(null);
@@ -69,11 +70,36 @@ export default function LogScreen() {
       // 4. Write to database
       await setDoc(newPhotoRef, postData);
 
+      const userRef = doc(db, 'users', user.uid);
+
       // 5. Increment user's photoCount
-      await updateDoc(doc(db, 'users', user.uid), {
+      await updateDoc(userRef, {
         photoCount: increment(1),
         lastPostAt: serverTimestamp(),
       });
+
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+
+      if (userData) {
+        const currentBadges = userData.badges || {};
+
+        const { updatedBadges, newlyUnlocked } = evaluateUserBadges(userData, currentBadges);
+
+        if (newlyUnlocked.length > 0) {
+          await updateDoc(userRef, { badges: updatedBadges });
+          // Simple alert for new badges
+          Alert.alert(
+            'New badge unlocked! 🎉',
+            `You earned: ${newlyUnlocked.join(', ')}`
+          );
+        }
+
+        const userGroup = userData.abTestGroup;
+        if (userGroup) {
+          logPostCreation(userGroup);
+        }
+      }
 
       const userProfileSnap = await getDoc(doc(db, 'users', user.uid)); 
       const userGroup = userProfileSnap.data()?.abTestGroup;

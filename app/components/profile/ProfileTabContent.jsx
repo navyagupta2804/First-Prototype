@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { BADGE_DEFS } from './badges/badges.jsx';
+import { BADGE_DEFS } from '../../utils/badge_defs.jsx';
 
 const SPACING = 6;
 
@@ -27,7 +27,7 @@ const renderEmptyState = (iconName, title, text) => (
     </View>
 );
 
-const ProfileTabContent = ({ activeTab, posts, onPostPress }) => {
+const ProfileTabContent = ({ activeTab, posts, onPostPress, userBadges }) => {
     if (activeTab === 'Posts') {
         return posts.length > 0 ? (
             <FlatList
@@ -56,13 +56,8 @@ const ProfileTabContent = ({ activeTab, posts, onPostPress }) => {
     } 
     
     if (activeTab === 'Badges') {
-        const userBadgeState = {
-            cook_first: true,
-            streak_7: false,
-            first_journal: false,
-        };
+        return <BadgesTab userBadgeState={userBadges} />;
 
-        return <BadgesTab userBadgeState={userBadgeState} />;
         // return renderEmptyState(
         //     "trophy-outline", 
         //     "Earn badges by cooking!", 
@@ -73,30 +68,28 @@ const ProfileTabContent = ({ activeTab, posts, onPostPress }) => {
     return null;
 };
 
-const BadgesTab = ({ userBadgeState }) => {
-    return (
-        <View style={styles.badgeGrid}>
-            {BADGE_DEFS.map((badge) => {
-                const unlocked = userBadgeState[badge.id] === true;
+const BadgesTab = ({ userBadgeState }) => (
+    <View style={styles.badgeGrid}>
+        {BADGE_DEFS.map((badge) => {
+            const unlocked = userBadgeState?.[badge.id] === true;
 
-                return (
-                    <View key={badge.id} style={styles.badgeItem}>
-                        <Image
-                            source={badge.Icon}
-                            style={{
-                                width: 64,
-                                height: 64,
-                                opacity: unlocked ? 1 : 0.3,
-                            }}
-                            resizeMode="contain"
-                        />
-                        <Text style={styles.badgeLabel}>{badge.name}</Text>
-                    </View>
-                );
-            })}
-        </View>
-    );
-};
+            return (
+                <View key={badge.id} style={styles.badgeItem}>
+                    <Image
+                        source={badge.Icon}
+                        style={{
+                            width: 64,
+                            height: 64,
+                            opacity: unlocked ? 1 : 0.3,
+                        }}
+                        resizeMode="contain"
+                    />
+                    <Text style={styles.badgeLabel}>{badge.name}</Text>
+                </View>
+            );
+        })}
+    </View>
+);
 
 
 const styles = StyleSheet.create({
