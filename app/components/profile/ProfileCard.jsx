@@ -17,13 +17,9 @@ const getDate = (createdAt, type) => {
 const ProfileCard = ({ userData, postsLength, recentJournalEntry, onJournalPress, onSettingsPress }) => {
     const joinDate = getDate(userData?.createdAt, 'join');
     const hasEntry = !!recentJournalEntry;
-
-    console.log(recentJournalEntry);
-
     const previewText = hasEntry 
         ? recentJournalEntry.text.substring(0, 50) + (recentJournalEntry.text.length > 50 ? '...' : '')
         : 'Start journaling today!';
-
     const journalDate = hasEntry ? getDate(recentJournalEntry.createdAt, 'journal') : '';
 
     return (

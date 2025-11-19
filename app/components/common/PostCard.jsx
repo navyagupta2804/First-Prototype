@@ -22,7 +22,6 @@ function usePostData(itemId, user) {
     // 1. Likes Subscription
     const likesRef = collection(db, 'feed', itemId, 'likes');
     const unsubLikes = onSnapshot(likesRef, (snap) => {
-      console.log(snap.size);
       setLikesCount(snap.size);
     });
 
