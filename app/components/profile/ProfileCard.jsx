@@ -22,6 +22,8 @@ const ProfileCard = ({ userData, postsLength, recentJournalEntry, onJournalPress
         : 'Start journaling today!';
     const journalDate = hasEntry ? getDate(recentJournalEntry.createdAt, 'journal') : '';
 
+     const badgeCount = userData?.badges ? Object.keys(userData.badges).length : 0;
+
     return (
         <View style={styles.profileCard}>
             {/* Avatar & Name Section */}
@@ -66,7 +68,7 @@ const ProfileCard = ({ userData, postsLength, recentJournalEntry, onJournalPress
                 <View style={styles.statBox}>
                     <View style={styles.statIconRow}>
                         <Ionicons name="trophy" size={20} color="#f59e0b" />
-                        <Text style={styles.statNumber}>{userData?.badges || 0}</Text>
+                        <Text style={styles.statNumber}>{badgeCount}</Text>
                     </View>
                     <Text style={styles.statLabel}>Badges</Text>
                 </View>

@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BADGE_DEFS } from '../../utils/badge_defs.jsx';
 
 const SPACING = 6;
 
@@ -26,7 +27,7 @@ const renderEmptyState = (iconName, title, text) => (
     </View>
 );
 
-const ProfileTabContent = ({ activeTab, posts, onPostPress }) => {
+const ProfileTabContent = ({ activeTab, posts, onPostPress, userBadges }) => {
     if (activeTab === 'Posts') {
         return posts.length > 0 ? (
             <FlatList
@@ -55,15 +56,41 @@ const ProfileTabContent = ({ activeTab, posts, onPostPress }) => {
     } 
     
     if (activeTab === 'Badges') {
-        return renderEmptyState(
-            "trophy-outline", 
-            "Earn badges by cooking!", 
-            "Unlock achievements for your streaks and posts."
-        );
+        return <BadgesTab userBadgeState={userBadges} />;
+
+        // return renderEmptyState(
+        //     "trophy-outline", 
+        //     "Earn badges by cooking!", 
+        //     "Unlock achievements for your streaks and posts."
+        // );
     }
 
     return null;
 };
+
+const BadgesTab = ({ userBadgeState }) => (
+    <View style={styles.badgeGrid}>
+        {BADGE_DEFS.map((badge) => {
+            const unlocked = userBadgeState?.[badge.id] === true;
+
+            return (
+                <View key={badge.id} style={styles.badgeItem}>
+                    <Image
+                        source={badge.Icon}
+                        style={{
+                            width: 64,
+                            height: 64,
+                            opacity: unlocked ? 1 : 0.3,
+                        }}
+                        resizeMode="contain"
+                    />
+                    <Text style={styles.badgeLabel}>{badge.name}</Text>
+                </View>
+            );
+        })}
+    </View>
+);
+
 
 const styles = StyleSheet.create({
     // Grid
@@ -80,7 +107,27 @@ const styles = StyleSheet.create({
         marginTop: 16,
         marginBottom: 8
     },
-    emptyStateText: { fontSize: 14, color: '#6b7280', textAlign: 'center', marginTop: 8 }
+    emptyStateText: { fontSize: 14, color: '#6b7280', textAlign: 'center', marginTop: 8 },
+    badgeGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        width: '100%',
+        justifyContent: 'center',
+        paddingVertical: 16,
+    },
+    badgeItem: {
+        width: '30%',
+        alignItems: 'center',
+        marginVertical: 12,
+        marginHorizontal: '1.66%',
+    },
+    badgeLabel: {
+        marginTop: 6,
+        fontSize: 14,
+        fontWeight: '600',
+    },
+
 });
 
 export default ProfileTabContent;

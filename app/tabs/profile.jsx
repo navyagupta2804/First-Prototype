@@ -15,6 +15,8 @@ import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
 import SettingsScreen from '../components/profile/screens/SettingsScreen';
 import WeeklyProgressBar from '../components/profile/WeeklyProgressBar';
 import { uploadImageToFirebase } from '../utils/imageUpload';
+import { evaluateUserBadges } from '../utils/badgeCalculations';
+
 
 export default function ProfileScreen() {
   const [userData, setUserData] = useState(null);
@@ -23,6 +25,7 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [userBadges, setUserBadges] = useState({});
   const [recentJournalEntry, setRecentJournalEntry] = useState(null);
   const [showJournalScreen, setShowJournalScreen] = useState(false);
 
@@ -39,7 +42,9 @@ export default function ProfileScreen() {
       doc(db, 'users', user.uid),
       (docSnap) => {
         if (docSnap.exists()) {
-          setUserData(docSnap.data());
+          const data = docSnap.data();
+          setUserData(data);
+          setUserBadges(data.badges || {});
         } else {
           console.log('No profile found');
           // Set default values if profile doesn't exist
@@ -53,12 +58,14 @@ export default function ProfileScreen() {
             badges: 0,
             createdAt: new Date(),
           });
+          setUserBadges({});
         }
         setLoading(false);
       },
       (error) => {
         console.error('Error loading profile:', error);
         setLoading(false);
+        setUserBadges({});
       }
     );
 
@@ -106,6 +113,17 @@ export default function ProfileScreen() {
       unsubJournal();
     };
   }, [user]);
+
+  useEffect(() => {
+    if (!userData) return;
+
+    const { updatedBadges, newlyUnlocked } = evaluateUserBadges(userData, userBadges);
+
+    if (newlyUnlocked.length > 0) {
+      setUserBadges(updatedBadges);
+      updateDoc(doc(db, 'users', user.uid), { badges: updatedBadges });
+    }
+  }, [userData]);
 
   const handleSignOut = async () => {
     try {
@@ -255,6 +273,7 @@ export default function ProfileScreen() {
           activeTab={activeTab} 
           posts={posts} 
           onPostPress={setSelectedPost}
+          userBadges={userBadges} 
         />
 
         {/* Bottom Spacing */}
