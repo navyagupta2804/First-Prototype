@@ -266,11 +266,17 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
 
 const styles = StyleSheet.create({
   card: { 
+    backgroundColor: "white",
     borderWidth: 1, 
     borderColor: '#EEE', 
     borderRadius: 14, 
     padding: 12,
-    marginBottom: 12 
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   avatar: { width: 36, height: 36, borderRadius: 18, marginRight: 10 },

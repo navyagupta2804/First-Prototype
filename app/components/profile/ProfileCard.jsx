@@ -1,15 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const getJoinDate = (createdAt) => {
-    if (!createdAt) return 'Recently';
+const getDate = (createdAt, type) => {
+    if (!createdAt && type == 'join') return 'Recently';
+    if (!createdAt && type == 'journal') return '';
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt); 
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    if (type == 'join') {
+        return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
 // We pass all necessary data and the sign-out handler as props
-const ProfileCard = ({ userData, postsLength, onSettingsPress }) => {
-    const joinDate = getJoinDate(userData?.createdAt);
+const ProfileCard = ({ userData, postsLength, recentJournalEntry, onJournalPress, onSettingsPress }) => {
+    const joinDate = getDate(userData?.createdAt, 'join');
+    const hasEntry = !!recentJournalEntry;
+
+    console.log(recentJournalEntry);
+
+    const previewText = hasEntry 
+        ? recentJournalEntry.text.substring(0, 50) + (recentJournalEntry.text.length > 50 ? '...' : '')
+        : 'Start journaling today!';
+
+    const journalDate = hasEntry ? getDate(recentJournalEntry.createdAt, 'journal') : '';
 
     return (
         <View style={styles.profileCard}>
@@ -60,6 +75,33 @@ const ProfileCard = ({ userData, postsLength, onSettingsPress }) => {
                     <Text style={styles.statLabel}>Badges</Text>
                 </View>
             </View>
+            {/* Journal Entries Preview */}
+            <TouchableOpacity 
+                style={styles.journalPreviewContainer}
+                onPress={onJournalPress}
+                activeOpacity={0.7}
+            >
+                <Ionicons 
+                    name={"journal-outline"} 
+                    size={22} 
+                    color={"#6b7280"} 
+                    style={styles.journalIcon}
+                />
+                
+                <View style={styles.journalTextContent}>
+                    <Text style={styles.journalTitle}>
+                        {hasEntry ? recentJournalEntry.title || "Recent Journal Entry" : "Start Your Food Journal"}
+                    </Text>
+                    <Text style={styles.journalPreviewText} numberOfLines={1}>
+                        {hasEntry ? previewText : "Track meals, thoughts, and progress privately."}
+                    </Text>
+                </View>
+
+                <View style={styles.journalArrowContainer}>
+                    {hasEntry && <Text style={styles.journalDate}>{journalDate}</Text>}
+                    <Ionicons name="chevron-forward-outline" size={22} color="#9ca3af" />
+                </View>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -96,6 +138,22 @@ const styles = StyleSheet.create({
     statIconRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
     statNumber: { fontSize: 24, fontWeight: '700', color: '#111' },
     statLabel: { fontSize: 12, color: '#6b7280' },
+
+    // Journal Entries Preview
+    journalPreviewContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingTop: 12,
+        borderTopWidth: 1, 
+        borderTopColor: '#f3f4f6', 
+        marginTop: 12, 
+    },
+    journalIcon: { marginRight: 12 },
+    journalTextContent: { flex: 1, justifyContent: 'center', marginRight: 8 },
+    journalTitle: { fontSize: 15, fontWeight: '600', color: '#111' },
+    journalPreviewText: { fontSize: 13, color: '#6b7280', marginTop: 2 },
+    journalArrowContainer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    journalDate: { fontSize: 13, color: '#9ca3af', marginRight: 4 },
 });
 
 export default ProfileCard;
