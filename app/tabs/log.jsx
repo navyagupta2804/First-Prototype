@@ -128,7 +128,7 @@ export default function LogScreen() {
     }
   };
  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container}>
       <PageHeader />
       <CenteredContainer>
         <Text style={styles.title}>Log a Meal</Text>
@@ -151,7 +151,6 @@ export default function LogScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
-  content: { paddingHorizontal: 16  },
   brand: { fontSize: 28, fontWeight: '800', color: '#ff4d2d', marginBottom: 8 },
-  title: { fontSize: 20, fontWeight: '700', marginBottom: 24 },
+  title: { fontSize: 24, fontWeight: '700', marginBottom: 24 },
 });

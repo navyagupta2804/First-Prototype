@@ -126,8 +126,8 @@ const HomeScreen = () => {
 }
 
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1, backgroundColor: 'white', paddingHorizontal: 16 },
-  feedHeader: { fontSize: 18, fontWeight: '800', marginVertical: 10 },
+  screenContainer: { flex: 1, backgroundColor: 'white' },
+  feedHeader: { fontSize: 20, fontWeight: '800', marginVertical: 10 },
 });
 
 export default HomeScreen;
