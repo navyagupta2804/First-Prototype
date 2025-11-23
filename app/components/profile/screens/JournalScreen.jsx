@@ -178,7 +178,7 @@ export default function JournalScreen({ onClose, userId }) {
                 {/* Header */}
                 <View style={styles.pageTitle}>
                     <TouchableOpacity style={styles.backButtonContainer} onPress={onClose}>
-                        <Ionicons name="arrow-back" size={16} color="#111" />  
+                        <Ionicons name="chevron-back" size={20} color="#111" />  
                         <Text style={styles.title}>Your Journal</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setShowNewEntryModal(true)}>
@@ -222,10 +222,10 @@ export default function JournalScreen({ onClose, userId }) {
 
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 24, paddingBottom: 40 },
-    pageTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 20 },
+    pageTitle: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingBottom: 20 },
     backButtonContainer: { flexDirection: 'row', alignItems: 'center', paddingRight: 15 },
     
-    title: { paddingLeft: 10, fontSize: 16, fontWeight: '500', color: '#111' },
+    title: { paddingLeft: 10, fontSize: 20, fontWeight: '500', color: '#111' },
     subtitle: { fontSize: 14, color: '#6b7280', marginBottom: 16, fontWeight: '600' },
 
     journalEntry: { 

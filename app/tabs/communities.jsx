@@ -2,14 +2,17 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
+
 import CenteredContainer from '../components/common/CenteredContainer';
 import CommunityCard from '../components/common/CommunityCard';
 import PageHeader from '../components/common/PageHeader';
+import CommunityScreen from '../components/communities/CommunityScreen';
 
 export default function CommunitiesScreen() {
   const user = auth.currentUser;
   const [allCommunities, setAllCommunities] = useState([]); // Fetch all to check membership
   const [loading, setLoading] = useState(true);
+  const [selectedCommunity, setSelectedCommunity] = useState(null);
 
   useEffect(() => {
     if (!user) {
@@ -37,10 +40,15 @@ export default function CommunitiesScreen() {
     return () => unsub();
   }, [user]);
 
-  // When you implement navigation, you will put the call here:
-  // navigation.navigate('CommunityPage', { communityId, communityName });
-  const handleCardPress = (communityId, communityName) => {
-    console.log(`[ACTION] Navigate to Community Page: ${communityName} (ID: ${communityId})`);
+  const handleCardPress = (communityId) => {
+    const community = allCommunities.find(c => c.id === communityId);
+
+    if (community) {
+      setSelectedCommunity(community); 
+      console.log(`[ACTION] Opening Community Page: ${community.name} (ID: ${communityId})`);
+    } else {
+      console.error(`Community not found for ID: ${communityId}`);
+    }
   };
 
   // Filter the list to show only communities the user is a member of
@@ -49,12 +57,12 @@ export default function CommunitiesScreen() {
   const renderCommunities = ({ item }) => {
     return (
       <CenteredContainer>
-        <CommunityCard
-          item={item}
-          userUid={user?.uid} 
-          handleAction={handleCardPress}
-          isMyCommunitiesView={true} 
-      />
+          <CommunityCard
+            item={item}
+            userUid={user?.uid} 
+            handleAction={() => handleCardPress(item.id)}
+            isMyCommunitiesView={true} 
+          />
       </CenteredContainer>
     );
   };
@@ -65,6 +73,15 @@ export default function CommunitiesScreen() {
             <ActivityIndicator size="large" color="#ff4d2d" />
             <Text style={{ marginTop: 10 }}>Loading your communities...</Text>
         </View>
+    );
+  }
+
+  if (selectedCommunity) {
+    return (
+      <CommunityScreen 
+        community={selectedCommunity}
+        onClose={() => setSelectedCommunity(null)} 
+      />
     );
   }
 

@@ -15,7 +15,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center', // Centers the block itself within its parent
     
     // Default Padding (You can override this with the 'style' prop if needed)
-    // paddingHorizontal: 20, 
     paddingVertical: 10,
   },
 });

@@ -76,7 +76,7 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
         {/* Header */}
         <View style={styles.pageTitle}>
           <TouchableOpacity style={styles.backButtonContainer} onPress={onClose}>
-            <Ionicons name="arrow-back" size={16} color="#111" />  
+            <Ionicons name="chevron-back" size={20} color="#111" />  
             <Text style={styles.title}>Settings</Text>
           </TouchableOpacity>
         </View>
@@ -167,9 +167,9 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 24  },
-  pageTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'left', paddingVertical: 20 },
+  pageTitle: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'left', paddingBottom: 20 },
   backButtonContainer: { flexDirection: 'row', alignItems: 'center', paddingRight: 15 },
-  title: { paddingLeft: 10, fontSize: 16, fontWeight: '500', color: '#111' },
+  title: { paddingLeft: 10, fontSize: 20, fontWeight: '500', color: '#111' },
 
   sectionCard: { 
     backgroundColor: 'white', 

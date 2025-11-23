@@ -7,9 +7,9 @@ import { auth, db } from '../../firebaseConfig';
 
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
+import TabBar from '../components/common/TabBar';
 import ProfileCard from '../components/profile/ProfileCard';
 import ProfileTabContent from '../components/profile/ProfileTabContent';
-import ProfileTabs from '../components/profile/ProfileTabs';
 import JournalScreen from '../components/profile/screens/JournalScreen';
 import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
 import SettingsScreen from '../components/profile/screens/SettingsScreen';
@@ -262,9 +262,10 @@ export default function ProfileScreen() {
         />
 
         {/* Tabs (Posts, Saved, Badges) */}
-        <ProfileTabs 
+        <TabBar 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
+          tabs={['Posts', 'Saved', 'Badges']}
         />
 
         {/* Content based on active tab */}

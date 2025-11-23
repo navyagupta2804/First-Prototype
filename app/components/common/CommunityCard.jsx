@@ -32,7 +32,7 @@ const CommunityCard = ({ item, userUid, handleAction, isMyCommunitiesView }) => 
 
     if (isMyCommunitiesView && !joined) return null;
 
-    return (
+    const CardContent = (
         <View style={styles.card}>
             <View style={styles.cardInfo}>
                 <View style={styles.titleRow}>
@@ -49,6 +49,16 @@ const CommunityCard = ({ item, userUid, handleAction, isMyCommunitiesView }) => 
             </TouchableOpacity>
         </View>
     );
+
+    if (isMyCommunitiesView) {
+        return (
+            <TouchableOpacity onPress={actionHandler}>
+                {CardContent}
+            </TouchableOpacity>
+        );
+    }
+
+    return CardContent
 };
 
 export default CommunityCard;
