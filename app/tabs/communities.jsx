@@ -1,6 +1,6 @@
-import { arrayRemove, collection, doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
 import CommunityCard from '../components/common/CommunityCard';
@@ -37,22 +37,10 @@ export default function CommunitiesScreen() {
     return () => unsub();
   }, [user]);
 
-  // --- LEAVE LOGIC ---
-  const handleLeaveCommunity = async (communityId, communityName) => {
-    if (!user) return;
-
-    const communityRef = doc(db, 'communities', communityId);
-    
-    try {
-        // Leave: Use arrayRemove to remove the UID from the memberUids array
-        await updateDoc(communityRef, {
-            memberUids: arrayRemove(user.uid),
-        });
-        Alert.alert('Left', `You have left ${communityName}.`);
-    } catch (e) {
-      console.error('Error leaving community:', e);
-      Alert.alert('Error', e.message);
-    }
+  // When you implement navigation, you will put the call here:
+  // navigation.navigate('CommunityPage', { communityId, communityName });
+  const handleCardPress = (communityId, communityName) => {
+    console.log(`[ACTION] Navigate to Community Page: ${communityName} (ID: ${communityId})`);
   };
 
   // Filter the list to show only communities the user is a member of
@@ -64,7 +52,7 @@ export default function CommunitiesScreen() {
         <CommunityCard
           item={item}
           userUid={user?.uid} 
-          toggleMembership={handleLeaveCommunity}
+          handleAction={handleCardPress}
           isMyCommunitiesView={true} 
       />
       </CenteredContainer>
@@ -100,10 +88,10 @@ export default function CommunitiesScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1, backgroundColor: 'white' }, 
+  screenContainer: { flex: 1, backgroundColor: 'white', paddingHorizontal: 24 }, 
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   myCommunitiesTitle: { fontSize: 24, fontWeight: '700', marginBottom: 10 },
-  listContent: { paddingHorizontal: 16, paddingBottom: 30, gap: 16 },
+  listContent: { paddingBottom: 30, gap: 16 },
   emptyText: {
       textAlign: 'center',
       marginTop: 50,

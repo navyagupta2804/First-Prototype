@@ -221,11 +221,8 @@ export default function JournalScreen({ onClose, userId }) {
 }
 
 const styles = StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 16  },
-    pageTitle: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
-        paddingVertical: 20, marginTop: 20,  
-    },
+    safeArea: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 24, paddingBottom: 40 },
+    pageTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 20 },
     backButtonContainer: { flexDirection: 'row', alignItems: 'center', paddingRight: 15 },
     
     title: { paddingLeft: 10, fontSize: 16, fontWeight: '500', color: '#111' },

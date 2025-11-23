@@ -24,6 +24,7 @@ export default function ExploreScreen() {
             id: d.id, 
             ...data,
             memberUids: data.memberUids || [],
+            description: data.description || '',
         });
       });
       setCommunities(communityArr);
@@ -69,7 +70,7 @@ export default function ExploreScreen() {
         <CommunityCard
           item={item}
           userUid={user?.uid} 
-          toggleMembership={toggleMembership}
+          handleAction={toggleMembership}
           isMyCommunitiesView={false} 
       />
       </CenteredContainer>
@@ -88,19 +89,20 @@ export default function ExploreScreen() {
   return (
     <View style={styles.screenContainer}>
       <PageHeader />
-      <CenteredContainer>
         <View style={styles.contentContainer}>
-          <Text style={styles.exploreTitle}>Explore</Text>
-          <TextInput 
-            style={styles.search} 
-            placeholder="Search communities, challenges..." 
-            placeholderTextColor="#A9A9A9"
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-          />
-          
-          {/* Community List */}
-          <Text style={styles.sectionTitle}>Communities</Text>
+          <CenteredContainer>
+            <Text style={styles.exploreTitle}>Explore</Text>
+            <TextInput 
+              style={styles.search} 
+              placeholder="Search communities, challenges..." 
+              placeholderTextColor="#A9A9A9"
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+            />
+            
+            {/* Community List */}
+            <Text style={styles.sectionTitle}>Communities</Text>
+          </CenteredContainer>
           <FlatList
             data={searchedCommunities}
             keyExtractor={(it) => it.id}
@@ -111,13 +113,12 @@ export default function ExploreScreen() {
             }
           />
         </View>
-      </CenteredContainer>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1, backgroundColor: 'white' },
+  screenContainer: { flex: 1, backgroundColor: 'white', paddingHorizontal: 24 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   contentContainer: { flex: 1 },
   exploreTitle: { fontSize: 24, fontWeight: '700', marginBottom: 20 },

@@ -129,8 +129,8 @@ export default function SignUpScreen() {
   };
 
   return (
-    <CenteredContainer>
-      <View style={styles.container}>
+    <View style={styles.container}>
+      <CenteredContainer>
         <Text style={styles.brand}>pantry</Text>
         <Text style={styles.title}>Create your account</Text>
 
@@ -190,8 +190,8 @@ export default function SignUpScreen() {
         </Text>
 
         <Link href="/signin" style={styles.link}>I already have an account</Link>
-      </View>
-    </CenteredContainer>
+      </CenteredContainer>
+    </View>
   );
 }
 

@@ -1,23 +1,33 @@
 // CommunityCard.jsx
+import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const CommunityCard = ({ item, userUid, toggleMembership, isMyCommunitiesView }) => {
+const CommunityCard = ({ item, userUid, handleAction, isMyCommunitiesView }) => {
     // Determine membership status
     const joined = item.memberUids.includes(userUid); 
     
-    let buttonText;
-    let buttonAction;
-    let buttonColor;
+    let actionElement;
+    let actionHandler;
     
-    // Logic for the button based on the view and membership status
     if (isMyCommunitiesView) {
-        buttonText = 'Leave';
-        buttonAction = () => toggleMembership(item.id, item.name, true); // true = joined
-        buttonColor = '#e5e7eb';
+        actionHandler = () => handleAction('CommunityPage', { communityId: item.id, communityName: item.name });
+        actionElement = (
+            <View style={styles.arrowContainer}>
+                <Ionicons name="chevron-forward" size={24} />
+            </View>
+        ); 
     } else {
-        buttonText = joined ? 'Leave' : 'Join';
-        buttonAction = () => toggleMembership(item.id, item.name, joined);
-        buttonColor = joined ? '#e5e7eb' : '#ff4d2d';
+        actionHandler = () => handleAction(item.id, item.name, joined);
+        actionElement = (
+            <TouchableOpacity
+                style={[styles.btn, { backgroundColor: joined ? '#e5e7eb' : '#ff4d2d' }]}
+                onPress={actionHandler}
+            >
+                <Text style={{ color: joined ? '#111216' : 'white', fontWeight: '700' }}>
+                    {joined ? 'Leave' : 'Join'}
+                </Text>
+            </TouchableOpacity>
+        );
     }
 
     if (isMyCommunitiesView && !joined) return null;
@@ -27,7 +37,6 @@ const CommunityCard = ({ item, userUid, toggleMembership, isMyCommunitiesView })
             <View style={styles.cardInfo}>
                 <View style={styles.titleRow}>
                     <Text style={styles.title}>{item.name}</Text>
-                    {/* Display Member Count next to Title */}
                     <Text style={styles.memberCountMeta}>
                         {item.memberUids.length} members
                     </Text>
@@ -35,13 +44,8 @@ const CommunityCard = ({ item, userUid, toggleMembership, isMyCommunitiesView })
                 <Text style={styles.description}>{item.description}</Text> 
             </View>
             
-            <TouchableOpacity
-                style={[styles.btn, { backgroundColor: buttonColor }]}
-                onPress={buttonAction}
-            >
-                <Text style={{ color: (buttonColor === '#e5e7eb') ? '#111216' : 'white', fontWeight: '700' }}>
-                    {buttonText}
-                </Text>
+            <TouchableOpacity onPress={actionHandler} disabled={!actionHandler}>
+                {actionElement}
             </TouchableOpacity>
         </View>
     );
@@ -76,5 +80,16 @@ const styles = StyleSheet.create({
     borderRadius: 10, 
     minWidth: 70, 
     alignItems: 'center',
-  }
+  },
+  arrowContainer: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  arrowIcon: {
+    fontSize: 24,
+    color: '#6b7280',
+    fontWeight: '300',
+  },
 });

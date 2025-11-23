@@ -150,7 +150,7 @@ export default function LogScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: 'white', paddingHorizontal: 24 },
   brand: { fontSize: 28, fontWeight: '800', color: '#ff4d2d', marginBottom: 8 },
   title: { fontSize: 24, fontWeight: '700', marginBottom: 24 },
 });
