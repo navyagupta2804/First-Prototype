@@ -1,8 +1,9 @@
+import React, { useEffect, useState } from 'react';
+import { Tabs } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '../../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
-import { Tabs } from 'expo-router';
 
 export default function TabsLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -24,7 +25,8 @@ export default function TabsLayout() {
       }
     });
 
-    return unsub;
+    // ✅ FIX: return a proper cleanup function
+    return () => unsub();
   }, []);
 
   return (
@@ -48,9 +50,9 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="log"
+        name="post"
         options={{
-          title: 'Log',
+          title: 'Post',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="add-circle-outline" color={color} size={size} />
           )
@@ -75,7 +77,7 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* ✅ This hides the tab completely unless admin */}
+      {/* Hidden unless admin */}
       <Tabs.Screen
         name="dashboard"
         options={{
@@ -83,7 +85,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="stats-chart" color={color} size={size} />
           ),
-          href: isAdmin ? undefined : null,
+          href: isAdmin ? undefined : null, // hides the tab
         }}
       />
     </Tabs>

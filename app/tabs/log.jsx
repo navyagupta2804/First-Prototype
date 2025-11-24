@@ -12,9 +12,6 @@ import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
 // import for dashboard
 import { logEvent } from '../utils/analytics';
 
-// import for dashboard
-import { logEvent } from '../utils/analytics';
-
 export default function LogScreen() {
   const [image, setImage] = useState(null);
   const [assetMimeType, setAssetMimeType] = useState(null);
@@ -111,9 +108,6 @@ export default function LogScreen() {
       if (userGroup) {
         logPostCreation(userGroup); // <-- Log the event with the A/B group!
       }
-
-      const userSnap = await getDoc(userRef);
-      const userData = userSnap.data();
 
       if (userData) {
         const currentBadges = userData.badges || {};
