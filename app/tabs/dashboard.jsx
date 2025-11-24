@@ -30,6 +30,14 @@ import Section from "../components/dashboard/Section";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const screenWidth = Dimensions.get("window").width;
 
+// ✅ helper to replace findLast (web-safe)
+function findBucket(ts, dayBuckets) {
+  for (let i = dayBuckets.length - 1; i >= 0; i--) {
+    if (ts >= dayBuckets[i]) return dayBuckets[i];
+  }
+  return null;
+}
+
 export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [adminLoading, setAdminLoading] = useState(true);
@@ -40,7 +48,6 @@ export default function DashboardScreen() {
   const [posts, setPosts] = useState([]);
   const [emailByUid, setEmailByUid] = useState({});
   const [nameByUid, setNameByUid] = useState({});
-
 
   const auth = getAuth();
   const uid = auth?.currentUser?.uid;
@@ -75,7 +82,6 @@ export default function DashboardScreen() {
         const since7d = Timestamp.fromDate(new Date(Date.now() - 7 * DAY_MS));
         const since30d = Timestamp.fromDate(new Date(Date.now() - 30 * DAY_MS));
 
-        // --- events (last 30 days) ---
         const evQ = query(
           collection(db, "events"),
           where("ts", ">=", since30d),
@@ -86,12 +92,9 @@ export default function DashboardScreen() {
         const evs = evSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
         setEvents(evs);
 
-        // --- users total ---
         const usersSnap = await getDocs(collection(db, "users"));
         setUsersCount(usersSnap.size);
 
-        // --- posts (last 7 days) ---
-        // change "posts" / "createdAt" if your schema differs
         const postsQ = query(
           collection(db, "posts"),
           where("createdAt", ">=", since7d),
@@ -134,7 +137,7 @@ export default function DashboardScreen() {
         const ts = ev.ts?.toDate?.() ? ev.ts.toDate().getTime() : null;
         if (!ts) continue;
 
-        const bucket = dayBuckets.findLast((t) => ts >= t) ?? null;
+        const bucket = findBucket(ts, dayBuckets); // ✅ replaced findLast
         if (bucket) evDay[bucket]++;
 
         typeCounts[ev.type] = (typeCounts[ev.type] || 0) + 1;
@@ -153,7 +156,7 @@ export default function DashboardScreen() {
           : null;
         if (!ts) continue;
 
-        const bucket = dayBuckets.findLast((t) => ts >= t) ?? null;
+        const bucket = findBucket(ts, dayBuckets); // ✅ replaced findLast
         if (bucket) postDay[bucket]++;
       }
 
@@ -171,38 +174,39 @@ export default function DashboardScreen() {
         topUsers: top,
       };
     }, [events, posts]);
-    useEffect(() => {
-        (async () => {
-            try {
-                if (!topUsers || topUsers.length === 0) return;
 
-                const uids = topUsers.map(u => u.uid);
+  // ====== FETCH TOP USER NAMES/EMAILS ======
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!topUsers || topUsers.length === 0) return;
 
-                const usersQ = query(
-                    collection(db, "users"),
-                    where(documentId(), "in", uids)
-                );
+        const uids = topUsers.map(u => u.uid);
 
-                const snap = await getDocs(usersQ);
+        const usersQ = query(
+          collection(db, "users"),
+          where(documentId(), "in", uids)
+        );
 
-                const emailMap = {};
-                const nameMap = {};
+        const snap = await getDocs(usersQ);
 
-                snap.forEach(d => {
-                    const data = d.data();
-                    emailMap[d.id] = data?.email || "";
-                    nameMap[d.id] = data?.displayName || "";
-                });
+        const emailMap = {};
+        const nameMap = {};
 
-                setEmailByUid(emailMap);
-                setNameByUid(nameMap);
+        snap.forEach(d => {
+          const data = d.data();
+          emailMap[d.id] = data?.email || "";
+          nameMap[d.id] = data?.displayName || "";
+        });
 
-            } catch (e) {
-                console.warn("Failed to fetch top user info:", e?.message);
-            }
-        })();
-    }, [topUsers]);
+        setEmailByUid(emailMap);
+        setNameByUid(nameMap);
 
+      } catch (e) {
+        console.warn("Failed to fetch top user info:", e?.message);
+      }
+    })();
+  }, [topUsers]);
 
   const chartLabels = Object.keys(eventsByDay).map((t) => {
     const d = new Date(Number(t));
@@ -212,7 +216,6 @@ export default function DashboardScreen() {
   const eventsDayValues = Object.values(eventsByDay);
   const postsDayValues = Object.values(postsByDay);
 
-  // ====== UI STATES ======
   if (adminLoading) {
     return (
       <View style={styles.center}>
@@ -245,7 +248,6 @@ export default function DashboardScreen() {
     );
   }
 
-  // ====== MAIN DASHBOARD ======
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <Text style={styles.header}>Pantry Admin Dashboard</Text>
@@ -310,10 +312,10 @@ export default function DashboardScreen() {
         {topUsers.map((u) => (
           <View key={u.uid} style={styles.row}>
             <Text style={styles.rowLabel} numberOfLines={1}>
-                {nameByUid[u.uid]
-                    ? `${nameByUid[u.uid]} (${emailByUid[u.uid] || ""})`
-                    : (emailByUid[u.uid] || u.uid)
-                }
+              {nameByUid[u.uid]
+                ? `${nameByUid[u.uid]} (${emailByUid[u.uid] || ""})`
+                : (emailByUid[u.uid] || u.uid)
+              }
             </Text>
             <Text style={styles.rowValue}>{u.count}</Text>
           </View>
