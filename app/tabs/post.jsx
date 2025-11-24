@@ -7,13 +7,15 @@ import PageHeader from '../components/common/PageHeader';
 import PostForm from '../components/post/PostForm';
 import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
 
+// import for dashboard
+import { logEvent } from '../utils/analytics';
+
 export default function PostScreen() {
   const [image, setImage] = useState(null);
   const [assetMimeType, setAssetMimeType] = useState(null);
   const [caption, setCaption] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  // --- Image Picker/Camera Logic ---
   const launchPicker = async (type) => {
     const asset = await launchImagePicker(type); 
     if (asset) {
@@ -42,15 +44,15 @@ export default function PostScreen() {
     try {
       setUploading(true);
 
-      // 1. Prepare unique Post ID and document references
+      // 1. Prepare Post ID + storage path
       const newPhotoRef = doc(collection(db, 'feed'));
-      const postId = newPhotoRef.id; // Define postId BEFORE it is used for the storagePath
-      const storagePath = `users/${user.uid}/photos/${postId}`; 
-      
-      // 2. Upload image to Firebase Storage
+      const postId = newPhotoRef.id;
+      const storagePath = `users/${user.uid}/photos/${postId}`;
+
+      // 2. Upload image
       const url = await uploadImageToFirebase(image, assetMimeType, storagePath);
 
-      // 3. Prepare the common post data
+      // 3. Build post data
       const postData = {
         id: postId,
         uid: user.uid,
@@ -59,25 +61,28 @@ export default function PostScreen() {
         displayPhoto: user.photoURL,
         caption: caption.trim() || '',
         createdAt: serverTimestamp(),
-        likesCount: 0, 
+        likesCount: 0,
         commentsCount: 0,
-        isPublished: true, 
+        isPublished: true,
       };
 
-      // 4. Write to database
+      // 4. Write post
       await setDoc(newPhotoRef, postData);
 
-      // 5. Increment user's photoCount
+      // 5. Update user stats
       await updateDoc(doc(db, 'users', user.uid), {
         photoCount: increment(1),
         lastPostAt: serverTimestamp(),
       });
 
-      // Success!
+      // ✅ 6. Log analytics event (SAFE, MINIMAL CHANGE)
+      await logEvent("create_post", { hasImage: !!url });
+
+      // Success
       Alert.alert('Posted!', 'Your meal has been logged.', [
         { text: 'OK', onPress: () => {
-          setImage(null);
-          setCaption('');
+            setImage(null);
+            setCaption('');
         }}
       ]);
 
@@ -91,7 +96,8 @@ export default function PostScreen() {
       setUploading(false);
     }
   };
- return (
+
+  return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <PageHeader />
       <CenteredContainer>
@@ -114,6 +120,5 @@ export default function PostScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
   content: { paddingHorizontal: 16  },
-  brand: { fontSize: 28, fontWeight: '800', color: '#ff4d2d', marginBottom: 8 },
   title: { fontSize: 20, fontWeight: '700', marginBottom: 24 },
 });

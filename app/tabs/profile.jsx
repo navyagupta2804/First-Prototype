@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../../firebaseConfig';
+import { logEvent } from '../utils/analytics';
 
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
@@ -237,3 +238,6 @@ const styles = StyleSheet.create({
   },
   loadingText: { marginTop: 12, color: '#6b7280', fontSize: 14 },
 });
+
+//for dashboard
+useEffect(() => logEvent("view_profile"), []);

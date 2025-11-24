@@ -152,3 +152,4 @@ const styles = StyleSheet.create({
   uploadButtonText: { color: 'white', fontWeight: '700', fontSize: 16 },
   hint: { color: '#6b7280', fontSize: 14, textAlign: 'center', marginTop: 16 },
 });
+

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 import { requiresGoalSetting } from '../utils/bageCalculations';
+import { logEvent } from '../utils/analytics';
 
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
@@ -45,6 +46,11 @@ const HomeScreen = () => {
       setFeed(items);
     });
     return unsub;
+  }, []);
+
+  //dashboard
+  useEffect(() => {
+    logEvent("view_home");
   }, []);
 
   // ---- Goal Submission Handler ----
