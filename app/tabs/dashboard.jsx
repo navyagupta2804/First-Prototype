@@ -12,6 +12,7 @@ import { getAuth } from "firebase/auth";
 import {
   collection,
   getDocs,
+  onSnapshot, // ✅ added
   limit,
   orderBy,
   query,
@@ -76,12 +77,15 @@ export default function DashboardScreen() {
   useEffect(() => {
     if (!isAdmin) return;
 
+    let unsubPosts = null;
+
     (async () => {
       setLoading(true);
       try {
         const since7d = Timestamp.fromDate(new Date(Date.now() - 7 * DAY_MS));
         const since30d = Timestamp.fromDate(new Date(Date.now() - 30 * DAY_MS));
 
+        // --- events (last 30 days) ---
         const evQ = query(
           collection(db, "events"),
           where("ts", ">=", since30d),
@@ -92,24 +96,35 @@ export default function DashboardScreen() {
         const evs = evSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
         setEvents(evs);
 
+        // --- users total ---
         const usersSnap = await getDocs(collection(db, "users"));
         setUsersCount(usersSnap.size);
 
+        // --- posts (last 7 days) ---
+        // ✅ FIX: posts are stored in "feed", not "posts"
+        // ✅ FIX: realtime updates using onSnapshot
         const postsQ = query(
-          collection(db, "posts"),
+          collection(db, "feed"),
           where("createdAt", ">=", since7d),
           orderBy("createdAt", "desc"),
           limit(500)
         );
-        const postsSnap = await getDocs(postsQ);
-        const ps = postsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setPosts(ps);
+
+        unsubPosts = onSnapshot(postsQ, (postsSnap) => {
+          const ps = postsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          setPosts(ps);
+        });
       } catch (e) {
         console.warn("Dashboard load error:", e?.message);
       } finally {
         setLoading(false);
       }
     })();
+
+    // ✅ cleanup for realtime listener
+    return () => {
+      if (unsubPosts) unsubPosts();
+    };
   }, [isAdmin]);
 
   // ====== DERIVED METRICS ======
@@ -137,7 +152,7 @@ export default function DashboardScreen() {
         const ts = ev.ts?.toDate?.() ? ev.ts.toDate().getTime() : null;
         if (!ts) continue;
 
-        const bucket = findBucket(ts, dayBuckets); // ✅ replaced findLast
+        const bucket = findBucket(ts, dayBuckets);
         if (bucket) evDay[bucket]++;
 
         typeCounts[ev.type] = (typeCounts[ev.type] || 0) + 1;
@@ -156,7 +171,7 @@ export default function DashboardScreen() {
           : null;
         if (!ts) continue;
 
-        const bucket = findBucket(ts, dayBuckets); // ✅ replaced findLast
+        const bucket = findBucket(ts, dayBuckets);
         if (bucket) postDay[bucket]++;
       }
 
@@ -181,7 +196,7 @@ export default function DashboardScreen() {
       try {
         if (!topUsers || topUsers.length === 0) return;
 
-        const uids = topUsers.map(u => u.uid);
+        const uids = topUsers.map((u) => u.uid);
 
         const usersQ = query(
           collection(db, "users"),
@@ -193,7 +208,7 @@ export default function DashboardScreen() {
         const emailMap = {};
         const nameMap = {};
 
-        snap.forEach(d => {
+        snap.forEach((d) => {
           const data = d.data();
           emailMap[d.id] = data?.email || "";
           nameMap[d.id] = data?.displayName || "";
@@ -201,7 +216,6 @@ export default function DashboardScreen() {
 
         setEmailByUid(emailMap);
         setNameByUid(nameMap);
-
       } catch (e) {
         console.warn("Failed to fetch top user info:", e?.message);
       }
@@ -216,6 +230,7 @@ export default function DashboardScreen() {
   const eventsDayValues = Object.values(eventsByDay);
   const postsDayValues = Object.values(postsByDay);
 
+  // ====== UI STATES ======
   if (adminLoading) {
     return (
       <View style={styles.center}>
@@ -248,6 +263,7 @@ export default function DashboardScreen() {
     );
   }
 
+  // ====== MAIN DASHBOARD ======
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <Text style={styles.header}>Pantry Admin Dashboard</Text>
@@ -255,8 +271,16 @@ export default function DashboardScreen() {
 
       <View style={styles.statsRow}>
         <StatCard label="Total Users" value={usersCount} />
-        <StatCard label="Daily Active Users" value={dau} sublabel="active last 24h" />
-        <StatCard label="Weekly Active Users" value={wau} sublabel="active last 7d" />
+        <StatCard
+          label="Daily Active Users"
+          value={dau}
+          sublabel="active last 24h"
+        />
+        <StatCard
+          label="Weekly Active Users"
+          value={wau}
+          sublabel="active last 7d"
+        />
         <StatCard
           label="Events (30d)"
           value={events.length}
@@ -314,8 +338,7 @@ export default function DashboardScreen() {
             <Text style={styles.rowLabel} numberOfLines={1}>
               {nameByUid[u.uid]
                 ? `${nameByUid[u.uid]} (${emailByUid[u.uid] || ""})`
-                : (emailByUid[u.uid] || u.uid)
-              }
+                : emailByUid[u.uid] || u.uid}
             </Text>
             <Text style={styles.rowValue}>{u.count}</Text>
           </View>
