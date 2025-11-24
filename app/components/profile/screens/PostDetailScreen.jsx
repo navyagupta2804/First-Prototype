@@ -28,7 +28,7 @@ export default function PostDetailScreen({ posts, postId, onClose, onTogglePubli
         <View style={styles.pageTitle}>
           <TouchableOpacity style={styles.backButtonContainer} onPress={onClose}>
             <Ionicons name="arrow-back" size={16} color="#111" /> 
-            <Text style={styles.title}>your post</Text> 
+            <Text style={styles.title}>Your Posts</Text> 
           </TouchableOpacity>
         </View>
       </CenteredContainer>
@@ -47,7 +47,7 @@ export default function PostDetailScreen({ posts, postId, onClose, onTogglePubli
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: 'white', paddingHorizontal: 16 },
+  safeArea: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 16 },
   pageTitle: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'left', 
     paddingVertical: 20, marginTop: 20,  

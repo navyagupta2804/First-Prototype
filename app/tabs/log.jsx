@@ -1,19 +1,25 @@
-import { collection, doc, increment, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
-import PostForm from '../components/post/PostForm';
+import LogForm from '../components/log/LogForm';
+import { logPostCreation } from '../utils/analyticsHelper';
+import { evaluateUserBadges } from '../utils/badgeCalculations';
 import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
 
 // import for dashboard
 import { logEvent } from '../utils/analytics';
 
-export default function PostScreen() {
+// import for dashboard
+import { logEvent } from '../utils/analytics';
+
+export default function LogScreen() {
   const [image, setImage] = useState(null);
   const [assetMimeType, setAssetMimeType] = useState(null);
   const [caption, setCaption] = useState('');
+  const [isPublished, setIsPublished] = useState(true);
   const [uploading, setUploading] = useState(false);
 
   const launchPicker = async (type) => {
@@ -69,11 +75,66 @@ export default function PostScreen() {
       // 4. Write post
       await setDoc(newPhotoRef, postData);
 
-      // 5. Update user stats
-      await updateDoc(doc(db, 'users', user.uid), {
-        photoCount: increment(1),
+      const userRef = doc(db, 'users', user.uid);
+
+      // 5. Update user's profile with last post time 
+      await updateDoc(userRef, {
         lastPostAt: serverTimestamp(),
       });
+
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+
+      if (userData) {
+        const currentBadges = userData.badges || {};
+
+        const { updatedBadges, newlyUnlocked } = evaluateUserBadges(userData, currentBadges);
+
+        if (newlyUnlocked.length > 0) {
+          await updateDoc(userRef, { badges: updatedBadges });
+          // Simple alert for new badges
+          Alert.alert(
+            'New badge unlocked! 🎉',
+            `You earned: ${newlyUnlocked.join(', ')}`
+          );
+        }
+
+        const userGroup = userData.abTestGroup;
+        if (userGroup) {
+          logPostCreation(userGroup);
+        }
+      }
+
+      const userProfileSnap = await getDoc(doc(db, 'users', user.uid)); 
+      const userGroup = userProfileSnap.data()?.abTestGroup;
+      
+      if (userGroup) {
+        logPostCreation(userGroup); // <-- Log the event with the A/B group!
+      }
+
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+
+      if (userData) {
+        const currentBadges = userData.badges || {};
+
+        const { updatedBadges, newlyUnlocked } = evaluateUserBadges(userData, currentBadges);
+
+        if (newlyUnlocked.length > 0) {
+          await updateDoc(userRef, { badges: updatedBadges });
+          // Simple alert for new badges
+          Alert.alert(
+            'New badge unlocked! 🎉',
+            `You earned: ${newlyUnlocked.join(', ')}`
+          );
+        }
+
+        const userGroup = userData.abTestGroup;
+        if (userGroup) {
+          logPostCreation(userGroup);
+        }
+      }
+
 
       // ✅ 6. Log analytics event (SAFE, MINIMAL CHANGE)
       await logEvent("create_post", { hasImage: !!url });
@@ -83,11 +144,13 @@ export default function PostScreen() {
         { text: 'OK', onPress: () => {
             setImage(null);
             setCaption('');
+          setIsPublished(true);
         }}
       ]);
 
       setImage(null);
       setCaption('');
+      setIsPublished(true);
 
     } catch (e) {
       console.error('Upload error:', e);
@@ -102,11 +165,13 @@ export default function PostScreen() {
       <PageHeader />
       <CenteredContainer>
         <Text style={styles.title}>Log a Meal</Text>
-        <PostForm 
+        <LogForm 
           image={image}
           caption={caption}
+          isPublished={isPublished}
           uploading={uploading}
           setCaption={setCaption}
+          setIsPublished={setIsPublished}
           pickImage={pickImage}
           takePhoto={takePhoto}
           uploadPost={uploadPost}

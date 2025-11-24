@@ -1,19 +1,26 @@
+import { setUserProperties } from 'firebase/analytics';
 import { collection, doc, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { auth, db } from '../../firebaseConfig';
-import { requiresGoalSetting } from '../utils/bageCalculations';
+import { analytics, auth, db } from '../../firebaseConfig';
+import { getStartOfWeek, requiresGoalSetting } from '../utils/badgeCalculations';
 import { logEvent } from '../utils/analytics';
 
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
 import PostCard from '../components/common/PostCard';
-import ChallengeSection from '../components/home/ChallengeSection';
-import FriendActivityCard from '../components/home/FriendActivityCard';
 import PersonalGreeting from '../components/home/PersonalGreeting';
 import PromptCard from '../components/home/PromptCard';
 import WeeklyGoalSetter from '../components/home/WeeklyGoalSetter';
 
+const INTERNAL_TESTER_UIDS = [
+    "sxs1k2tZFhTy0sQ1CFYJUD9tZSY2", // jins
+    "XMAjQ3JzOdbOvAv2mlsgNxirdUK2", // mannu1623
+    "oidjXXbQModtDgAkrvLVG3EFiUb2", // olufunmilola92
+    "FtoyNcl5FNgsudn04CEyobyIpSH2", // test
+    "uf6finICXxNjukDyd8ssVssx1ur2", // jin
+    "hujq5wObGxdt27SDwvvPQYrXmW13", // navyag711
+];
 
 const HomeScreen = () => {
   const [feed, setFeed] = useState([]);
@@ -31,6 +38,22 @@ const HomeScreen = () => {
       }
     });
     return unsub;
+  }, [userId]);
+
+  // 3. ---- Analytics Tagging (NEW useEffect) ----
+  useEffect(() => {
+    // Only run if the user is logged in
+    if (!userId) return;
+
+    // Check if the current user ID is in the list of known internal testers
+    if (INTERNAL_TESTER_UIDS.includes(userId)) {
+      // Set the custom user property to tag this user's traffic
+      setUserProperties(analytics, {
+        internal_tester: 'Internal'
+      });
+      console.log(`[Analytics] User ${userId} tagged as internal_tester.`);
+    }
+    // Dependency array ensures this runs once when userId is available
   }, [userId]);
 
   // 2. ---- Feed subscription ----
@@ -58,14 +81,15 @@ const HomeScreen = () => {
     if (!userId) return;
 
     const userRef = doc(db, 'users', userId);
-    const now = new Date();
+    const sundayMidnight = getStartOfWeek(new Date());
     
     try {
       await updateDoc(userRef, {
         weeklyGoal: goal,
-        streakStartDate: now, 
+        streakStartDate: sundayMidnight, 
         currentWeekPosts: 0, 
-        streakCount: userData.streakCount || 0
+        streakCount: userData.streakCount || 0,
+        hasGoalBeenMetThisWeek: false,
       });
       console.log("Weekly goal set successfully!");
     } catch (error) {
@@ -84,8 +108,8 @@ const HomeScreen = () => {
       ) : (
         <PromptCard />
       )}
-      <ChallengeSection />
-      <FriendActivityCard/>
+      {/* <ChallengeSection /> */}
+      {/* <FriendActivityCard/> */}
       <CenteredContainer>
         <Text style={styles.feedHeader}>Community Updates</Text>
       </CenteredContainer>

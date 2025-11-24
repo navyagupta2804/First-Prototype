@@ -4,13 +4,15 @@ import CenteredContainer from '../common/CenteredContainer';
 
 const WeeklyGoalSetter = ({ onSubmitGoal }) => {
   const [goal, setGoal] = useState('3'); // Default to 3, or read from saved data
+  const [error, setError] = useState('');
 
   const handleSubmit = () => {
     const numericGoal = parseInt(goal, 10);
-    if (!isNaN(numericGoal) && numericGoal > 0) { 
+    if (!isNaN(numericGoal) && numericGoal >= 3) { 
       onSubmitGoal(numericGoal);
     } else {
       console.warn("Please enter a valid positive number for your goal.");
+      setError(`Your weekly goal must be at least 3 meals.`);
     }
   };
 
@@ -35,6 +37,11 @@ const WeeklyGoalSetter = ({ onSubmitGoal }) => {
             />
             <Text style={styles.unit}>meals</Text>
         </View>
+        {/* --- NEW ERROR DISPLAY --- */}
+        {error ? (
+            <Text style={styles.errorText}>{error}</Text>
+        ) : null}
+        {/* ------------------------- */}
     </CenteredContainer>
   );
 };
@@ -96,6 +103,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: { color: '#fff', fontWeight: '700' }, 
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 5,
+    marginBottom: 5,
+  },
 });
 
 export default WeeklyGoalSetter;

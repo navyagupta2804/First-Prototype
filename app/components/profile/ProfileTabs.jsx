@@ -1,9 +1,11 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const ProfileTabs = ({ activeTab, setActiveTab }) => {
+    let tabs = ['Posts', 'Saved', 'Badges']; // Base tabs for everyone
+    
     return (
         <View style={styles.tabBar}>
-            {['Posts', 'Saved', 'Badges'].map((tab) => (
+            {tabs.map((tab) => (
                 <TouchableOpacity
                     key={tab}
                     style={[styles.tab, activeTab === tab && styles.tabActive]}

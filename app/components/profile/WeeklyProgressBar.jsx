@@ -23,7 +23,7 @@ const WeeklyProgressBar = ({ currentWeekPosts = 0, weeklyGoal = 0 }) => {
       </View>
       <View style={styles.track}>
         <View style={[styles.fill, { width: progressBarWidth }]}>
-          {clampedPercentage === 100 && <Text style={styles.checkmark}>✔️</Text>}
+          {clampedPercentage === 100 }
         </View>
       </View>
     </View>
@@ -70,11 +70,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     paddingRight: 4,
-  },
-  checkmark: {
-    fontSize: 10,
-    color: 'white',
-    fontWeight: 'bold',
   },
 });
 

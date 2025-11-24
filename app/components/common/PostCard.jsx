@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
-  addDoc, collection, deleteDoc, doc, getDoc, increment,
-  onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc
+  addDoc, collection, deleteDoc, doc, getDoc,
+  onSnapshot, orderBy, query, serverTimestamp, setDoc
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import {
@@ -13,7 +13,44 @@ import {
 import { auth, db } from '../../../firebaseConfig';
 import CenteredContainer from './CenteredContainer';
 
-function CommentInput({ itemId, onCommentAdded }) {
+function usePostData(itemId, user) {
+  const [likesCount, setLikesCount] = useState(0);
+  const [commentsCount, setCommentsCount] = useState(0);
+  const [liked, setLiked] = useState(false);
+  
+  useEffect(() => {
+    // 1. Likes Subscription
+    const likesRef = collection(db, 'feed', itemId, 'likes');
+    const unsubLikes = onSnapshot(likesRef, (snap) => {
+      setLikesCount(snap.size);
+    });
+
+    // 2. Comments Subscription 
+    const commentsRef = collection(db, 'feed', itemId, 'comments');
+    const unsubComments = onSnapshot(commentsRef, (snap) => {
+      setCommentsCount(snap.size);
+    });
+    
+    // 3. Current User Like Status Check
+    const checkLike = async () => {
+      if (!user) return setLiked(false);
+      const likeDoc = await getDoc(doc(db, 'feed', itemId, 'likes', user.uid));
+      setLiked(likeDoc.exists());
+    };
+    checkLike();
+    
+    // Clean up all subscriptions
+    return () => {
+      unsubLikes();
+      unsubComments();
+    };
+
+  }, [itemId, user]); // Re-run if post or user changes
+
+  return { likesCount, commentsCount, liked, setLiked };
+}
+
+function CommentInput({ itemId }) {
   const [commentText, setCommentText] = useState('');
   const user = auth.currentUser;
 
@@ -22,7 +59,6 @@ function CommentInput({ itemId, onCommentAdded }) {
     if (!commentText.trim()) return;
 
     const commentsRef = collection(db, 'feed', itemId, 'comments');
-    const feedRef = doc(db, 'feed', itemId);
 
     try {
       await addDoc(commentsRef, {
@@ -31,10 +67,7 @@ function CommentInput({ itemId, onCommentAdded }) {
         displayName: user.displayName || 'Pantry Member',
         createdAt: serverTimestamp()
       });
-      // increment comment count on feed doc
-      await updateDoc(feedRef, { commentsCount: increment(1) });
       setCommentText('');
-      if (onCommentAdded) onCommentAdded();
     } catch (e) {
       console.warn('Add comment error', e);
       Alert.alert('Error', 'Unable to add comment.');
@@ -93,7 +126,13 @@ function CommentsSection({ itemId, show }) {
   );
 }
 
-// --- Options Menu Component ---
+// Indicator Component
+const PrivateIndicator = () => (
+  <View style={styles.privateBadge}>
+    <Text style={styles.privateBadgeText}>🔒 PRIVATE LOG</Text>
+  </View>
+);
+
 // This is the menu that pops up when the user clicks the three dots
 const PostOptionsMenu = ({ isVisible, onClose, item, onTogglePublish }) => {
   const menuActionText = item.isPublished ? 'Hide from Feed (Archive)' : 'Publish to Feed';
@@ -126,47 +165,27 @@ const PostOptionsMenu = ({ isVisible, onClose, item, onTogglePublish }) => {
   );
 };
 
+
 export default function PostCard({ item, isProfileView = false, onTogglePublish }) {
-  const [likesCount, setLikesCount] = useState(item.likesCount || 0);
-  const [commentsCount, setCommentsCount] = useState(item.commentsCount || 0);
-  const [liked, setLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const user = auth.currentUser;
 
-  useEffect(() => {
-    const dref = doc(db, 'feed', item.id);
-    const unsub = onSnapshot(dref, (snap) => {
-      const data = snap.data() || {};
-      setLikesCount(data.likesCount || 0);
-      setCommentsCount(data.commentsCount || 0);
-    });
-    // check if current user liked
-    const checkLike = async () => {
-      try {
-        if (!user) return setLiked(false);
-        const likeDoc = await getDoc(doc(db, 'feed', item.id, 'likes', user.uid));
-        setLiked(likeDoc.exists());
-      } catch (e) {
-        console.warn('Error checking initial like state:', e);
-      }
-    };
-    checkLike();
-    return unsub;
-  }, [item.id]);
+  const isAuthorAndInProfile = isProfileView && user && user.uid === item.uid;
+  const isPrivate = item.isPublished === false;
+
+  const { likesCount, commentsCount, liked, setLiked } = usePostData(item.id, user);
 
   const toggleLike = async () => {
     if (!user) return Alert.alert('Sign in', 'Please sign in to like posts.');
     const likeRef = doc(db, 'feed', item.id, 'likes', user.uid);
-    const feedRef = doc(db, 'feed', item.id);
+
     try {
       if (liked) {
         await deleteDoc(likeRef);
-        await updateDoc(feedRef, { likesCount: increment(-1) });
         setLiked(false);
       } else {
         await setDoc(likeRef, { uid: user.uid, createdAt: serverTimestamp() });
-        await updateDoc(feedRef, { likesCount: increment(1) });
         setLiked(true);
       }
     } catch (e) {
@@ -175,7 +194,6 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
   };
 
   const postTime = item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleString() : '';
-  const isAuthorAndInProfile = isProfileView && user && user.uid === item.uid;
 
   return (
     <CenteredContainer style={styles.card}>
@@ -186,12 +204,20 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
           <Text style={styles.cardTitle}>{item.displayName || 'Pantry Member'}</Text>
           <Text style={styles.cardTime}>{postTime}</Text>
         </View>
+        
+        {/* Private Indicator */}
+        {isAuthorAndInProfile && isPrivate && (
+          <View style={styles.privateIndicatorRow}>
+            <PrivateIndicator />
+          </View>
+        )}
+
         {isAuthorAndInProfile && (
           <TouchableOpacity 
             style={styles.optionsButton} 
             onPress={() => setIsMenuVisible(true)}
           >
-           <Ionicons name="ellipsis-vertical" size={24} color="#666" />
+           <Ionicons name="ellipsis-vertical" size={24} color="#667" />
           </TouchableOpacity>
         )}
       </View>
@@ -239,11 +265,17 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
 
 const styles = StyleSheet.create({
   card: { 
+    backgroundColor: "white",
     borderWidth: 1, 
     borderColor: '#EEE', 
     borderRadius: 14, 
     padding: 12,
-    marginBottom: 12 
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   avatar: { width: 36, height: 36, borderRadius: 18, marginRight: 10 },
@@ -301,5 +333,22 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   menuItem: { paddingVertical: 12, paddingHorizontal: 15 },
-  menuText: { fontSize: 15, color: '#333' }
+  menuText: { fontSize: 15, color: '#333' },
+
+  // privacy indicator
+  privateIndicatorRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  privateBadge: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  privateBadgeText: {
+    color: '#B91C1C',
+    fontWeight: '700',
+    fontSize: 12,
+  }
 });

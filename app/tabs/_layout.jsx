@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Tabs } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '../../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
+import { Tabs } from 'expo-router';
 
 export default function TabsLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -49,9 +48,9 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="post"
+        name="log"
         options={{
-          title: 'Post',
+          title: 'Log',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="add-circle-outline" color={color} size={size} />
           )

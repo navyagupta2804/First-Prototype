@@ -1,5 +1,5 @@
 import { signOut, updateProfile } from 'firebase/auth';
-import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import { collection, doc, limit, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,10 +11,13 @@ import PageHeader from '../components/common/PageHeader';
 import ProfileCard from '../components/profile/ProfileCard';
 import ProfileTabContent from '../components/profile/ProfileTabContent';
 import ProfileTabs from '../components/profile/ProfileTabs';
+import JournalScreen from '../components/profile/screens/JournalScreen';
 import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
 import SettingsScreen from '../components/profile/screens/SettingsScreen';
 import WeeklyProgressBar from '../components/profile/WeeklyProgressBar';
+import { evaluateUserBadges } from '../utils/badgeCalculations';
 import { uploadImageToFirebase } from '../utils/imageUpload';
+
 
 export default function ProfileScreen() {
   const [userData, setUserData] = useState(null);
@@ -23,6 +26,9 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [userBadges, setUserBadges] = useState({});
+  const [recentJournalEntry, setRecentJournalEntry] = useState(null);
+  const [showJournalScreen, setShowJournalScreen] = useState(false);
 
   const user = auth.currentUser;
 
@@ -37,26 +43,30 @@ export default function ProfileScreen() {
       doc(db, 'users', user.uid),
       (docSnap) => {
         if (docSnap.exists()) {
-          setUserData(docSnap.data());
+          const data = docSnap.data();
+          setUserData(data);
+          setUserBadges(data.badges || {});
         } else {
           console.log('No profile found');
           // Set default values if profile doesn't exist
           setUserData({
             displayName: user.displayName || 'Pantry User',
             email: user.email,
-            streak: 0,
+            streakCount: 0,
             communities: 0,
             photoCount: 0,
             friends: 0,
             badges: 0,
             createdAt: new Date(),
           });
+          setUserBadges({});
         }
         setLoading(false);
       },
       (error) => {
         console.error('Error loading profile:', error);
         setLoading(false);
+        setUserBadges({});
       }
     );
 
@@ -77,11 +87,44 @@ export default function ProfileScreen() {
       }
     );
 
+    // Listen to user's journal entries
+    const unsubJournal = onSnapshot(
+      query(
+        collection(db, 'journals'), // Target the top-level 'journals' collection
+        where('uid', '==', user.uid), // Filter: ONLY journals belonging to this user
+        orderBy('createdAt', 'desc'), // Sort by newest first
+        limit(1) // Get only the single most recent one
+      ),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          setRecentJournalEntry({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
+        } else {
+          setRecentJournalEntry(null);
+        }
+      },
+      (error) => {
+        console.error('Error loading recent journal entry:', error);
+        setRecentJournalEntry(null);
+      }
+    );
+
     return () => {
       unsubProfile();
       unsubPosts();
+      unsubJournal();
     };
   }, [user]);
+
+  useEffect(() => {
+    if (!userData) return;
+
+    const { updatedBadges, newlyUnlocked } = evaluateUserBadges(userData, userBadges);
+
+    if (newlyUnlocked.length > 0) {
+      setUserBadges(updatedBadges);
+      updateDoc(doc(db, 'users', user.uid), { badges: updatedBadges });
+    } 
+  }, [userData]);
 
   const handleSignOut = async () => {
     try {
@@ -129,7 +172,7 @@ export default function ProfileScreen() {
 
       await updateProfile(user, updateData);
       await updateDoc(doc(db, 'users', user.uid), updateData);
-
+      console.log("Success", "Your profile changes have been saved!");
       Alert.alert("Success", "Your profile changes have been saved!");
 
     } catch (e) {
@@ -189,6 +232,15 @@ export default function ProfileScreen() {
     );
   }
 
+  if (showJournalScreen) {
+      return (
+        <JournalScreen 
+          onClose={() => setShowJournalScreen(false)} 
+          userId={user.uid}
+        />
+      );
+  }
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* AppHeader (Brand, Add Friend, Notifications) */}
@@ -199,9 +251,11 @@ export default function ProfileScreen() {
         <ProfileCard
           userData={userData} 
           postsLength={posts.length} 
+          recentJournalEntry={recentJournalEntry} 
+          onJournalPress={() => setShowJournalScreen(true)}
           onSettingsPress={() => setShowSettings(true)} 
         />
-        
+  
         {/* Progress bar for user-set weekly goals */}
         <WeeklyProgressBar
           currentWeekPosts={userData.currentWeekPosts}
@@ -219,6 +273,7 @@ export default function ProfileScreen() {
           activeTab={activeTab} 
           posts={posts} 
           onPostPress={setSelectedPost}
+          userBadges={userBadges} 
         />
 
         {/* Bottom Spacing */}

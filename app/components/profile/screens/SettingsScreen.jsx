@@ -72,8 +72,8 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
       <CenteredContainer>
+        {/* Header */}
         <View style={styles.pageTitle}>
           <TouchableOpacity style={styles.backButtonContainer} onPress={onClose}>
             <Ionicons name="arrow-back" size={16} color="#111" />  
@@ -105,6 +105,7 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
                   value={displayName}
                   onChangeText={setDisplayName}
                   placeholder="Display name"
+                  placeholderTextColor="#A9A9A9"
                 />
                 <Text style={styles.usernameLabel}>Username</Text>
               </View>
@@ -180,7 +181,8 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     borderRadius: 16, 
     padding: 20,
-    borderColor: '#e5e7eb', 
+    borderWidth: 1, 
+    borderColor: '#EEE', 
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
