@@ -17,7 +17,7 @@ const CommunityCard = ({ item, userUid, handleAction, isMyCommunitiesView }) => 
             </View>
         ); 
     } else {
-        actionHandler = () => handleAction(item.id, item.name, joined);
+        actionHandler = () => handleAction(userUid, item.id, item.name, joined);
         actionElement = (
             <TouchableOpacity
                 style={[styles.btn, { backgroundColor: joined ? '#e5e7eb' : '#ff4d2d' }]}

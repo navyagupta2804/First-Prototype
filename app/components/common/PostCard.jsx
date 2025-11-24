@@ -222,18 +222,15 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
         )}
       </View>
 
-      {/* Post Image */}
-      {<Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />}
-      
       {/* Caption Display */}
       {(item.caption && item.caption.trim()) ? (
         <View style={styles.captionContainer}>
-            <Text style={styles.captionText}>
-              <Text style={styles.captionAuthor}>{item.displayName || 'Pantry Member'}</Text>
-              {' '}{item.caption}
-            </Text>
+            <Text style={styles.captionText}>{item.caption}</Text>
         </View>
       ) : null}
+
+      {/* Post Image */}
+      {<Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />}
 
       {/* Actions Row */}
       <View style={styles.actionsRow}>
@@ -269,7 +266,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, 
     borderColor: '#EEE', 
     borderRadius: 14, 
-    padding: 12,
+    padding: 20,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -277,8 +274,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  avatar: { width: 36, height: 36, borderRadius: 18, marginRight: 10 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center' },
+  avatar: { width: 40, height: 40, borderRadius: 100, marginRight: 10 },
   cardTitle: { fontWeight: '700' },
   cardTime: { color: '#6B7280', fontSize: 12 },
   
@@ -291,7 +288,7 @@ const styles = StyleSheet.create({
   },
 
   // Caption
-  captionContainer: { marginTop: 6, paddingVertical: 8, paddingHorizontal: 4},
+  captionContainer: { marginTop: 6, paddingVertical: 8, paddingHorizontal: 4 },
   captionText: { fontSize: 14, color: '#111216'},
   captionAuthor: { fontWeight: '700', marginRight: 4, color: '#111216'},
 
@@ -310,9 +307,7 @@ const styles = StyleSheet.create({
   sendBtn: { backgroundColor: '#111216', padding: 10, borderRadius: 8 },
 
   // Options Button
-  optionsButton: {
-    padding: 8, 
-  },
+  optionsButton: { padding: 8 },
   
   // Options Modal
   modalBackdrop: {

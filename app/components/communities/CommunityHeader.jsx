@@ -1,4 +1,3 @@
-// CommunityHeader.jsx
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CenteredContainer from '../common/CenteredContainer';

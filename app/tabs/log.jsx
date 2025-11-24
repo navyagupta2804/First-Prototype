@@ -1,5 +1,5 @@
-import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
-import { useState } from 'react';
+import { collection, doc, getDoc, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
@@ -15,6 +15,72 @@ export default function LogScreen() {
   const [caption, setCaption] = useState('');
   const [isPublished, setIsPublished] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [selectedCommunityIds, setSelectedCommunityIds] = useState([]);
+
+  const [availableCommunities, setAvailableCommunities] = useState([]);
+  const [loadingCommunities, setLoadingCommunities] = useState(true);
+
+  const user = auth.currentUser;
+
+  useEffect(() => {
+    if (!user) {
+      setLoadingCommunities(false);
+      setAvailableCommunities([]);
+      return;
+    }
+
+    setLoadingCommunities(true);
+    
+    const userRef = doc(db, 'users', user.uid);
+    let unsubCommunityDetails = () => {}; // For cleaning up the inner listener
+
+    // 1. Listen to the user profile document
+    const unsubUser = onSnapshot(userRef, async (userSnap) => {
+      const joinedIds = userSnap.data()?.joinedCommunities || [];
+
+      if (joinedIds.length > 0) {
+        // 2. Query communities based ONLY on the joined IDs
+        const q = query(
+          collection(db, 'communities'), 
+          where('__name__', 'in', joinedIds)
+        );
+        
+        // IMPORTANT: Use onSnapshot for the communities query too, 
+        // to listen for changes in the community data itself (e.g., member count change)
+        unsubCommunityDetails = onSnapshot(q, (querySnapshot) => {
+          const communityDetails = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              name: data.name,
+              memberUids: data.memberUids || [],
+            };
+          });
+          setAvailableCommunities(communityDetails);
+          setLoadingCommunities(false);
+        }, (error) => {
+          console.error("Error listening to community details:", error);
+          setLoadingCommunities(false);
+        });
+        
+      } else {
+        // No communities joined
+        unsubCommunityDetails(); // Clean up if it was running
+        setAvailableCommunities([]);
+        setLoadingCommunities(false);
+      }
+    }, (error) => {
+        console.error("Error listening to user profile:", error);
+        setLoadingCommunities(false);
+    });
+
+    // Clean up both listeners when the component unmounts
+    return () => {
+        unsubUser();
+        unsubCommunityDetails();
+    };
+
+  }, [user]); // Only depends on the user object
 
   // --- Image Picker/Camera Logic ---
   const launchPicker = async (type) => {
@@ -32,15 +98,26 @@ export default function LogScreen() {
     setAssetMimeType(null);
   };
 
+  // --- Community Select Handler ---
+  const onToggleCommunity = (id) => {
+    setSelectedCommunityIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(cid => cid !== id) // Remove if already selected
+        : [...prev, id] // Add if not selected
+    );
+  };
+
   // --- Core Upload Logic ---
   const uploadPost = async () => {
-    if (!image) {
-      Alert.alert('No image', 'Please select or take a photo first.');
+    const hasContent = !!image || caption.trim().length > 0;
+    if (!hasContent) {
+      Alert.alert('Missing content', 'Please add a photo or a caption.');
       return;
     }
 
-    const user = auth.currentUser;
     if (!user) return;
+
+    let url = null;
 
     try {
       setUploading(true);
@@ -48,10 +125,11 @@ export default function LogScreen() {
       // 1. Prepare unique Post ID and document references
       const newPhotoRef = doc(collection(db, 'feed'));
       const postId = newPhotoRef.id; // Define postId BEFORE it is used for the storagePath
-      const storagePath = `users/${user.uid}/photos/${postId}`; 
       
-      // 2. Upload image to Firebase Storage
-      const url = await uploadImageToFirebase(image, assetMimeType, storagePath);
+      if (image) {
+        const storagePath = `users/${user.uid}/photos/${postId}`; 
+        url = await uploadImageToFirebase(image, assetMimeType, storagePath); // <-- Assign URL here
+      }
 
       // 3. Prepare the common post data
       const postData = {
@@ -65,14 +143,14 @@ export default function LogScreen() {
         likesCount: 0, 
         commentsCount: 0,
         isPublished: isPublished, 
+        communityIds: selectedCommunityIds,
       };
 
       // 4. Write to database
       await setDoc(newPhotoRef, postData);
 
-      const userRef = doc(db, 'users', user.uid);
-
       // 5. Update user's profile with last post time 
+      const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         lastPostAt: serverTimestamp(),
       });
@@ -82,7 +160,6 @@ export default function LogScreen() {
 
       if (userData) {
         const currentBadges = userData.badges || {};
-
         const { updatedBadges, newlyUnlocked } = evaluateUserBadges(userData, currentBadges);
 
         if (newlyUnlocked.length > 0) {
@@ -100,12 +177,12 @@ export default function LogScreen() {
         }
       }
 
-      const userProfileSnap = await getDoc(doc(db, 'users', user.uid)); 
-      const userGroup = userProfileSnap.data()?.abTestGroup;
+      // const userProfileSnap = await getDoc(doc(db, 'users', user.uid)); 
+      // const userGroup = userProfileSnap.data()?.abTestGroup;
       
-      if (userGroup) {
-        logPostCreation(userGroup); // <-- Log the event with the A/B group!
-      }
+      // if (userGroup) {
+      //   logPostCreation(userGroup); // <-- Log the event with the A/B group!
+      // }
 
       // Success!
       Alert.alert('Posted!', 'Your meal has been logged.', [
@@ -113,12 +190,14 @@ export default function LogScreen() {
           setImage(null);
           setCaption('');
           setIsPublished(true);
+          setSelectedCommunityIds([]);
         }}
       ]);
 
       setImage(null);
       setCaption('');
       setIsPublished(true);
+      setSelectedCommunityIds([]);
 
     } catch (e) {
       console.error('Upload error:', e);
@@ -127,7 +206,8 @@ export default function LogScreen() {
       setUploading(false);
     }
   };
- return (
+  
+  return (
     <ScrollView style={styles.container}>
       <PageHeader />
       <CenteredContainer>
@@ -143,6 +223,9 @@ export default function LogScreen() {
           takePhoto={takePhoto}
           uploadPost={uploadPost}
           clearImage={clearImage}
+          userCommunities={availableCommunities}
+          selectedCommunityIds={selectedCommunityIds}
+          onToggleCommunity={onToggleCommunity}
         />
       </CenteredContainer>
     </ScrollView>

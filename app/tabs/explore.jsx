@@ -37,21 +37,20 @@ export default function ExploreScreen() {
   }, []);
 
   // --- JOIN/LEAVE LOGIC ---
-  const toggleMembership = async (communityId, communityName, isCurrentlyJoined) => {
+  const toggleMembership = async (userId, communityId, communityName, isCurrentlyJoined) => {
     if (!user) return;
 
+    const userRef = doc(db, 'users', userId);
     const communityRef = doc(db, 'communities', communityId);
     
     try {
       if (isCurrentlyJoined) {
-        await updateDoc(communityRef, {
-            memberUids: arrayRemove(user.uid),
-        });
+        await updateDoc(communityRef, { memberUids: arrayRemove(userId) });
+        await updateDoc(userRef, { joinedCommunities: arrayRemove(communityId) });
         Alert.alert('Left', `You have left ${communityName}.`);
       } else {
-        await updateDoc(communityRef, {
-            memberUids: arrayUnion(user.uid),
-        });
+        await updateDoc(communityRef, { memberUids: arrayUnion(userId) });
+        await updateDoc(userRef, { joinedCommunities: arrayUnion(communityId) });
         Alert.alert('Joined!', `Welcome to ${communityName}!`);
       }
     } catch (e) {
