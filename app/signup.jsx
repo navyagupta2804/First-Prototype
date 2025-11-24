@@ -72,6 +72,7 @@ export default function SignUpScreen() {
         communities: 0,
         photoCount: 0,
         lastJournalDate: null,
+        isAdmin: false,
         createdAt: serverTimestamp()
       });
 
