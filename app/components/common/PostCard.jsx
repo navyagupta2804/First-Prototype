@@ -230,7 +230,9 @@ export default function PostCard({ item, isProfileView = false, onTogglePublish 
       ) : null}
 
       {/* Post Image */}
-      {<Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />}
+      {item.url && (
+        <Image source={{ uri: item.url }} style={styles.feedImage} resizeMode="cover" />
+      )}
 
       {/* Actions Row */}
       <View style={styles.actionsRow}>

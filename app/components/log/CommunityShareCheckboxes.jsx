@@ -16,8 +16,6 @@ export default function CommunityShareCheckboxes({
 
   const renderCommunityItem = (community) => {
     const isSelected = selectedCommunityIds.includes(community.id);
-    console.log(community.name);
-    console.log(isSelected);
     
     return (
       <TouchableOpacity

@@ -1,12 +1,35 @@
 // CommunityActivityFeed.jsx
 import { Ionicons } from '@expo/vector-icons';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { serverTimestamp } from 'firebase/firestore';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import PostCard from '../common/PostCard';
 
 // Dummy data remains here for demonstration
 const DUMMY_POSTS = [
-    { id: 'post1', author: 'Sarah M.', category: 'Meals Under $5', time: '2h ago', text: 'Made this amazing $3 pasta with just pantry staples. The key is using pasta water to make it creamy.', image: 'https://via.placeholder.com/300x200?text=Pasta+Dish', likes: 24, comments: 8 },
-    { id: 'post2', author: 'BudgetChef', category: 'Weekly Haul', time: '4h ago', text: 'Got a huge haul from the farmers market for just $20! Planning veggie chili and roasted root veggies this week. #budgetcooking', image: null, likes: 15, comments: 3 },
-    { id: 'post3', author: 'EcoEats', category: 'Tips & Tricks', time: '1d ago', text: 'Meal prepping tip: Cook a big batch of grains (rice, quinoa) at the start of the week. Saves so much time!', image: null, likes: 40, comments: 12 },
+    { 
+        caption: 'Made this amazing $3 pasta with just pantry staples. The key is using pasta water to make it creamy.', 
+        commentsCount: 8,
+        createdAt: serverTimestamp(),
+        displayName: "Lola",
+        displayPhoto: "https://ui-avatars.com/api/?name=Lola&background=e5e7eb&color=6b7280z&length=1&bold=true",
+        id: 'post1', 
+        isPublished: true,
+        likesCount: 24, 
+        uid: 'oidjXXbQModtDgAkrvLVG3EFiUb2',
+        url: 'https://via.placeholder.com/300x200?text=Pasta+Dish', 
+    },
+    { 
+        id: 'post2', 
+        uid: 'oidjXXbQModtDgAkrvLVG3EFiUb2',
+        isPublished: true,
+        createdAt: serverTimestamp(),
+        caption: 'Got a huge haul from the farmers market for just $20! Planning veggie chili and roasted root veggies this week. #budgetcooking', 
+        displayName: "Lola",
+        displayPhoto: "https://ui-avatars.com/api/?name=Lola&background=e5e7eb&color=6b7280z&length=1&bold=true",
+        url: null, 
+        likesCount: 15, 
+        commentsCount: 3 
+    },
 ];
 
 const CommunityActivityFeed = () => {
@@ -20,38 +43,9 @@ const CommunityActivityFeed = () => {
 
             {/* Activity Feed List */}
             {DUMMY_POSTS.map(post => (
-                <View key={post.id} style={styles.postCard}>
-                    <View style={styles.postHeader}>
-                        <View style={styles.postAvatarPlaceholder}>
-                            <Text style={styles.postAvatarText}>{post.author.charAt(0)}</Text>
-                        </View>
-                        <View style={styles.postHeaderText}>
-                            <Text style={styles.postAuthor}>{post.author}</Text>
-                            <View style={styles.postCategoryTime}>
-                                {post.category && (
-                                    <View style={styles.postCategoryChip}>
-                                        <Text style={styles.postCategoryText}>{post.category}</Text>
-                                    </View>
-                                )}
-                                <Text style={styles.postTime}>{post.time}</Text>
-                            </View>
-                        </View>
-                    </View>
-                    <Text style={styles.postText}>{post.text}</Text>
-                    {post.image && (
-                        <Image source={{ uri: post.image }} style={styles.postImage} />
-                    )}
-                    <View style={styles.postActions}>
-                        <View style={styles.postActionItem}>
-                            <Ionicons name="heart-outline" size={18} color="#6b7280" />
-                            <Text style={styles.postActionText}>{post.likes}</Text>
-                        </View>
-                        <View style={styles.postActionItem}>
-                            <Ionicons name="chatbubble-outline" size={18} color="#6b7280" />
-                            <Text style={styles.postActionText}>{post.comments}</Text>
-                        </View>
-                    </View>
-                </View>
+                <PostCard
+                    item={post} 
+                />
             ))}
         </>
     );

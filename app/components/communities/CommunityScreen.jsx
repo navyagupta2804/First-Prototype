@@ -6,7 +6,7 @@ import CenteredContainer from '../common/CenteredContainer';
 import TabBar from '../common/TabBar';
 import CommunityActivityFeed from './CommunityActivityFeed';
 import CommunityHeader from './CommunityHeader';
-import CommunityOverviewCard from './CommunityOverviewCard';
+import CommunityProgressCard from './CommunityProgressCard';
 
 const DUMMY_POSTS = [
   {
@@ -47,14 +47,15 @@ const DUMMY_POSTS = [
 export default function CommunityScreen({ community, onClose }) {
     if (!community) return null;
 
-    const [activeTab, setActiveTab] = useState('Journal');
+    const [activeTab, setActiveTab] = useState('Log');
     const tabs = ['Log', 'Discussions', 'Members'];
 
     const totalMembers = community.memberUids.length; 
+    const membersCooked = 1;
 
     const renderTabContent = () => {
       switch (activeTab) {
-        case 'Journal':
+        case 'Log':
           return <CommunityActivityFeed />;
         case 'Discussions':
           return <Text style={styles.placeholderText}>Discussions tab content coming soon!</Text>;
@@ -76,11 +77,11 @@ export default function CommunityScreen({ community, onClose }) {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>   
           <CenteredContainer>
-            {/* Overview Card */}
-            <CommunityOverviewCard 
-              description={community.description}
+            <Text style={styles.communityDescription}>{community.description}</Text>
+            {/* Progress Card */}
+            <CommunityProgressCard 
               totalMembers={totalMembers}
-              streak={12} 
+              membersCooked={membersCooked}
             />
 
             {/* Tab Navigation */}
@@ -105,6 +106,15 @@ const styles = StyleSheet.create({
   pageTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'left', paddingBottom: 20 },
   backButtonContainer: { flexDirection: 'row', alignItems: 'center', paddingRight: 15 },
   title: { paddingLeft: 10, fontSize: 20, fontWeight: '800', color: '#ff4d2d' },
+  communityDescription: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#6b7280',
+    marginBottom: 12,
+    lineHeight: 20,
+    letterSpacing: 2,
+    textAlign: 'center',
+  },
   placeholderText: {
     textAlign: 'center',
     marginTop: 50,
