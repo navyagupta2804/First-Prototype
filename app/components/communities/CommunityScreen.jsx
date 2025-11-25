@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,42 +9,6 @@ import CommunityActivityFeed from './CommunityActivityFeed';
 import CommunityHeader from './CommunityHeader';
 import CommunityProgressCard from './CommunityProgressCard';
 
-const DUMMY_POSTS = [
-  {
-    id: 'post1',
-    author: 'Sarah M.',
-    avatar: null, // Could be a URL
-    category: 'Meals Under $5',
-    time: '2h ago',
-    text: 'Made this amazing $3 pasta with just pantry staples! The key is using pasta water to make it creamy.',
-    image: 'https://via.placeholder.com/300x200?text=Pasta+Dish', // Placeholder image
-    likes: 24,
-    comments: 8,
-  },
-  {
-    id: 'post2',
-    author: 'BudgetChef',
-    avatar: null,
-    category: 'Weekly Haul',
-    time: '4h ago',
-    text: 'Got a huge haul from the farmers market for just $20! Planning veggie chili and roasted root veggies this week. #budgetcooking',
-    image: null, // No image for this post
-    likes: 15,
-    comments: 3,
-  },
-  {
-    id: 'post3',
-    author: 'EcoEats',
-    avatar: null,
-    category: 'Tips & Tricks',
-    time: '1d ago',
-    text: 'Meal prepping tip: Cook a big batch of grains (rice, quinoa) at the start of the week. Saves so much time!',
-    image: null,
-    likes: 40,
-    comments: 12,
-  },
-];
-
 export default function CommunityScreen({ community, onClose }) {
     if (!community) return null;
 
@@ -53,10 +18,26 @@ export default function CommunityScreen({ community, onClose }) {
     const totalMembers = community.memberUids.length; 
     const membersCooked = 1;
 
+    const router = useRouter();
+    const handleCommunityPost = (communityId) => {
+      if (!communityId) {
+        console.error("Community data is missing to navigate.");
+        return;
+      }
+
+      // Navigate to the LogScreen and pass the community ID in the params object
+      router.push({
+        pathname: '../../tabs/log', 
+        params: { 
+          preSelectedCommunityId: communityId
+        }
+      });
+    };
+
     const renderTabContent = () => {
       switch (activeTab) {
         case 'Log':
-          return <CommunityActivityFeed />;
+          return <CommunityActivityFeed onPress={() => handleCommunityPost(community.id)}/>;
         case 'Discussions':
           return <Text style={styles.placeholderText}>Discussions tab content coming soon!</Text>;
         case 'Members':

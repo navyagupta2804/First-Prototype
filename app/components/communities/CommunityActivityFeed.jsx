@@ -32,13 +32,13 @@ const DUMMY_POSTS = [
     },
 ];
 
-const CommunityActivityFeed = () => {
+const CommunityActivityFeed = ({onPress}) => {
     return (
         <>
             {/* Share Input */}
-            <TouchableOpacity style={styles.shareInput}>
+            <TouchableOpacity style={styles.shareInput} onPress={onPress}>
                 <Ionicons name="camera-outline" size={20} color="#6b7280" />
-                <Text style={styles.shareInputText}>Share your budget cooking win...</Text>
+                <Text style={styles.shareInputText}>Share your cooking win!! 🙌</Text>
             </TouchableOpacity>
 
             {/* Activity Feed List */}

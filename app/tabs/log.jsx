@@ -1,10 +1,13 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { collection, doc, getDoc, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
+
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
 import LogForm from '../components/log/LogForm';
+
 import { logPostCreation } from '../utils/analyticsHelper';
 import { evaluateUserBadges } from '../utils/badgeCalculations';
 import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
@@ -21,7 +24,10 @@ export default function LogScreen() {
   const [loadingCommunities, setLoadingCommunities] = useState(true);
 
   const user = auth.currentUser;
-
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const preSelectedCommunityId = params.preSelectedCommunityId;
+  
   useEffect(() => {
     if (!user) {
       setLoadingCommunities(false);
@@ -32,7 +38,7 @@ export default function LogScreen() {
     setLoadingCommunities(true);
     
     const userRef = doc(db, 'users', user.uid);
-    let unsubCommunityDetails = () => {}; // For cleaning up the inner listener
+    let unsubCommunityDetails = () => {};
 
     // 1. Listen to the user profile document
     const unsubUser = onSnapshot(userRef, async (userSnap) => {
@@ -45,8 +51,6 @@ export default function LogScreen() {
           where('__name__', 'in', joinedIds)
         );
         
-        // IMPORTANT: Use onSnapshot for the communities query too, 
-        // to listen for changes in the community data itself (e.g., member count change)
         unsubCommunityDetails = onSnapshot(q, (querySnapshot) => {
           const communityDetails = querySnapshot.docs.map(doc => {
             const data = doc.data();
@@ -81,6 +85,19 @@ export default function LogScreen() {
     };
 
   }, [user]); // Only depends on the user object
+
+  useEffect(() => {
+    if (preSelectedCommunityId && selectedCommunityIds.length === 0 && availableCommunities.length > 0) {
+        const isValidId = availableCommunities.some(comm => comm.id === preSelectedCommunityId);
+
+        if (isValidId) {
+          console.log(`SUCCESS: Auto-selecting community ID: ${preSelectedCommunityId}`);
+          setSelectedCommunityIds([preSelectedCommunityId]);
+        } else {
+          console.log(`FAIL: ID ${preSelectedCommunityId} is not a valid community the user has joined.`);
+        }
+    }
+  }, [preSelectedCommunityId, availableCommunities, selectedCommunityIds]);
 
   // --- Image Picker/Camera Logic ---
   const launchPicker = async (type) => {
@@ -177,27 +194,22 @@ export default function LogScreen() {
         }
       }
 
-      // const userProfileSnap = await getDoc(doc(db, 'users', user.uid)); 
-      // const userGroup = userProfileSnap.data()?.abTestGroup;
-      
-      // if (userGroup) {
-      //   logPostCreation(userGroup); // <-- Log the event with the A/B group!
-      // }
-
-      // Success!
-      Alert.alert('Posted!', 'Your meal has been logged.', [
-        { text: 'OK', onPress: () => {
-          setImage(null);
-          setCaption('');
-          setIsPublished(true);
-          setSelectedCommunityIds([]);
-        }}
-      ]);
+      // // Success!
+      // Alert.alert('Posted!', 'Your meal has been logged.', [
+      //   { text: 'OK', onPress: () => {
+      //     setImage(null);
+      //     setCaption('');
+      //     setIsPublished(true);
+      //     setSelectedCommunityIds([]);
+      //     router.setParams({ preSelectedCommunityId: null });
+      //   }}
+      // ]);
 
       setImage(null);
       setCaption('');
       setIsPublished(true);
       setSelectedCommunityIds([]);
+      router.setParams({ preSelectedCommunityId: null });
 
     } catch (e) {
       console.error('Upload error:', e);
