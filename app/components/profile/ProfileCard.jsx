@@ -44,7 +44,7 @@ const ProfileCard = ({ userData, postsLength, recentJournalEntry, onJournalPress
                             <Text style={styles.socialNumber}>{userData?.friends || 0}</Text> friends
                         </Text>
                         <Text style={styles.socialText}>
-                            <Text style={styles.socialNumber}>{userData?.communities || 0}</Text> communities
+                            <Text style={styles.socialNumber}>{userData?.joinedCommunities.length || 0}</Text> communities
                         </Text>
                     </View>
                 </View>

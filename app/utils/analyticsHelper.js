@@ -39,3 +39,8 @@ export const logWeeklyGoalSubmission = (abGroup) => {
         console.warn("Firebase Analytics is not initialized. Cannot log event.");
     }
 };
+
+export default {
+  logPostCreation,
+  logWeeklyGoalSubmission,
+};

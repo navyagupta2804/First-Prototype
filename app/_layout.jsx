@@ -1,8 +1,8 @@
 import { Stack, useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { auth } from '../firebaseConfig';
+import LoadingView from './components/common/LoadingView';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -24,11 +24,7 @@ export default function RootLayout() {
   }, []);
 
   if (!hasCheckedAuth) {
-    return (
-        <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#ff4d2d" />
-        </View>
-    );
+    return <LoadingView />;
   }
 
   return (
@@ -40,12 +36,3 @@ export default function RootLayout() {
     </Stack>
   );
 }
-
-const styles = StyleSheet.create({
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    }
-});
