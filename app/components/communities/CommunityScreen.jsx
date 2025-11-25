@@ -9,11 +9,13 @@ import CenteredContainer from '../common/CenteredContainer';
 import TabBar from '../common/TabBar';
 import CommunityActivityFeed from './CommunityActivityFeed';
 import CommunityHeader from './CommunityHeader';
+import CommunityMemberList from './CommunityMemberList';
 import CommunityProgressCard from './CommunityProgressCard';
 
 export default function CommunityScreen({ community, onClose }) {
     if (!community) return null;
-    const [communityFeed, setcommunityFeed] = useState([])
+    const [communityMembers, setCommunityMembers] = useState([]);
+    const [communityFeed, setcommunityFeed] = useState([]);
     const [activeTab, setActiveTab] = useState('Log');
     const tabs = ['Log', 'Discussions', 'Members'];
 
@@ -39,6 +41,7 @@ export default function CommunityScreen({ community, onClose }) {
 
     // ---- Community Feed Subscription ----
     useEffect(() => {
+      if (!currentCommunityId) return;
       const q = query(
         collection(db, 'feed'), 
         where('communityIds', 'array-contains', currentCommunityId),
@@ -51,11 +54,27 @@ export default function CommunityScreen({ community, onClose }) {
         setcommunityFeed(items);
       });
       return unsub;
-    }, []);
+    }, [currentCommunityId]);
+
+    // ---- Community Members Subscription ----
+    useEffect(() => {
+      if (!currentCommunityId) return;
+      const q = query(
+        collection(db, 'users'), 
+        where('joinedCommunities', 'array-contains', currentCommunityId),
+        orderBy('displayName', 'asc')
+      );
+      const unsub = onSnapshot(q, (snap) => {
+        const items = [];
+        snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+        setCommunityMembers(items);
+      });
+      return unsub;
+    }, [currentCommunityId]);
 
     const renderTabContent = () => {
       switch (activeTab) {
-        case 'Log':
+        case 'Log': 
           return ( 
             <CommunityActivityFeed 
               communityFeed={communityFeed}
@@ -65,7 +84,9 @@ export default function CommunityScreen({ community, onClose }) {
         case 'Discussions':
           return <Text style={styles.placeholderText}>Discussions tab content coming soon!</Text>;
         case 'Members':
-          return <Text style={styles.placeholderText}>Members list coming soon!</Text>;
+          return (
+            <CommunityMemberList communityMembers={communityMembers} />
+          );
         default:
           return null;
       }

@@ -100,3 +100,10 @@ export const uploadImageToFirebase = async (imageUri, mimeType, storagePath) => 
   
   return url;
 };
+
+export default {
+  requestPermissions,
+  launchImagePicker,
+  getFileExtension,
+  uploadImageToFirebase,
+};

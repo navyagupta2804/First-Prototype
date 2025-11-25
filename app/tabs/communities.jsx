@@ -45,7 +45,6 @@ export default function CommunitiesScreen() {
 
     if (community) {
       setSelectedCommunity(community); 
-      console.log(`[ACTION] Opening Community Page: ${community.name} (ID: ${communityId})`);
     } else {
       console.error(`Community not found for ID: ${communityId}`);
     }

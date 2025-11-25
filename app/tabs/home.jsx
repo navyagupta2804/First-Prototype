@@ -94,7 +94,7 @@ const HomeScreen = () => {
   const showGoalSetter = requiresGoalSetting(userData);
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
-    <>
+    <View>
       <PageHeader />
       <PersonalGreeting/>
       {showGoalSetter ? (
@@ -107,7 +107,7 @@ const HomeScreen = () => {
       <CenteredContainer>
         <Text style={styles.feedHeader}>Community Updates</Text>
       </CenteredContainer>
-    </>
+    </View>
   );
 
   // ---- Layout ----
