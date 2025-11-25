@@ -5,13 +5,7 @@ import { ActivityIndicator, Alert, FlatList, Modal, StyleSheet, Text, TextInput,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { db } from '../../../../firebaseConfig';
 import CenteredContainer from '../../common/CenteredContainer';
-// Helper component for the loading state (you can define this in a separate file if needed)
-const LoadingView = () => (
-    <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color="#ff4d2d" />
-        <Text style={styles.loadingText}>Loading journal...</Text>
-    </View>
-);
+import LoadingView from '../../common/LoadingView';
 
 // This modal will handle creating new journal entries
 const JournalEntryModal = ({ isVisible, onClose, onSave, userId }) => {
@@ -65,7 +59,7 @@ const JournalEntryModal = ({ isVisible, onClose, onSave, userId }) => {
                     <TextInput
                         style={modalStyles.titleInput}
                         placeholder="Entry Title"
-                        placeholderTextColor="#374151"
+                        placeholderTextColor="#A9A9A9"
                         value={prompt}
                         onChangeText={setPrompt}
                         maxLength={100} // Limit title length
@@ -92,7 +86,7 @@ export default function JournalScreen({ onClose, userId }) {
     const [loading, setLoading] = useState(true);
     const [showNewEntryModal, setShowNewEntryModal] = useState(false);
 
-    // 2. DATA FETCHING LOGIC (from ProfileScreen.jsx)
+    // 2. DATA FETCHING LOGIC 
     useEffect(() => {
         if (!userId) {
             setLoading(false);
@@ -169,7 +163,7 @@ export default function JournalScreen({ onClose, userId }) {
     
     // 4. MAIN RETURN BLOCK
     if (loading) {
-        return <LoadingView />;
+        return <LoadingView text="Loading journal..." />;
     }
 
     return (
@@ -262,9 +256,6 @@ const styles = StyleSheet.create({
     emptyEmoji: { fontSize: 48, marginBottom: 12 },
     emptyTitle: { fontSize: 18, fontWeight: '800', color: '#374151', marginBottom: 8 },
     emptyText: { fontSize: 14, color: '#6b7280', textAlign: 'center', lineHeight: 20 },
-
-    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-    loadingText: { marginTop: 8, color: '#6b7280' }
 });
 
 const modalStyles = StyleSheet.create({

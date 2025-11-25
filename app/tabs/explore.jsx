@@ -1,9 +1,10 @@
 import { arrayRemove, arrayUnion, collection, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 import CenteredContainer from '../components/common/CenteredContainer';
 import CommunityCard from '../components/common/CommunityCard';
+import LoadingView from '../components/common/LoadingView';
 import PageHeader from '../components/common/PageHeader';
 
 export default function ExploreScreen() {
@@ -77,12 +78,7 @@ export default function ExploreScreen() {
   };
 
   if (loading) {
-    return (
-        <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#ff4d2d" />
-            <Text style={{ marginTop: 10 }}>Loading exploration data...</Text>
-        </View>
-    );
+    return <LoadingView text='Loading exploration data...' />;
   }
 
   return (
@@ -118,7 +114,6 @@ export default function ExploreScreen() {
 
 const styles = StyleSheet.create({
   screenContainer: { flex: 1, backgroundColor: 'white', paddingHorizontal: 24 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   contentContainer: { flex: 1 },
   exploreTitle: { fontSize: 24, fontWeight: '700', marginBottom: 20 },
   search: { 
