@@ -1,7 +1,6 @@
-// CommunityActivityFeed.jsx
 import { Ionicons } from '@expo/vector-icons';
 import { serverTimestamp } from 'firebase/firestore';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import PostCard from '../common/PostCard';
 
 // Dummy data remains here for demonstration
@@ -32,7 +31,8 @@ const DUMMY_POSTS = [
     },
 ];
 
-const CommunityActivityFeed = ({onPress}) => {
+const CommunityActivityFeed = ({ communityFeed, onPress }) => {
+    const renderPosts = ({ item }) => <PostCard item={item} />;
     return (
         <>
             {/* Share Input */}
@@ -42,11 +42,15 @@ const CommunityActivityFeed = ({onPress}) => {
             </TouchableOpacity>
 
             {/* Activity Feed List */}
-            {DUMMY_POSTS.map(post => (
-                <PostCard
-                    item={post} 
-                />
-            ))}
+            <View style={styles.screenContainer}>
+                  <FlatList
+                    data={communityFeed}
+                    keyExtractor={(it) => it.id}
+                    renderItem={renderPosts}
+                    contentContainerStyle={{ paddingBottom: 140 }}
+                    showsVerticalScrollIndicator={false}
+                  />
+            </View>
         </>
     );
 };

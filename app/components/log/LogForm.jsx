@@ -120,9 +120,9 @@ export default function LogForm({
         placeholder="What did you make today? Add some details!"
         placeholderTextColor="#A9A9A9"
         multiline
-        maxLength={500}
+        maxLength={2000}
       />
-      <Text style={styles.charCount}>{caption.length}/500</Text>
+      <Text style={styles.charCount}>{caption.length}/2000</Text>
 
       {/* Published/Private Selection */}
       <ButtonSelect />

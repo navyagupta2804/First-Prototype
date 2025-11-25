@@ -1,7 +1,9 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { db } from '../../../firebaseConfig';
 
 import CenteredContainer from '../common/CenteredContainer';
 import TabBar from '../common/TabBar';
@@ -11,10 +13,11 @@ import CommunityProgressCard from './CommunityProgressCard';
 
 export default function CommunityScreen({ community, onClose }) {
     if (!community) return null;
-
+    const [communityFeed, setcommunityFeed] = useState([])
     const [activeTab, setActiveTab] = useState('Log');
     const tabs = ['Log', 'Discussions', 'Members'];
 
+    const currentCommunityId = community.uid;
     const totalMembers = community.memberUids.length; 
     const membersCooked = 1;
 
@@ -34,10 +37,31 @@ export default function CommunityScreen({ community, onClose }) {
       });
     };
 
+    // ---- Community Feed Subscription ----
+    useEffect(() => {
+      const q = query(
+        collection(db, 'feed'), 
+        where('communityIds', 'array-contains', currentCommunityId),
+        where('isPublished', '==', true),
+        orderBy('createdAt', 'desc')
+      );
+      const unsub = onSnapshot(q, (snap) => {
+        const items = [];
+        snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+        setcommunityFeed(items);
+      });
+      return unsub;
+    }, []);
+
     const renderTabContent = () => {
       switch (activeTab) {
         case 'Log':
-          return <CommunityActivityFeed onPress={() => handleCommunityPost(community.id)}/>;
+          return ( 
+            <CommunityActivityFeed 
+              communityFeed={communityFeed}
+              onPress={() => handleCommunityPost(community.id)}
+            />    
+          );
         case 'Discussions':
           return <Text style={styles.placeholderText}>Discussions tab content coming soon!</Text>;
         case 'Members':

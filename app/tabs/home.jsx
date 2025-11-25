@@ -39,7 +39,7 @@ const HomeScreen = () => {
     return unsub;
   }, [userId]);
 
-  // 3. ---- Analytics Tagging (NEW useEffect) ----
+  // 2. ---- Analytics Tagging ----
   useEffect(() => {
     // Only run if the user is logged in
     if (!userId) return;
@@ -55,7 +55,7 @@ const HomeScreen = () => {
     // Dependency array ensures this runs once when userId is available
   }, [userId]);
 
-  // 2. ---- Feed subscription ----
+  // 3. ---- Feed Subscription ----
   useEffect(() => {
      const q = query(
       collection(db, 'feed'), 
