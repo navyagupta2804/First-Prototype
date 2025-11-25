@@ -7,6 +7,7 @@ import { db } from '../../../firebaseConfig';
 
 import CenteredContainer from '../common/CenteredContainer';
 import TabBar from '../common/TabBar';
+import { getStartOfWeek } from '../utils/badgeCalculations';
 import CommunityActivityFeed from './CommunityActivityFeed';
 import CommunityHeader from './CommunityHeader';
 import CommunityMemberList from './CommunityMemberList';
@@ -15,13 +16,13 @@ import CommunityProgressCard from './CommunityProgressCard';
 export default function CommunityScreen({ community, onClose }) {
     if (!community) return null;
     const [communityMembers, setCommunityMembers] = useState([]);
+    const [membersCooked, setMembersCooked] = useState(0);
     const [communityFeed, setcommunityFeed] = useState([]);
     const [activeTab, setActiveTab] = useState('Log');
+    
     const tabs = ['Log', 'Discussions', 'Members'];
-
     const currentCommunityId = community.uid;
     const totalMembers = community.memberUids.length; 
-    const membersCooked = 1;
 
     const router = useRouter();
     const handleCommunityPost = (communityId) => {
@@ -69,6 +70,36 @@ export default function CommunityScreen({ community, onClose }) {
         snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
         setCommunityMembers(items);
       });
+      return unsub;
+    }, [currentCommunityId]);
+
+    // --- Weekly Progress Subscription (Posts since start of week) ---
+    // This fetches a SUBSET of posts, only for calculating membersCooked.
+    useEffect(() => {
+      if (!currentCommunityId) return;
+
+      const startOfWeek = getStartOfWeek(new Date());
+      const q = query(
+        collection(db, 'feed'), 
+        where('communityIds', 'array-contains', currentCommunityId),
+        where('isPublished', '==', true),
+        where('createdAt', '>=', startOfWeek), 
+        orderBy('createdAt', 'desc') 
+      );
+
+      const unsub = onSnapshot(q, (snap) => {
+        const uniqueCookers = new Set();
+          
+        snap.forEach((d) => {
+          const data = d.data();
+          if (data.userId) {
+            uniqueCookers.add(data.userId); 
+          }
+        });
+          
+        setMembersCooked(uniqueCookers.size); 
+      });
+
       return unsub;
     }, [currentCommunityId]);
 
