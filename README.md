@@ -8,3 +8,4 @@ into created .env file: (values given to team individually)
 
 
 5. run npx expo start -c to start simulation, emulator can be set up and run with this as well.
+6. for management dashboard: run in terminal: npx expo install react-native-chart-kit react-native-svg

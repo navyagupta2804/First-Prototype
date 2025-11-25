@@ -12,6 +12,8 @@ import { logPostCreation } from '../utils/analyticsHelper';
 import { evaluateUserBadges } from '../utils/badgeCalculations';
 import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
 
+// import for dashboard
+
 export default function LogScreen() {
   const [image, setImage] = useState(null);
   const [assetMimeType, setAssetMimeType] = useState(null);
@@ -99,7 +101,6 @@ export default function LogScreen() {
     }
   }, [preSelectedCommunityId, availableCommunities, selectedCommunityIds]);
 
-  // --- Image Picker/Camera Logic ---
   const launchPicker = async (type) => {
     const asset = await launchImagePicker(type); 
     if (asset) {
@@ -139,7 +140,7 @@ export default function LogScreen() {
     try {
       setUploading(true);
 
-      // 1. Prepare unique Post ID and document references
+      // 1. Prepare Post ID + storage path
       const newPhotoRef = doc(collection(db, 'feed'));
       const postId = newPhotoRef.id; // Define postId BEFORE it is used for the storagePath
       
@@ -148,7 +149,7 @@ export default function LogScreen() {
         url = await uploadImageToFirebase(image, assetMimeType, storagePath); // <-- Assign URL here
       }
 
-      // 3. Prepare the common post data
+      // 3. Build post data
       const postData = {
         id: postId,
         uid: user.uid,
@@ -157,13 +158,13 @@ export default function LogScreen() {
         displayPhoto: user.photoURL,
         caption: caption.trim() || '',
         createdAt: serverTimestamp(),
-        likesCount: 0, 
+        likesCount: 0,
         commentsCount: 0,
         isPublished: isPublished, 
         communityIds: selectedCommunityIds,
       };
 
-      // 4. Write to database
+      // 4. Write post
       await setDoc(newPhotoRef, postData);
 
       // 5. Update user's profile with last post time 
@@ -246,6 +247,5 @@ export default function LogScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white', paddingHorizontal: 24 },
-  brand: { fontSize: 28, fontWeight: '800', color: '#ff4d2d', marginBottom: 8 },
   title: { fontSize: 24, fontWeight: '700', marginBottom: 24 },
 });

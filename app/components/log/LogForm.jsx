@@ -241,3 +241,4 @@ const styles = StyleSheet.create({
   selectButtonTextActive: { color: 'white', fontWeight: '700' },
   selectHint: { color: '#6b7280', fontSize: 14, marginBottom: 16 },
 });
+

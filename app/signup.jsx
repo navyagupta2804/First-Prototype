@@ -104,6 +104,8 @@ export default function SignUpScreen() {
         streakCount: 0,
         communities: 0,
         photoCount: 0,
+        lastJournalDate: null,
+        isAdmin: false,
         createdAt: serverTimestamp()
       });
 
