@@ -40,7 +40,7 @@ const HomeScreen = () => {
     return unsub;
   }, [userId]);
 
-  // 3. ---- Analytics Tagging (NEW useEffect) ----
+  // 2. ---- Analytics Tagging ----
   useEffect(() => {
     // Only run if the user is logged in
     if (!userId) return;
@@ -56,7 +56,7 @@ const HomeScreen = () => {
     // Dependency array ensures this runs once when userId is available
   }, [userId]);
 
-  // 2. ---- Feed subscription ----
+  // 3. ---- Feed Subscription ----
   useEffect(() => {
      const q = query(
       collection(db, 'feed'), 
@@ -100,7 +100,7 @@ const HomeScreen = () => {
   const showGoalSetter = requiresGoalSetting(userData);
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
-    <>
+    <View>
       <PageHeader />
       <PersonalGreeting/>
       {showGoalSetter ? (
@@ -113,7 +113,7 @@ const HomeScreen = () => {
       <CenteredContainer>
         <Text style={styles.feedHeader}>Community Updates</Text>
       </CenteredContainer>
-    </>
+    </View>
   );
 
   // ---- Layout ----
@@ -132,8 +132,8 @@ const HomeScreen = () => {
 }
 
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1, backgroundColor: 'white', paddingHorizontal: 16 },
-  feedHeader: { fontSize: 18, fontWeight: '800', marginVertical: 10 },
+  screenContainer: { flex: 1, backgroundColor: 'white', paddingHorizontal: 24 },
+  feedHeader: { fontSize: 20, fontWeight: '800', marginVertical: 10 },
 });
 
 export default HomeScreen;

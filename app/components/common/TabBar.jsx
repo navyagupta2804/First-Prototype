@@ -1,8 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const ProfileTabs = ({ activeTab, setActiveTab }) => {
-    let tabs = ['Posts', 'Saved', 'Badges']; // Base tabs for everyone
-    
+const TabBar = ({ activeTab, setActiveTab, tabs }) => {
     return (
         <View style={styles.tabBar}>
             {tabs.map((tab) => (
@@ -24,6 +22,8 @@ const styles = StyleSheet.create({
     tabBar: {
         flexDirection: 'row',
         backgroundColor: 'white',
+        borderWidth: 1, 
+        borderColor: '#eee',
         borderRadius: 12,
         padding: 4,
         marginTop: 16,
@@ -40,4 +40,4 @@ const styles = StyleSheet.create({
     tabTextActive: { color: '#111' },
 });
 
-export default ProfileTabs;
+export default TabBar;

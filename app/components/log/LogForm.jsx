@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import CommunityShareCheckboxes from './CommunityShareCheckboxes';
 
 /**
  * Renders the meal logging UI, separating the view from the screen logic.
@@ -20,6 +21,9 @@ import {
  * @param {function} props.uploadPost - Handler to initiate the post upload.
  * @param {boolean} props.isPublished - Current published status (maps to isPublished).
  * @param {function} props.setIsPublished - Handler to toggle published status.
+ * @param {Array<object>} props.userCommunities - List of communities to display.
+ * @param {Array<string>} props.selectedCommunityIds - Community IDs currently selected.
+ * @param {function} props.onToggleCommunity - Handler to toggle community selection.
  */
 export default function LogForm({
   image,
@@ -32,8 +36,12 @@ export default function LogForm({
   clearImage,
   isPublished,
   setIsPublished,
+  userCommunities,
+  selectedCommunityIds,
+  onToggleCommunity,
 }) {
-  const isPostDisabled = !image || uploading;
+  const hasContent = !!image || caption.trim().length > 0;
+  const isPostDisabled = !hasContent || uploading;
 
   // --- Image Picker/Preview Section ---
   const ImageSection = () => {
@@ -50,16 +58,19 @@ export default function LogForm({
 
     {/* Image Preview or Picker Buttons */}
     return (
-      <View style={styles.pickerContainer}>
-        <TouchableOpacity style={styles.pickerButton} onPress={takePhoto}>
-          <Text style={styles.pickerIcon}>📷</Text>
-          <Text style={styles.pickerText}>Take Photo</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.pickerButton} onPress={pickImage}>
-          <Text style={styles.pickerIcon}>🖼️</Text>
-          <Text style={styles.pickerText}>Choose from Library</Text>
-        </TouchableOpacity>
-      </View>
+      <>
+        <Text style={styles.label}>Photo</Text>
+        <View style={styles.pickerContainer}>
+          <TouchableOpacity style={styles.pickerButton} onPress={takePhoto}>
+            <Text style={styles.pickerIcon}>📷</Text>
+            <Text style={styles.pickerText}>Take Photo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.pickerButton} onPress={pickImage}>
+            <Text style={styles.pickerIcon}>🖼️</Text>
+            <Text style={styles.pickerText}>Choose from Library</Text>
+          </TouchableOpacity>
+        </View>
+      </>
     );
   };
 
@@ -100,6 +111,19 @@ export default function LogForm({
     <View>
       <ImageSection />
 
+      {/* Caption Input */}
+      <Text style={styles.label}>Caption</Text>
+      <TextInput
+        style={styles.captionInput}
+        value={caption}
+        onChangeText={setCaption}
+        placeholder="What did you make today? Add some details!"
+        placeholderTextColor="#A9A9A9"
+        multiline
+        maxLength={2000}
+      />
+      <Text style={styles.charCount}>{caption.length}/2000</Text>
+
       {/* Published/Private Selection */}
       <ButtonSelect />
       <Text style={styles.selectHint}>
@@ -108,19 +132,14 @@ export default function LogForm({
           : 'Your post will only be visible to you (private log).'
         }
       </Text>
-
-      {/* Caption Input */}
-      <Text style={styles.label}>Caption (optional)</Text>
-      <TextInput
-        style={styles.captionInput}
-        value={caption}
-        onChangeText={setCaption}
-        placeholder="What did you make today? Tag a friend or add some details!"
-        placeholderTextColor="#A9A9A9"
-        multiline
-        maxLength={500}
-      />
-      <Text style={styles.charCount}>{caption.length}/500</Text>
+      
+      {isPublished && (
+        <CommunityShareCheckboxes
+          userCommunities={userCommunities}
+          selectedCommunityIds={selectedCommunityIds}
+          onToggleCommunity={onToggleCommunity}
+        />
+      )}
 
       {/* Upload Button */}
       <TouchableOpacity
@@ -155,7 +174,7 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     borderStyle: 'dashed',
   },
-  pickerIcon: { fontSize: 32, marginRight: 16 },
+  pickerIcon: { fontSize: 20, marginRight: 16 },
   pickerText: { fontSize: 16, fontWeight: '600', color: '#374151' },
   
   // Image Preview Styles
@@ -165,7 +184,7 @@ const styles = StyleSheet.create({
   changeImageText: { color: '#6b4eff', fontWeight: '600', fontSize: 14 },
   
   // Input Styles
-  label: { fontSize: 14, fontWeight: '600', marginBottom: 8, color: '#374151' },
+  label: { fontSize: 16, fontWeight: '600', marginBottom: 8, color: '#374151' },
   captionInput: {
     borderWidth: 1,
     borderColor: '#d1d5db',
@@ -203,40 +222,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: 50,
     borderRadius: 10,
-    backgroundColor: '#f3f4f6', // Light gray background for the group
+    backgroundColor: '#f3f4f6',
     marginBottom: 8,
-    overflow: 'hidden', // Ensures buttons are clipped to container border-radius
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
-  selectButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    // The default (inactive) style is the background color of the container
-  },
+  selectButton: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   selectButtonActive: {
-    backgroundColor: '#ff4d2d', // Orange background for the selected button
-    // The "inset" visual effect:
+    backgroundColor: '#ff4d2d',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 1,
     elevation: 2,
   },
-  selectButtonText: {
-    color: '#374151', // Dark text color when inactive
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  selectButtonTextActive: {
-    color: 'white', // White text when active (on the orange background)
-    fontWeight: '700',
-  },
-  selectHint: {
-    color: '#6b7280', 
-    fontSize: 14, 
-    marginBottom: 16,
-  },
+  selectButtonText: { color: '#374151', fontWeight: '600', fontSize: 16 },
+  selectButtonTextActive: { color: 'white', fontWeight: '700' },
+  selectHint: { color: '#6b7280', fontSize: 14, marginBottom: 16 },
 });
 

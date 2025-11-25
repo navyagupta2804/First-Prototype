@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { auth } from '../../../firebaseConfig';
 import CenteredContainer from '../common/CenteredContainer';
 
@@ -20,7 +20,7 @@ const PersonalGreeting = () => {
   };
 
   return (
-    <CenteredContainer style={styles.container}>
+    <CenteredContainer>
       <Text style={styles.greeting}>What's cooking today, {firstName}?</Text>
       <Text style={styles.date}>{formatDate()}</Text>
     </CenteredContainer>
@@ -28,13 +28,9 @@ const PersonalGreeting = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 16,
-    paddingHorizontal: 0,
-  },
   greeting: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#111216',
     marginBottom: 4,
   },

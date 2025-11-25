@@ -49,41 +49,41 @@ export default function SignInScreen() {
   };
 
   return (
-    <CenteredContainer>
       <View style={styles.container}>
-        <Text style={styles.title}>pantry</Text>
-        <TextInput 
-          style={styles.input} 
-          value={email} onChangeText={setEmail} 
-          placeholder="Email" 
-          placeholderTextColor="#A9A9A9"
-          autoCapitalize="none" 
-        />
-        <TextInput 
-          style={styles.input} 
-          value={password} 
-          onChangeText={setPassword} 
-          placeholder="Password" 
-          placeholderTextColor="#A9A9A9"
-          secureTextEntry 
-        />
+        <CenteredContainer>
+          <Text style={styles.title}>pantry</Text>
+          <TextInput 
+            style={styles.input} 
+            value={email} onChangeText={setEmail} 
+            placeholder="Email" 
+            placeholderTextColor="#A9A9A9"
+            autoCapitalize="none" 
+          />
+          <TextInput 
+            style={styles.input} 
+            value={password} 
+            onChangeText={setPassword} 
+            placeholder="Password" 
+            placeholderTextColor="#A9A9A9"
+            secureTextEntry 
+          />
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        <TouchableOpacity style={styles.button} onPress={onSignIn} disabled={loading}>
-          {loading 
-            ? <Text style={styles.buttonText}>Signing In...</Text> 
-            : <Text style={styles.buttonText}>Sign In</Text>
-          }
-        </TouchableOpacity>
-        <Link href="/signup" style={styles.link}>Create an account</Link>
+          <TouchableOpacity style={styles.button} onPress={onSignIn} disabled={loading}>
+            {loading 
+              ? <Text style={styles.buttonText}>Signing In...</Text> 
+              : <Text style={styles.buttonText}>Sign In</Text>
+            }
+          </TouchableOpacity>
+          <Link href="/signup" style={styles.link}>Create an account</Link>
+        </CenteredContainer>
       </View>
-    </CenteredContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: 'white' },
+  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: 'white'},
   title: { fontSize: 36, fontWeight: 'bold', marginBottom: 24, color: '#ff4d2d' },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 14, marginBottom: 12 },
   button: { backgroundColor: '#111216', padding: 14, borderRadius: 10, alignItems: 'center', marginTop: 6 },

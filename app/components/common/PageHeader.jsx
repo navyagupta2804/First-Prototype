@@ -17,22 +17,24 @@ const PageHeader = () => {
   };
 
   return (
-    <CenteredContainer style={styles.header}>
-      <Text style={styles.brand}>pantry</Text>
-      <View style={styles.headerIcons}>
-        <TouchableOpacity style={styles.iconButton} onPress={handleAddFriend}>
-          <Ionicons name="person-add-outline" size={24} color="#111" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={handleNotifications}>
-          <Ionicons name="notifications-outline" size={24} color="#111" />
-        </TouchableOpacity>
+    <CenteredContainer>
+      <View style={styles.header}>
+        <Text style={styles.brand}>pantry</Text>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity style={styles.iconButton} onPress={handleAddFriend}>
+            <Ionicons name="person-add-outline" size={24} color="#111" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={handleNotifications}>
+            <Ionicons name="notifications-outline" size={24} color="#111" />
+          </TouchableOpacity>
+        </View>
       </View>
     </CenteredContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { paddingTop: 56, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  header: { paddingTop: 46, paddingBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   brand: { fontSize: 26, fontWeight: '900', color: '#ff4d2d', letterSpacing: 0.2 },
   headerIcons: { flexDirection: 'row', gap: 15 },
   // iconButton: { padding: 4 },
