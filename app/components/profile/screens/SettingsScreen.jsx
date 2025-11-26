@@ -5,7 +5,7 @@ import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import notificationService from '../../../services/notificationService';
 import webNotificationService from '../../../services/webNotificationService';
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ onClose }) {
   const [settings, setSettings] = useState({
     dailyReminders: true,
     reminderTime: '09:00',
@@ -121,6 +121,13 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={onClose}>
+          <Text style={styles.backButtonText}>← Back to Profile</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Settings</Text>
+      </View>
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Notifications</Text>
         
@@ -228,6 +235,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  header: {
+    backgroundColor: 'white',
+    paddingTop: 50,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  backButton: {
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#111216',
   },
   loadingText: {
     fontSize: 16,
