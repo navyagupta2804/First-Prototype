@@ -32,7 +32,7 @@ export function evaluateUserBadges(userData, currentBadges = {}) {
   const photoCount = userData.photoCount || 0;
   const streakCount = userData.streakCount || 0;
   const journalCount = userData.journalCount || 0;
-  const thanksgivingChallenge = userData.hasGoalBeenMetThisWeek || false;
+  const thanksgivingChallenge = (userData.thanksgivingChallengeTasks.length === 5) || false;
 
   const nextBadges = { ...currentBadges };
   const newlyUnlocked = [];

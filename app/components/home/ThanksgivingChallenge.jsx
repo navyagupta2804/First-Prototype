@@ -1,7 +1,5 @@
-import { doc, updateDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { auth, db } from '../../../firebaseConfig';
 import CenteredContainer from '../common/CenteredContainer';
 
 const THANKSGIVING_TASKS = [
@@ -27,8 +25,8 @@ const THANKSGIVING_TASKS = [
   },
   {
     id: 'task5',
-    title: 'Check in mid-week',
-    description: 'Log anything you cooked, ate, or thought about food this week—even if it\'s just "had cereal, felt cozy."',
+    title: 'Communnity check in',
+    description: 'Share what you cooked, ate, or thought about this week in one of your communities—extra credit for Thanksgiving vibes! No community yet? Join one or start your own.',
   },
 ];
 

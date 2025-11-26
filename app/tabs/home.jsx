@@ -12,6 +12,7 @@ import PostCard from '../components/common/PostCard';
 import PersonalGreeting from '../components/home/PersonalGreeting';
 import PromptCard from '../components/home/PromptCard';
 import ThanksgivingChallenge from '../components/home/ThanksgivingChallenge';
+import WeeklyGoalSetter from '../components/home/WeeklyGoalSetter';
 
 const INTERNAL_TESTER_UIDS = [
   "sxs1k2tZFhTy0sQ1CFYJUD9tZSY2", // jins

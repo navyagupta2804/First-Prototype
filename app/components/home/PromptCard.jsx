@@ -16,7 +16,7 @@ const PromptCard = ({ journalPrompt }) => {
   const [journalText, setJournalText] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const defaultPrompt = "What's one comfort food that always makes you smile?";
+  const defaultPrompt = "What's your favorite Thanksgiving dish?";
   const PROMPT = journalPrompt || defaultPrompt;
 
   // ---- ensure user profile doc exists ----
