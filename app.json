@@ -5,9 +5,9 @@
     "scheme": "pantry",
     "version": "1.1.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/food-icon.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/food-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -19,7 +19,7 @@
       "googleServicesFile": "./google-services.json",
       "useNextNotificationsApi": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adapt-icon.png",
+        "foregroundImage": "./assets/food-icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -30,7 +30,7 @@
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/icon.png"
+      "favicon": "./assets/food-icon.png"
     },
     "plugins": [
       "expo-router"
