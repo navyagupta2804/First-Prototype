@@ -1,15 +1,16 @@
 import { signOut, updateProfile } from 'firebase/auth';
 import { collection, doc, limit, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
+import { logEvent } from '../utils/analytics';
 
 import CenteredContainer from '../components/common/CenteredContainer';
+import LoadingView from '../components/common/LoadingView';
 import PageHeader from '../components/common/PageHeader';
+import TabBar from '../components/common/TabBar';
 import ProfileCard from '../components/profile/ProfileCard';
 import ProfileTabContent from '../components/profile/ProfileTabContent';
-import ProfileTabs from '../components/profile/ProfileTabs';
 import JournalScreen from '../components/profile/screens/JournalScreen';
 import PostDetailScreen from '../components/profile/screens/PostDetailScreen';
 import SettingsScreen from '../components/profile/screens/SettingsScreen';
@@ -201,12 +202,7 @@ export default function ProfileScreen() {
   };
 
   if (loading || !userData) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#ff4d2d" />
-        <Text style={styles.loadingText}>Loading your profile...</Text>
-      </SafeAreaView>
-    );
+    return <LoadingView text='Loading your profile...'/>;
   }
 
   if (selectedPost) {
@@ -262,9 +258,10 @@ export default function ProfileScreen() {
         />
 
         {/* Tabs (Posts, Saved, Badges) */}
-        <ProfileTabs 
+        <TabBar 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
+          tabs={['Posts', 'Saved', 'Badges']}
         />
 
         {/* Content based on active tab */}
@@ -283,12 +280,8 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 16, backgroundColor: '#f9fafb' },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb'
-  },
-  loadingText: { marginTop: 12, color: '#6b7280', fontSize: 14 },
+  container: { flex: 1, paddingHorizontal: 24, backgroundColor: '#f9fafb' },
 });
+
+// for dashboard --> NEED TO CHANGE
+useEffect(() => logEvent("view_profile"), []);

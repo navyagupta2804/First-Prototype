@@ -1,13 +1,18 @@
-import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
-import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { collection, doc, getDoc, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
+
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
 import LogForm from '../components/log/LogForm';
+
 import { logPostCreation } from '../utils/analyticsHelper';
 import { evaluateUserBadges } from '../utils/badgeCalculations';
 import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
+
+// import for dashboard
 
 export default function LogScreen() {
   const [image, setImage] = useState(null);
@@ -15,8 +20,87 @@ export default function LogScreen() {
   const [caption, setCaption] = useState('');
   const [isPublished, setIsPublished] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [selectedCommunityIds, setSelectedCommunityIds] = useState([]);
 
-  // --- Image Picker/Camera Logic ---
+  const [availableCommunities, setAvailableCommunities] = useState([]);
+  const [loadingCommunities, setLoadingCommunities] = useState(true);
+
+  const user = auth.currentUser;
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const preSelectedCommunityId = params.preSelectedCommunityId;
+  
+  useEffect(() => {
+    if (!user) {
+      setLoadingCommunities(false);
+      setAvailableCommunities([]);
+      return;
+    }
+
+    setLoadingCommunities(true);
+    
+    const userRef = doc(db, 'users', user.uid);
+    let unsubCommunityDetails = () => {};
+
+    // 1. Listen to the user profile document
+    const unsubUser = onSnapshot(userRef, async (userSnap) => {
+      const joinedIds = userSnap.data()?.joinedCommunities || [];
+
+      if (joinedIds.length > 0) {
+        // 2. Query communities based ONLY on the joined IDs
+        const q = query(
+          collection(db, 'communities'), 
+          where('__name__', 'in', joinedIds)
+        );
+        
+        unsubCommunityDetails = onSnapshot(q, (querySnapshot) => {
+          const communityDetails = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              name: data.name,
+              memberUids: data.memberUids || [],
+            };
+          });
+          setAvailableCommunities(communityDetails);
+          setLoadingCommunities(false);
+        }, (error) => {
+          console.error("Error listening to community details:", error);
+          setLoadingCommunities(false);
+        });
+        
+      } else {
+        // No communities joined
+        unsubCommunityDetails(); // Clean up if it was running
+        setAvailableCommunities([]);
+        setLoadingCommunities(false);
+      }
+    }, (error) => {
+        console.error("Error listening to user profile:", error);
+        setLoadingCommunities(false);
+    });
+
+    // Clean up both listeners when the component unmounts
+    return () => {
+        unsubUser();
+        unsubCommunityDetails();
+    };
+
+  }, [user]); // Only depends on the user object
+
+  useEffect(() => {
+    if (preSelectedCommunityId && selectedCommunityIds.length === 0 && availableCommunities.length > 0) {
+        const isValidId = availableCommunities.some(comm => comm.id === preSelectedCommunityId);
+
+        if (isValidId) {
+          console.log(`SUCCESS: Auto-selecting community ID: ${preSelectedCommunityId}`);
+          setSelectedCommunityIds([preSelectedCommunityId]);
+        } else {
+          console.log(`FAIL: ID ${preSelectedCommunityId} is not a valid community the user has joined.`);
+        }
+    }
+  }, [preSelectedCommunityId, availableCommunities, selectedCommunityIds]);
+
   const launchPicker = async (type) => {
     const asset = await launchImagePicker(type); 
     if (asset) {
@@ -32,28 +116,40 @@ export default function LogScreen() {
     setAssetMimeType(null);
   };
 
+  // --- Community Select Handler ---
+  const onToggleCommunity = (id) => {
+    setSelectedCommunityIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(cid => cid !== id) // Remove if already selected
+        : [...prev, id] // Add if not selected
+    );
+  };
+
   // --- Core Upload Logic ---
   const uploadPost = async () => {
-    if (!image) {
-      Alert.alert('No image', 'Please select or take a photo first.');
+    const hasContent = !!image || caption.trim().length > 0;
+    if (!hasContent) {
+      Alert.alert('Missing content', 'Please add a photo or a caption.');
       return;
     }
 
-    const user = auth.currentUser;
     if (!user) return;
+
+    let url = null;
 
     try {
       setUploading(true);
 
-      // 1. Prepare unique Post ID and document references
+      // 1. Prepare Post ID + storage path
       const newPhotoRef = doc(collection(db, 'feed'));
       const postId = newPhotoRef.id; // Define postId BEFORE it is used for the storagePath
-      const storagePath = `users/${user.uid}/photos/${postId}`; 
       
-      // 2. Upload image to Firebase Storage
-      const url = await uploadImageToFirebase(image, assetMimeType, storagePath);
+      if (image) {
+        const storagePath = `users/${user.uid}/photos/${postId}`; 
+        url = await uploadImageToFirebase(image, assetMimeType, storagePath); // <-- Assign URL here
+      }
 
-      // 3. Prepare the common post data
+      // 3. Build post data
       const postData = {
         id: postId,
         uid: user.uid,
@@ -62,17 +158,17 @@ export default function LogScreen() {
         displayPhoto: user.photoURL,
         caption: caption.trim() || '',
         createdAt: serverTimestamp(),
-        likesCount: 0, 
+        likesCount: 0,
         commentsCount: 0,
         isPublished: isPublished, 
+        communityIds: selectedCommunityIds,
       };
 
-      // 4. Write to database
+      // 4. Write post
       await setDoc(newPhotoRef, postData);
 
-      const userRef = doc(db, 'users', user.uid);
-
       // 5. Update user's profile with last post time 
+      const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         lastPostAt: serverTimestamp(),
       });
@@ -82,7 +178,6 @@ export default function LogScreen() {
 
       if (userData) {
         const currentBadges = userData.badges || {};
-
         const { updatedBadges, newlyUnlocked } = evaluateUserBadges(userData, currentBadges);
 
         if (newlyUnlocked.length > 0) {
@@ -100,25 +195,22 @@ export default function LogScreen() {
         }
       }
 
-      const userProfileSnap = await getDoc(doc(db, 'users', user.uid)); 
-      const userGroup = userProfileSnap.data()?.abTestGroup;
-      
-      if (userGroup) {
-        logPostCreation(userGroup); // <-- Log the event with the A/B group!
-      }
-
-      // Success!
-      Alert.alert('Posted!', 'Your meal has been logged.', [
-        { text: 'OK', onPress: () => {
-          setImage(null);
-          setCaption('');
-          setIsPublished(true);
-        }}
-      ]);
+      // // Success!
+      // Alert.alert('Posted!', 'Your meal has been logged.', [
+      //   { text: 'OK', onPress: () => {
+      //     setImage(null);
+      //     setCaption('');
+      //     setIsPublished(true);
+      //     setSelectedCommunityIds([]);
+      //     router.setParams({ preSelectedCommunityId: null });
+      //   }}
+      // ]);
 
       setImage(null);
       setCaption('');
       setIsPublished(true);
+      setSelectedCommunityIds([]);
+      router.setParams({ preSelectedCommunityId: null });
 
     } catch (e) {
       console.error('Upload error:', e);
@@ -127,8 +219,9 @@ export default function LogScreen() {
       setUploading(false);
     }
   };
- return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+  
+  return (
+    <ScrollView style={styles.container}>
       <PageHeader />
       <CenteredContainer>
         <Text style={styles.title}>Log a Meal</Text>
@@ -143,6 +236,9 @@ export default function LogScreen() {
           takePhoto={takePhoto}
           uploadPost={uploadPost}
           clearImage={clearImage}
+          userCommunities={availableCommunities}
+          selectedCommunityIds={selectedCommunityIds}
+          onToggleCommunity={onToggleCommunity}
         />
       </CenteredContainer>
     </ScrollView>
@@ -150,8 +246,6 @@ export default function LogScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
-  content: { paddingHorizontal: 16  },
-  brand: { fontSize: 28, fontWeight: '800', color: '#ff4d2d', marginBottom: 8 },
-  title: { fontSize: 20, fontWeight: '700', marginBottom: 24 },
+  container: { flex: 1, backgroundColor: 'white', paddingHorizontal: 24 },
+  title: { fontSize: 24, fontWeight: '700', marginBottom: 24 },
 });

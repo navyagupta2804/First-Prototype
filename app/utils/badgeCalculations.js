@@ -1,5 +1,3 @@
-// utils/badgeCalculations.js (PURE JAVASCRIPT - NO REACT NATIVE IMPORTS)
-
 // Helper to determine the start of the week for a given date
 export const getStartOfWeek = (date) => {
   const d = new Date(date);
@@ -82,3 +80,9 @@ export function evaluateUserBadges(userData, currentBadges = {}) {
 
   return { updatedBadges: nextBadges, newlyUnlocked };
 }
+
+export default {
+  getStartOfWeek,
+  requiresGoalSetting,
+  evaluateUserBadges,
+};
