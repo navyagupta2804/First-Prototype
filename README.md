@@ -19,6 +19,3 @@ This app supports multi-platform push notifications:
 - ✅ **Web** - Browser push notifications via Firebase Cloud Messaging
 - ❌ **iOS** - Not currently supported
 
-### Quick Setup
-For web notifications setup, see: [WEB_NOTIFICATIONS_SETUP.md](./WEB_NOTIFICATIONS_SETUP.md)
-For migration details, see: [NOTIFICATION_MIGRATION_SUMMARY.md](./NOTIFICATION_MIGRATION_SUMMARY.md)
