@@ -22,7 +22,8 @@ const ProfileCard = ({ userData, postsLength, recentJournalEntry, onJournalPress
         : 'Start journaling today!';
     const journalDate = hasEntry ? getDate(recentJournalEntry.createdAt, 'journal') : '';
 
-     const badgeCount = userData?.badges ? Object.keys(userData.badges).length : 0;
+    const badgeCount = userData?.badges ? Object.keys(userData.badges).length : 0;
+    const joinedCommunitiesCount = userData?.joinedCommunities?.length ?? 0;
 
     return (
         <View style={styles.profileCard}>
@@ -44,7 +45,7 @@ const ProfileCard = ({ userData, postsLength, recentJournalEntry, onJournalPress
                             <Text style={styles.socialNumber}>{userData?.friends || 0}</Text> friends
                         </Text>
                         <Text style={styles.socialText}>
-                            <Text style={styles.socialNumber}>{userData?.joinedCommunities.length || 0}</Text> communities
+                            <Text style={styles.socialNumber}>{joinedCommunitiesCount}</Text> communities
                         </Text>
                     </View>
                 </View>
