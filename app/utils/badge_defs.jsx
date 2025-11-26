@@ -78,7 +78,7 @@ export const BADGE_DEFS = [
     name: 'Thanksgiving Challenge',
     description: 'Complete the Thanksgiving cooking challenge.',
     Icon: ThanksgivingBadge,
-    sortOrder: 3,
+    sortOrder: 4,
   }, 
 ];
 
