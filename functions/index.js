@@ -1,4 +1,3 @@
-// A Cloud Function that updates denormalized user data across all posts and comments.
 const functions = require("firebase-functions");
 const {onDocumentWritten, onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {onSchedule} = require("firebase-functions/v2/scheduler");

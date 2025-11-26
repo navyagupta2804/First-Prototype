@@ -3,8 +3,7 @@ import { collection, doc, onSnapshot, orderBy, query, updateDoc, where } from 'f
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { analytics, auth, db } from '../../firebaseConfig';
-import { getStartOfWeek, requiresGoalSetting } from '../utils/badgeCalculations';
-import { logEvent } from '../utils/analytics';
+import logEvent from '../utils/analytics';
 
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
@@ -14,12 +13,12 @@ import PromptCard from '../components/home/PromptCard';
 import ThanksgivingChallenge from '../components/home/ThanksgivingChallenge';
 
 const INTERNAL_TESTER_UIDS = [
-    "sxs1k2tZFhTy0sQ1CFYJUD9tZSY2", // jins
-    "XMAjQ3JzOdbOvAv2mlsgNxirdUK2", // mannu1623
-    "oidjXXbQModtDgAkrvLVG3EFiUb2", // olufunmilola92
-    "FtoyNcl5FNgsudn04CEyobyIpSH2", // test
-    "uf6finICXxNjukDyd8ssVssx1ur2", // jin
-    "hujq5wObGxdt27SDwvvPQYrXmW13", // navyag711
+  "sxs1k2tZFhTy0sQ1CFYJUD9tZSY2", // jins
+  "XMAjQ3JzOdbOvAv2mlsgNxirdUK2", // mannu1623
+  "oidjXXbQModtDgAkrvLVG3EFiUb2", // olufunmilola92
+  "FtoyNcl5FNgsudn04CEyobyIpSH2", // test
+  "uf6finICXxNjukDyd8ssVssx1ur2", // jin
+  "hujq5wObGxdt27SDwvvPQYrXmW13", // navyag711
 ];
 
 const HomeScreen = () => {

@@ -66,6 +66,7 @@ export default function CommunityScreen({ community, onClose }) {
     if (!currentCommunityId) return;
 
     const startOfWeek = getStartOfWeek(new Date());
+    console.log(startOfWeek);
     const q = query(
       collection(db, 'feed'), 
       where('communityIds', 'array-contains', currentCommunityId),
@@ -73,6 +74,9 @@ export default function CommunityScreen({ community, onClose }) {
       where('createdAt', '>=', startOfWeek), 
       orderBy('createdAt', 'desc') 
     );
+
+    console.log("q");
+    console.log(q);
 
     const unsub = onSnapshot(q, (snap) => {
       const uniqueCookers = new Set();

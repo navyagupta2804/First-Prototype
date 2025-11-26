@@ -32,6 +32,8 @@ export default function ProfileScreen() {
 
   const user = auth.currentUser;
 
+  useEffect(() => logEvent("view_profile"), []);
+
   useEffect(() => {
     if (!user) {
       setLoading(false);
@@ -282,5 +284,3 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 24, backgroundColor: '#f9fafb' },
 });
-
-useEffect(() => logEvent("view_profile"), []);
