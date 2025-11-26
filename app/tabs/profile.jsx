@@ -283,5 +283,4 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 24, backgroundColor: '#f9fafb' },
 });
 
-// for dashboard --> NEED TO CHANGE
 useEffect(() => logEvent("view_profile"), []);

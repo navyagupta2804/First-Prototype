@@ -11,7 +11,7 @@ import PageHeader from '../components/common/PageHeader';
 import PostCard from '../components/common/PostCard';
 import PersonalGreeting from '../components/home/PersonalGreeting';
 import PromptCard from '../components/home/PromptCard';
-import WeeklyGoalSetter from '../components/home/WeeklyGoalSetter';
+import ThanksgivingChallenge from '../components/home/ThanksgivingChallenge';
 
 const INTERNAL_TESTER_UIDS = [
     "sxs1k2tZFhTy0sQ1CFYJUD9tZSY2", // jins
@@ -27,6 +27,9 @@ const HomeScreen = () => {
   const [userData, setUserData] = useState({}); 
   const userId = auth.currentUser?.uid;
   
+  // ---- Thanksgiving Challenge State ----
+  const [completedTasks, setCompletedTasks] = useState([]);
+  
   // 1. ---- User Data and Streak Status Subscription ----
   useEffect(() => {
     if (!userId) return;
@@ -34,7 +37,12 @@ const HomeScreen = () => {
     const userRef = doc(db, 'users', userId);
     const unsub = onSnapshot(userRef, (docSnap) => {
       if (docSnap.exists()) {
-        setUserData(docSnap.data());
+        const data = docSnap.data();
+        setUserData(data);
+        // Load completed Thanksgiving tasks
+        if (data.thanksgivingChallengeTasks) {
+          setCompletedTasks(data.thanksgivingChallengeTasks);
+        }
       }
     });
     return unsub;
@@ -71,43 +79,49 @@ const HomeScreen = () => {
     return unsub;
   }, []);
 
-  //dashboard
   useEffect(() => {
     logEvent("view_home");
   }, []);
 
-  // ---- Goal Submission Handler ----
-  const handleGoalSubmit = async (goal) => {
+  // ---- Thanksgiving Challenge Task Toggle Handler ----
+  const handleTaskToggle = async (taskId) => {
     if (!userId) return;
 
     const userRef = doc(db, 'users', userId);
-    const sundayMidnight = getStartOfWeek(new Date());
-    
+    let updatedTasks;
+
+    if (completedTasks.includes(taskId)) {
+      // Remove task from completed list
+      updatedTasks = completedTasks.filter(id => id !== taskId);
+    } else {
+      // Add task to completed list
+      updatedTasks = [...completedTasks, taskId];
+    }
+
+    setCompletedTasks(updatedTasks);
+
     try {
       await updateDoc(userRef, {
-        weeklyGoal: goal,
-        streakStartDate: sundayMidnight, 
-        currentWeekPosts: 0, 
-        streakCount: userData.streakCount || 0,
-        hasGoalBeenMetThisWeek: false,
+        thanksgivingChallengeTasks: updatedTasks,
       });
-      console.log("Weekly goal set successfully!");
+      console.log("Thanksgiving challenge task updated!");
     } catch (error) {
-      console.error("Error setting weekly goal:", error);
+      console.error("Error updating Thanksgiving challenge task:", error);
+      // Revert on error
+      setCompletedTasks(completedTasks);
     }
   };
 
-  const showGoalSetter = requiresGoalSetting(userData);
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <View>
       <PageHeader />
       <PersonalGreeting/>
-      {showGoalSetter ? (
-        <WeeklyGoalSetter onSubmitGoal={handleGoalSubmit} />
-      ) : (
-        <PromptCard />
-      )}
+      <ThanksgivingChallenge 
+        completedTasks={completedTasks}
+        onTaskToggle={handleTaskToggle}
+      />
+      <PromptCard />
       {/* <ChallengeSection /> */}
       {/* <FriendActivityCard/> */}
       <CenteredContainer>
@@ -137,4 +151,3 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
-

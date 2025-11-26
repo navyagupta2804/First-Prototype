@@ -83,17 +83,22 @@ const getFileExtension = (uri, mimeType) => {
  * @returns {Promise<string>} - The download URL of the uploaded image.
  */
 export const uploadImageToFirebase = async (imageUri, mimeType, storagePath) => {
+  // Validate and ensure we have a valid MIME type
+  const validMimeType = mimeType || 'image/jpeg';
+  
   // 1. Fetch the image and create a Blob
   const response = await fetch(imageUri);
   const blob = await response.blob(); 
   
   // 2. Determine the full filename with extension
-  const extension = getFileExtension(imageUri, mimeType);
+  const extension = getFileExtension(imageUri, validMimeType);
   const fullPath = `${storagePath}.${extension}`;
 
-  // 3. Upload to Firebase Storage
+  // 3. Upload to Firebase Storage with content type metadata
   const storageRef = ref(storage, fullPath);
-  await uploadBytes(storageRef, blob);
+  await uploadBytes(storageRef, blob, {
+    contentType: validMimeType  // Fix: Explicitly set content type to prevent MIME error
+  });
   
   // 4. Get the public download URL
   const url = await getDownloadURL(storageRef);
