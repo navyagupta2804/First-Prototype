@@ -1,4 +1,4 @@
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -10,7 +10,7 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
+  const router = useRouter(); // <-- ADDED
 
   const onSignIn = async () => {
     setError(''); 
@@ -19,7 +19,7 @@ export default function SignInScreen() {
       return;
     }
 
-   setLoading(true);
+    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
       router.replace('/tabs/home');
@@ -76,7 +76,12 @@ export default function SignInScreen() {
               : <Text style={styles.buttonText}>Sign In</Text>
             }
           </TouchableOpacity>
-          <Link href="/signup" style={styles.link}>Create an account</Link>
+
+          {/* 🔽 REPLACED LINK WITH ROUTER.PUSH */}
+          <TouchableOpacity onPress={() => router.push('/signup')}>
+            <Text style={styles.link}>Create an account</Text>
+          </TouchableOpacity>
+
         </CenteredContainer>
       </View>
   );
