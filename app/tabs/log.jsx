@@ -12,8 +12,6 @@ import { logPostCreation } from '../utils/analyticsHelper';
 import { evaluateUserBadges } from '../utils/badgeCalculations';
 import { launchImagePicker, uploadImageToFirebase } from '../utils/imageUpload';
 
-// import for dashboard
-
 export default function LogScreen() {
   const [image, setImage] = useState(null);
   const [assetMimeType, setAssetMimeType] = useState(null);
