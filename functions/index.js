@@ -179,11 +179,6 @@ exports.notifyFriendsOnNewPost = onDocumentCreated({
     }
 
     const tokens = await getUserTokens(friendId);
-    if (tokens.length === 0) {
-      console.log(`No tokens found for user ${friendId}`);
-      return;
-    }
-
     const notification = {
       title: "New Post from " + authorName,
       body: postData.caption || "Check out their latest cooking creation!",
@@ -196,7 +191,22 @@ exports.notifyFriendsOnNewPost = onDocumentCreated({
       authorName: authorName,
     };
 
-    return sendPushNotification(tokens, notification, data);
+    // Save notification to Firestore
+    await db.collection("users").doc(friendId).collection("notifications").add({
+      title: notification.title,
+      body: notification.body,
+      type: data.type,
+      postId: postId,
+      authorId: authorId,
+      authorName: authorName,
+      read: false,
+      timestamp: FieldValue.serverTimestamp(),
+    });
+
+    // Send push notification if user has tokens
+    if (tokens.length > 0) {
+      return sendPushNotification(tokens, notification, data);
+    }
   });
 
   await Promise.all(notificationPromises);
@@ -255,9 +265,6 @@ exports.notifyFriendsOnGoalComplete = onDocumentWritten({
     }
 
     const tokens = await getUserTokens(friendId);
-    if (tokens.length === 0) {
-      return;
-    }
 
     const notification = {
       title: userName + " achieved their weekly goal! 🎉",
@@ -271,7 +278,21 @@ exports.notifyFriendsOnGoalComplete = onDocumentWritten({
       weeklyGoal: String(weeklyGoal),
     };
 
-    return sendPushNotification(tokens, notification, data);
+    // Save notification to Firestore
+    await db.collection("users").doc(friendId).collection("notifications").add({
+      title: notification.title,
+      body: notification.body,
+      type: data.type,
+      userId: userId,
+      userName: userName,
+      read: false,
+      timestamp: FieldValue.serverTimestamp(),
+    });
+
+    // Send push notification if user has tokens
+    if (tokens.length > 0) {
+      return sendPushNotification(tokens, notification, data);
+    }
   });
 
   await Promise.all(notificationPromises);

@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View, Platform } from 'react-native';
 import { auth } from '../firebaseConfig';
 import * as Notifications from 'expo-notifications';
+import firebaseApp from '../firebaseConfig';
 
 import notificationService from './services/notificationService';
+import webNotificationService from './services/webNotificationService';
 import { setupNotificationChannels } from './utils/notificationChannels';
 
 export default function RootLayout() {
@@ -17,7 +19,13 @@ export default function RootLayout() {
 
   // Initialize notifications
   useEffect(() => {
-    setupNotificationChannels();
+    if (Platform.OS === 'web') {
+      // Initialize web notifications
+      webNotificationService.initialize(firebaseApp);
+    } else {
+      // Initialize mobile notifications
+      setupNotificationChannels();
+    }
   }, []);
 
   // Auth state listener
@@ -38,21 +46,28 @@ export default function RootLayout() {
   // Register for push notifications
   const registerForPushNotifications = async (userId) => {
     try {
-      const { status, token } = await notificationService.requestPermissions();
-      
-      if (status === 'granted' && token) {
-        await notificationService.registerToken(userId, token);
+      if (Platform.OS === 'web') {
+        // Web notification registration (optional automatic setup)
+        // User can manually enable later in settings
+        console.log('Web notifications can be enabled in Settings');
+      } else {
+        // Mobile notification registration
+        const { status, token } = await notificationService.requestPermissions();
         
-        // Set default notification settings
-        await notificationService.updateSettings(userId, {
-          dailyReminders: true,
-          reminderTime: '09:00',
-          reminderDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-          friendActivity: true,
-        });
+        if (status === 'granted' && token) {
+          await notificationService.registerToken(userId, token);
+          
+          // Set default notification settings
+          await notificationService.updateSettings(userId, {
+            dailyReminders: true,
+            reminderTime: '09:00',
+            reminderDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+            friendActivity: true,
+          });
 
-        // Schedule daily reminders (9:00 AM)
-        await notificationService.scheduleDailyReminder(9, 0);
+          // Schedule daily reminders (9:00 AM)
+          await notificationService.scheduleDailyReminder(9, 0);
+        }
       }
     } catch (error) {
       console.error('Error registering for notifications:', error);
@@ -61,33 +76,55 @@ export default function RootLayout() {
 
   // Set up notification listeners
   useEffect(() => {
-    const handleNotificationReceived = (notification) => {
-      console.log('Notification received in foreground:', notification);
-      // You can show an in-app notification here
-    };
+    if (Platform.OS === 'web') {
+      // Web notification listener (foreground messages)
+      const handleWebNotification = (payload) => {
+        console.log('Web notification received:', payload);
+        // Notification is automatically shown by service worker
+        
+        // Navigate if needed based on notification data
+        const data = payload.data;
+        if (data?.type === 'friend_post' && data?.postId) {
+          router.push(`/components/profile/screens/PostDetailScreen?postId=${data.postId}`);
+        } else if (data?.type === 'friend_goal' && data?.userId) {
+          router.push(`/tabs/profile?userId=${data.userId}`);
+        } else if (data?.type === 'daily-reminder') {
+          router.push('/tabs/log');
+        }
+      };
 
-    const handleNotificationTapped = (response) => {
-      console.log('User tapped notification:', response);
-      
-      const data = response.notification.request.content.data;
-      
-      // Navigate based on notification type
-      if (data?.type === 'friend_post' && data?.postId) {
-        router.push(`/components/profile/screens/PostDetailScreen?postId=${data.postId}`);
-      } else if (data?.type === 'friend_goal' && data?.userId) {
-        router.push(`/tabs/profile?userId=${data.userId}`);
-      } else if (data?.type === 'daily-reminder') {
-        router.push('/tabs/log');
-      }
-    };
+      webNotificationService.setupForegroundMessageListener(handleWebNotification);
 
-    notificationService.setupNotificationListeners(
-      handleNotificationReceived,
-      handleNotificationTapped
-    );
+      return () => {
+        webNotificationService.removeForegroundMessageListener();
+      };
+    } else {
+      // Mobile notification listeners
+      const handleNotificationReceived = (notification) => {
+        console.log('Notification received in foreground:', notification);
+      };
 
-    // Handle app opened from notification (quit state)
-    if (Platform.OS !== 'web') {
+      const handleNotificationTapped = (response) => {
+        console.log('User tapped notification:', response);
+        
+        const data = response.notification.request.content.data;
+        
+        // Navigate based on notification type
+        if (data?.type === 'friend_post' && data?.postId) {
+          router.push(`/components/profile/screens/PostDetailScreen?postId=${data.postId}`);
+        } else if (data?.type === 'friend_goal' && data?.userId) {
+          router.push(`/tabs/profile?userId=${data.userId}`);
+        } else if (data?.type === 'daily-reminder') {
+          router.push('/tabs/log');
+        }
+      };
+
+      notificationService.setupNotificationListeners(
+        handleNotificationReceived,
+        handleNotificationTapped
+      );
+
+      // Handle app opened from notification (quit state)
       Notifications.getLastNotificationResponseAsync().then(response => {
         if (response) {
           const data = response.notification.request.content.data;
@@ -100,11 +137,11 @@ export default function RootLayout() {
           }
         }
       });
-    }
 
-    return () => {
-      notificationService.removeNotificationListeners();
-    };
+      return () => {
+        notificationService.removeNotificationListeners();
+      };
+    }
   }, [router]);
 
   // Navigation logic
