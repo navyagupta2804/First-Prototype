@@ -33,6 +33,8 @@ export function evaluateUserBadges(userData, currentBadges = {}) {
   const streakCount = userData.streakCount || 0;
   const journalCount = userData.journalCount || 0;
 
+  const thanksgivingChallenge = userData.thanksgivingChallenge || false;
+
   const nextBadges = { ...currentBadges };
   const newlyUnlocked = [];
 
@@ -76,6 +78,11 @@ export function evaluateUserBadges(userData, currentBadges = {}) {
   if (journalCount >= 20 && !nextBadges.journal_20) {
     nextBadges.journal_20 = true;
     newlyUnlocked.push('journal_20');
+  }
+
+  if (thanksgivingChallenge && !nextBadges.thanksgiving_challenge) {
+    nextBadges.thanksgiving_challenge = true;
+    newlyUnlocked.push('thanksgiving_challenge');
   }
 
   return { updatedBadges: nextBadges, newlyUnlocked };

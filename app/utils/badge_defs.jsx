@@ -7,6 +7,7 @@ import JournalBadge3 from "../../assets/badges/journal_badge_3.png";
 import StreakBadge1 from "../../assets/badges/streak_badge_1.png";
 import StreakBadge2 from "../../assets/badges/streak_badge_2.png";
 import StreakBadge3 from "../../assets/badges/streak_badge_3.png";
+import ThanksgivingBadge from "../../assets/badges/thanksgiving_badge.png";
 
 export const BADGE_DEFS = [
   {
@@ -70,6 +71,13 @@ export const BADGE_DEFS = [
     name: 'One Month Streak',
     description: 'Cook 30 days in a row.',
     Icon: StreakBadge3,
+    sortOrder: 3,
+  }, 
+  {
+    id: 'thanksgiving_challenge',
+    name: 'Thanksgiving Challenge',
+    description: 'Complete the Thanksgiving cooking challenge.',
+    Icon: ThanksgivingBadge,
     sortOrder: 3,
   }, 
 ];

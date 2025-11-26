@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         alignItems: 'center',
         width: '100%',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         paddingVertical: 16,
     },
     badgeItem: {
