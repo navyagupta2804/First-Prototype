@@ -3,7 +3,7 @@ import { collection, doc, limit, onSnapshot, orderBy, query, serverTimestamp, up
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
-import { logEvent } from '../utils/analytics';
+import logEvent from '../utils/analytics';
 
 import CenteredContainer from '../components/common/CenteredContainer';
 import LoadingView from '../components/common/LoadingView';

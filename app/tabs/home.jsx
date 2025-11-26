@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { analytics, auth, db } from '../../firebaseConfig';
 import logEvent from '../utils/analytics';
+import { getStartOfWeek, requiresGoalSetting } from '../utils/badgeCalculations';
 
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
@@ -82,6 +83,27 @@ const HomeScreen = () => {
     logEvent("view_home");
   }, []);
 
+  // ---- Goal Submission Handler ----
+  const handleGoalSubmit = async (goal) => {
+    if (!userId) return;
+
+    const userRef = doc(db, 'users', userId);
+    const sundayMidnight = getStartOfWeek(new Date());
+    
+    try {
+      await updateDoc(userRef, {
+        weeklyGoal: goal,
+        streakStartDate: sundayMidnight, 
+        currentWeekPosts: 0, 
+        streakCount: userData.streakCount || 0,
+        hasGoalBeenMetThisWeek: false,
+      });
+      console.log("Weekly goal set successfully!");
+    } catch (error) {
+      console.error("Error setting weekly goal:", error);
+    }
+  };
+
   // ---- Thanksgiving Challenge Task Toggle Handler ----
   const handleTaskToggle = async (taskId) => {
     if (!userId) return;
@@ -111,6 +133,7 @@ const HomeScreen = () => {
     }
   };
 
+  const showGoalSetter = requiresGoalSetting(userData);
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <View>
@@ -120,7 +143,11 @@ const HomeScreen = () => {
         completedTasks={completedTasks}
         onTaskToggle={handleTaskToggle}
       />
-      <PromptCard />
+      {showGoalSetter ? (
+        <WeeklyGoalSetter onSubmitGoal={handleGoalSubmit} />
+      ) : (
+        <PromptCard />
+      )}
       {/* <ChallengeSection /> */}
       {/* <FriendActivityCard/> */}
       <CenteredContainer>
