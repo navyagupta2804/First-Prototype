@@ -1,10 +1,8 @@
+import * as Notifications from 'expo-notifications';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-
-import { ActivityIndicator, StyleSheet, View, Platform } from 'react-native';
-import { auth } from '../firebaseConfig';
-import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import firebaseApp from '../firebaseConfig';
 
 import notificationService from './services/notificationService';
