@@ -53,7 +53,6 @@ const ThanksgivingChallenge = ({
     activeTasks = THANKSGIVING_TASKS;
   }
 
-  console.log(activeTasks);
   const totalTasks = activeTasks.length;
   const activeTaskIds = activeTasks.map(task => task.id);
   const completedCount = completedTasks.filter(id => activeTaskIds.includes(id)).length;

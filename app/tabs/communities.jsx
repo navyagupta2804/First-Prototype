@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { addDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { arrayUnion, collection, doc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
@@ -9,6 +9,42 @@ import CommunityCard from '../components/common/CommunityCard';
 import LoadingView from '../components/common/LoadingView';
 import PageHeader from '../components/common/PageHeader';
 import CommunityScreen from '../components/communities/CommunityScreen';
+
+const showToast = (message) => console.log('TOAST SUCCESS:', message);
+const showErrorToast = (message) => console.error('TOAST ERROR:', message);
+
+
+// Function to join community using the invite code
+const joinCommunityByCode = async (inviteCode, userId) => {
+  const communityQuery = query(
+    collection(db, 'communities'),
+    where('inviteCode', '==', inviteCode.trim())
+  );
+
+  const snapshot = await getDocs(communityQuery);
+
+  if (snapshot.empty) {
+    showErrorToast('Invalid or expired invite code.');
+    throw new Error('Invalid or expired invite code.');
+  }
+
+  const communityDoc = snapshot.docs[0];
+  const communityId = communityDoc.id;
+  const communityName = communityDoc.data().name;
+  
+  const communityRef = doc(db, 'communities', communityId);
+  const userRef = doc(db, 'users', userId);
+
+  await updateDoc(communityRef, {
+    memberUids: arrayUnion(userId) 
+  });
+
+  await updateDoc(userRef, {
+    joinedCommunities: arrayUnion(communityId)
+  });
+
+  return { success: true, communityId: communityId, communityName: communityName };
+};
 
 // This modal will handle creating new communities
 const NewCommunityModal = ({ isVisible, onClose, onSave, userId }) => {
@@ -136,12 +172,78 @@ const NewCommunityModal = ({ isVisible, onClose, onSave, userId }) => {
   );
 };
 
+// Modal for entering the invite code
+const JoinByCodeModal = ({ isVisible, onClose, onJoin, userId }) => {
+  const [code, setCode] = useState('');
+  const [joining, setJoining] = useState(false);
+
+  const handleJoin = async () => {
+    if (!code.trim()) {
+      showErrorToast("Please enter an invite code.");
+      return;
+    }
+    setJoining(true);
+    try {
+      const result = await onJoin(code.trim(), userId);
+      showToast(`Welcome to ${result.communityName}!`);
+      setCode('');
+      onClose();
+    } catch (error) {
+      console.log("error joining community:", error.message);
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={isVisible}
+      onRequestClose={onClose}
+    >
+      <View style={modalStyles.modalBackdrop}>
+        <View style={joinCodeModalStyles.container}>
+          <Text style={modalStyles.headerTitle}>Join Private Community</Text>
+          <Text style={joinCodeModalStyles.label}>Enter Invite Code</Text>
+          <TextInput
+            style={joinCodeModalStyles.input}
+            placeholder="e.g., A8P5RTx2"
+            placeholderTextColor="#A9A9A9"
+            value={code}
+            onChangeText={(text) => setCode(text)}
+            autoCapitalize="characters"
+            editable={!joining}
+          />
+
+          <TouchableOpacity 
+            onPress={handleJoin} 
+            style={[modalStyles.saveButton, joinCodeModalStyles.joinButton]}
+            disabled={joining}
+          >
+            {joining ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={modalStyles.saveButtonText}>Join Community</Text>
+            )}
+          </TouchableOpacity>
+          
+          <TouchableOpacity onPress={onClose} style={joinCodeModalStyles.closeButton}>
+            <Text style={joinCodeModalStyles.closeButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 export default function CommunitiesScreen() {
   const user = auth.currentUser;
   const [allCommunities, setAllCommunities] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [showNewCommunityModal, setShowNewCommunityModal] = useState(false);
+  const [showJoinByCodeModal, setShowJoinByCodeModal] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -171,6 +273,10 @@ export default function CommunitiesScreen() {
 
   const handleSaveNewCommunity = async ({ title, description, userId, isPublic }) => {
     try {
+      const newCommunityRef = doc(collection(db, 'communities'));
+      const uniqueId = newCommunityRef.id;
+      const code = isPublic ? null : uniqueId;
+
       await addDoc(collection(db, 'communities'), {
         creatorId: userId,
         name: title,
@@ -178,6 +284,8 @@ export default function CommunitiesScreen() {
         createdAt: serverTimestamp(),
         isPublic: isPublic,
         memberUids: [userId],
+        adminUids: [userId],
+        inviteCode: code,
       });
       console.log("Community  saved successfully!");
       setShowNewCommunityModal(false);
@@ -222,6 +330,7 @@ export default function CommunitiesScreen() {
       <CommunityScreen 
         community={selectedCommunity}
         onClose={() => setSelectedCommunity(null)} 
+        currentUserId={user.uid}
       />
     );
   }
@@ -240,6 +349,13 @@ export default function CommunitiesScreen() {
             <Ionicons name="add-circle" size={30} color="#ff4d2d" />
           </TouchableOpacity>
         </View>
+        <TouchableOpacity 
+          style={styles.subHeaderContainer} 
+          onPress={() => setShowJoinByCodeModal(true)}
+        >
+          <Ionicons name="lock-closed" size={16} color="#ff4d2d" />
+          <Text style={styles.subHeaderText}>Join by code</Text>
+        </TouchableOpacity>
       </CenteredContainer>
 
       {/* Community List */}
@@ -260,6 +376,14 @@ export default function CommunitiesScreen() {
         onSave={handleSaveNewCommunity}
         userId={user.uid}
       />
+
+      {/* Join By Code Modal */}
+      <JoinByCodeModal
+        isVisible={showJoinByCodeModal}
+        onClose={() => setShowJoinByCodeModal(false)}
+        onJoin={joinCommunityByCode}
+        userId={user.uid}
+      />
     </View>
   );
 }
@@ -270,8 +394,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent:'space-between',
     alignItems: 'center',
-    marginBottom: 10,
     position: 'relative', 
+  },
+  plusButton: {
+    padding: 5,
+  },
+  subHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent:'left',
+    alignItems: 'center',
+    position: 'relative', 
+  },
+  subHeaderText: {
+    paddingLeft: 8,
+    fontSize: 16,
+    color: '#ff4d2d',
   },
   myCommunitiesTitle: {
     fontSize: 24,
@@ -333,6 +470,7 @@ const modalStyles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    alignSelf: 'center',
   },
   titleInput: {
     fontSize: 22,
@@ -386,4 +524,47 @@ const modalStyles = StyleSheet.create({
   },
   selectButtonText: { color: '#374151', fontWeight: '500', fontSize: 14 },
   selectButtonTextActive: { color: 'white', fontWeight: '600' },
+});
+
+const joinCodeModalStyles = StyleSheet.create({
+  container: {
+    backgroundColor: 'white',
+    padding: 30,
+    borderRadius: 20, 
+    width: '85%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+    marginTop: 15,
+  },
+  input: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111216',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 10,
+    width: '100%',
+    textAlign: 'center',
+    marginBottom: 20,
+    letterSpacing: 2,
+  },
+  joinButton: {
+    width: '100%',
+    marginBottom: 10,
+  },
+  closeButton: {
+    padding: 10,
+  },
+  closeButtonText: {
+    color: '#6b7280',
+    fontSize: 16,
+  }
 });
