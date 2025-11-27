@@ -92,8 +92,8 @@ const styles = StyleSheet.create({
   promptCard: {
     marginVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: '#FFF1E6',
-    borderColor: '#FFD4B8',
+    backgroundColor: '#FFF2F0',
+    borderColor: '#FFE0DB',
     borderWidth: 2,
     borderRadius: 12,
   },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',  
     marginBottom: 6,
-    color: '#f97316',  
+    color: '#ff4d2d',  
     textAlign: 'left', 
     width: '100%',
     textTransform: 'uppercase' 

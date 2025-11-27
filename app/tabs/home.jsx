@@ -9,6 +9,7 @@ import { getStartOfWeek, requiresGoalSetting } from '../utils/badgeCalculations'
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
 import PostCard from '../components/common/PostCard';
+import InitialSetupModal from '../components/home/InitialSetupModal';
 import PersonalGreeting from '../components/home/PersonalGreeting';
 import PromptCard from '../components/home/PromptCard';
 import ThanksgivingChallenge from '../components/home/ThanksgivingChallenge';
@@ -26,6 +27,7 @@ const INTERNAL_TESTER_UIDS = [
 const HomeScreen = () => {
   const [feed, setFeed] = useState([]);
   const [userData, setUserData] = useState({}); 
+  const [isSetupComplete, setIsSetupComplete] = useState(false);
   const userId = auth.currentUser?.uid;
   
   // ---- Thanksgiving Challenge State ----
@@ -44,6 +46,12 @@ const HomeScreen = () => {
 
         setCompletedTasks(data.thanksgivingChallengeTasks || []);
         setCustomTaskList(data.customChallengeTaskList || []);
+
+        if (data.abTestGroup && data.profession) {
+          setIsSetupComplete(true);
+        } else {
+          setIsSetupComplete(false);
+        }
       }
     });
     return unsub;
@@ -149,10 +157,12 @@ const HomeScreen = () => {
     }
   };
 
-  const isCustomChallengeUser = userData.abTestGroup === "Group B"; // Group B is custom tasks
+  const isCustomChallengeUser = userData.abTestGroup === "Group A"; // Group A is custom tasks
   const currentChallengeMode = isCustomChallengeUser ? 'custom' : 'default';
 
   const showGoalSetter = requiresGoalSetting(userData);
+  const handleInitialSetupComplete = () => {setIsSetupComplete(true)};
+
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <View>
@@ -177,8 +187,11 @@ const HomeScreen = () => {
       </CenteredContainer>
     </View>
   );
-
+  
   // ---- Layout ----
+
+  if (!isSetupComplete) return <InitialSetupModal onSetupComplete={handleInitialSetupComplete} />;
+
   return (
     <View style={styles.screenContainer}>
       <FlatList
