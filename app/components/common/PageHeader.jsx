@@ -1,23 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { auth, db } from '../../../firebaseConfig';
 import CenteredContainer from './CenteredContainer';
 
 const PageHeader = () => {
   const router = useRouter();
-  const auth = getAuth();
   const user = auth.currentUser;
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
 
-    const db = getFirestore();
+    console.log(db);
     const notificationsRef = collection(db, 'users', user.uid, 'notifications');
     const q = query(notificationsRef, where('read', '==', false));
+
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setUnreadCount(snapshot.size);

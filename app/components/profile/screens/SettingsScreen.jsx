@@ -205,7 +205,7 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
   return (
     <SafeAreaView style={styles.safeArea}>
       <CenteredContainer>
-        {/* Header (File 1 Style) */}
+        {/* Header */}
         <View style={styles.pageTitle}>
           <TouchableOpacity style={styles.backButtonContainer} onPress={onClose}>
             <Ionicons name="chevron-back" size={20} color="#111" />
@@ -216,7 +216,7 @@ export default function SettingsScreen({ onSignOut, onClose, userData, onSave })
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <CenteredContainer>
-          {/* 1. Profile Information (File 1) */}
+          {/* 1. Profile Information */}
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Profile Information</Text>
             <View style={styles.profileInfoLayout}>
