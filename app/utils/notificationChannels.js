@@ -135,3 +135,11 @@ export async function getAllChannels() {
     return [];
   }
 }
+
+export default {
+  CHANNELS,
+  setupNotificationChannels,
+  getChannelId,
+  deleteNotificationChannel,
+  getAllChannels,
+}

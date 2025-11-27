@@ -3,32 +3,36 @@ import { collection, doc, onSnapshot, orderBy, query, updateDoc, where } from 'f
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { analytics, auth, db } from '../../firebaseConfig';
+import logEvent from '../utils/analytics';
 import { getStartOfWeek, requiresGoalSetting } from '../utils/badgeCalculations';
-import { logEvent } from '../utils/analytics';
 
 import CenteredContainer from '../components/common/CenteredContainer';
 import PageHeader from '../components/common/PageHeader';
 import PostCard from '../components/common/PostCard';
+import InitialSetupModal from '../components/home/InitialSetupModal';
 import PersonalGreeting from '../components/home/PersonalGreeting';
 import PromptCard from '../components/home/PromptCard';
 import ThanksgivingChallenge from '../components/home/ThanksgivingChallenge';
+import WeeklyGoalSetter from '../components/home/WeeklyGoalSetter';
 
 const INTERNAL_TESTER_UIDS = [
-    "sxs1k2tZFhTy0sQ1CFYJUD9tZSY2", // jins
-    "XMAjQ3JzOdbOvAv2mlsgNxirdUK2", // mannu1623
-    "oidjXXbQModtDgAkrvLVG3EFiUb2", // olufunmilola92
-    "FtoyNcl5FNgsudn04CEyobyIpSH2", // test
-    "uf6finICXxNjukDyd8ssVssx1ur2", // jin
-    "hujq5wObGxdt27SDwvvPQYrXmW13", // navyag711
+  "sxs1k2tZFhTy0sQ1CFYJUD9tZSY2", // jins
+  "XMAjQ3JzOdbOvAv2mlsgNxirdUK2", // mannu1623
+  "oidjXXbQModtDgAkrvLVG3EFiUb2", // olufunmilola92
+  "FtoyNcl5FNgsudn04CEyobyIpSH2", // test
+  "uf6finICXxNjukDyd8ssVssx1ur2", // jin
+  "hujq5wObGxdt27SDwvvPQYrXmW13", // navyag711
 ];
 
 const HomeScreen = () => {
   const [feed, setFeed] = useState([]);
   const [userData, setUserData] = useState({}); 
+  const [isSetupComplete, setIsSetupComplete] = useState(false);
   const userId = auth.currentUser?.uid;
   
   // ---- Thanksgiving Challenge State ----
   const [completedTasks, setCompletedTasks] = useState([]);
+  const [customTaskList, setCustomTaskList] = useState([]);
   
   // 1. ---- User Data and Streak Status Subscription ----
   useEffect(() => {
@@ -39,9 +43,14 @@ const HomeScreen = () => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setUserData(data);
-        // Load completed Thanksgiving tasks
-        if (data.thanksgivingChallengeTasks) {
-          setCompletedTasks(data.thanksgivingChallengeTasks);
+
+        setCompletedTasks(data.thanksgivingChallengeTasks || []);
+        setCustomTaskList(data.customChallengeTaskList || []);
+
+        if (data.abTestGroup && data.profession) {
+          setIsSetupComplete(true);
+        } else {
+          setIsSetupComplete(false);
         }
       }
     });
@@ -83,6 +92,42 @@ const HomeScreen = () => {
     logEvent("view_home");
   }, []);
 
+  // ---- Goal Submission Handler ----
+  const handleGoalSubmit = async (goal) => {
+    if (!userId) return;
+
+    const userRef = doc(db, 'users', userId);
+    const sundayMidnight = getStartOfWeek(new Date());
+    
+    try {
+      await updateDoc(userRef, {
+        weeklyGoal: goal,
+        streakStartDate: sundayMidnight, 
+        currentWeekPosts: 0, 
+        streakCount: userData.streakCount || 0,
+        hasGoalBeenMetThisWeek: false,
+      });
+      console.log("Weekly goal set successfully!");
+    } catch (error) {
+      console.error("Error setting weekly goal:", error);
+    }
+  };
+
+  const handleSaveCustomTasks = async (newTasksList) => {
+    if (!userId) return;
+
+    const userRef = doc(db, 'users', userId);
+
+    try {
+      await updateDoc(userRef, {
+        customChallengeTaskList: newTasksList,
+      });
+      console.log("Custom challenge task list saved successfully! UI update handled by listener.");
+    } catch (error) {
+      console.error("Error saving custom challenge tasks:", error);
+    }
+  };
+
   // ---- Thanksgiving Challenge Task Toggle Handler ----
   const handleTaskToggle = async (taskId) => {
     if (!userId) return;
@@ -112,16 +157,29 @@ const HomeScreen = () => {
     }
   };
 
+  const isCustomChallengeUser = userData.abTestGroup === "Group A"; // Group A is custom tasks
+  const currentChallengeMode = isCustomChallengeUser ? 'custom' : 'default';
+
+  const showGoalSetter = requiresGoalSetting(userData);
+  const handleInitialSetupComplete = () => {setIsSetupComplete(true)};
+
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
     <View>
       <PageHeader />
       <PersonalGreeting/>
       <ThanksgivingChallenge 
+        challengeMode={currentChallengeMode} 
+        customTasks={customTaskList} 
         completedTasks={completedTasks}
         onTaskToggle={handleTaskToggle}
+        onSaveCustomTasks={handleSaveCustomTasks}
       />
-      <PromptCard />
+      {showGoalSetter ? (
+        <WeeklyGoalSetter onSubmitGoal={handleGoalSubmit} />
+      ) : (
+        <PromptCard />
+      )}
       {/* <ChallengeSection /> */}
       {/* <FriendActivityCard/> */}
       <CenteredContainer>
@@ -129,8 +187,11 @@ const HomeScreen = () => {
       </CenteredContainer>
     </View>
   );
-
+  
   // ---- Layout ----
+
+  if (!isSetupComplete) return <InitialSetupModal onSetupComplete={handleInitialSetupComplete} />;
+
   return (
     <View style={styles.screenContainer}>
       <FlatList

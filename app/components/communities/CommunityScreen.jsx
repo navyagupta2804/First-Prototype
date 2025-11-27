@@ -79,8 +79,8 @@ export default function CommunityScreen({ community, onClose }) {
         
       snap.forEach((d) => {
         const data = d.data();
-        if (data.userId) {
-          uniqueCookers.add(data.userId); 
+        if (data.id) {
+          uniqueCookers.add(data.id); 
         }
       });
         

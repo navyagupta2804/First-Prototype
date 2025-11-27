@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, where, writeBatch } from 'firebase/firestore';
+import { collection, doc, getFirestore, onSnapshot, orderBy, query, updateDoc, writeBatch } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth, db } from '../firebaseConfig';
 import CenteredContainer from './components/common/CenteredContainer';
 
 export default function NotificationsScreen() {
@@ -11,13 +12,11 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
-  const auth = getAuth();
   const user = auth.currentUser;
 
   useEffect(() => {
     if (!user) return;
 
-    const db = getFirestore();
     const notificationsRef = collection(db, 'users', user.uid, 'notifications');
     const q = query(notificationsRef, orderBy('timestamp', 'desc'));
 
@@ -167,72 +166,55 @@ export default function NotificationsScreen() {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <View style={styles.container}>
-      <CenteredContainer style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#111" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Notifications</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <CenteredContainer>
+        {/* Header */}
+        <View style={styles.pageTitle}>
+          <View>
+            <TouchableOpacity style={styles.backButtonContainer} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={20} color="#111" />
+              <Text style={styles.title}>Notifications</Text>
+            </TouchableOpacity>
+          </View>
+          {unreadCount > 0 && (
+            <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
+              <Text style={styles.markAllText}>Mark all read</Text>
+            </TouchableOpacity>
+          )}
         </View>
-        
-        {unreadCount > 0 && (
-          <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-            <Text style={styles.markAllText}>Mark all read</Text>
-          </TouchableOpacity>
-        )}
       </CenteredContainer>
 
-      {unreadCount > 0 && (
-        <View style={styles.unreadBanner}>
-          <Text style={styles.unreadBannerText}>
-            {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
-          </Text>
-        </View>
-      )}
+      <CenteredContainer>
+        {unreadCount > 0 && (
+          <View style={styles.unreadBanner}>
+            <Text style={styles.unreadBannerText}>
+              {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+            </Text>
+          </View>
+        )}
 
-      <FlatList
-        data={notifications}
-        renderItem={renderNotification}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={!loading && renderEmpty}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+        <FlatList
+          data={notifications}
+          renderItem={renderNotification}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={!loading && renderEmpty}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      </CenteredContainer>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    paddingTop: 56,
-    paddingBottom: 12,
-    backgroundColor: 'white',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backButton: {
-    marginRight: 12,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111',
-  },
+  safeArea: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 24 },
+  pageTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 20 },
+  backButtonContainer: { flexDirection: 'row', alignItems: 'center', paddingRight: 15 },
+  title: { paddingLeft: 10, fontSize: 20, fontWeight: '500', color: '#111' },
+
   markAllButton: {
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -244,6 +226,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#4b5563',
   },
+
   unreadBanner: {
     backgroundColor: '#dbeafe',
     paddingVertical: 8,
@@ -257,6 +240,7 @@ const styles = StyleSheet.create({
     color: '#1e40af',
     textAlign: 'center',
   },
+  
   listContent: {
     paddingBottom: 100,
   },

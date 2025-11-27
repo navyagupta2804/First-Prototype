@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -49,41 +49,39 @@ export default function SignInScreen() {
   };
 
   return (
-      <View style={styles.container}>
-        <CenteredContainer>
-          <Text style={styles.title}>pantry</Text>
-          <TextInput 
-            style={styles.input} 
-            value={email} onChangeText={setEmail} 
-            placeholder="Email" 
-            placeholderTextColor="#A9A9A9"
-            autoCapitalize="none" 
-          />
-          <TextInput 
-            style={styles.input} 
-            value={password} 
-            onChangeText={setPassword} 
-            placeholder="Password" 
-            placeholderTextColor="#A9A9A9"
-            secureTextEntry 
-          />
+    <View style={styles.container}>
+      <CenteredContainer>
+        <Text style={styles.title}>pantry</Text>
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        <TextInput
+          style={styles.input}
+          value={email} onChangeText={setEmail}
+          placeholder="Email"
+          placeholderTextColor="#A9A9A9"
+          autoCapitalize="none"
+        />
 
-          <TouchableOpacity style={styles.button} onPress={onSignIn} disabled={loading}>
-            {loading 
-              ? <Text style={styles.buttonText}>Signing In...</Text> 
-              : <Text style={styles.buttonText}>Sign In</Text>
-            }
-          </TouchableOpacity>
+        <TextInput 
+          style={styles.input} 
+          value={password} 
+          onChangeText={setPassword} 
+          placeholder="Password" 
+          placeholderTextColor="#A9A9A9"
+          secureTextEntry 
+        />
 
-          {/* 🔽 REPLACED LINK WITH ROUTER.PUSH */}
-          <TouchableOpacity onPress={() => router.push('/signup')}>
-            <Text style={styles.link}>Create an account</Text>
-          </TouchableOpacity>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        </CenteredContainer>
-      </View>
+        <TouchableOpacity style={styles.button} onPress={onSignIn} disabled={loading}>
+          {loading
+            ? <Text style={styles.buttonText}>Signing In...</Text>
+            : <Text style={styles.buttonText}>Sign In</Text>
+          }
+        </TouchableOpacity>
+
+        <Link href="/signup" style={styles.link}>Create an account</Link>
+      </CenteredContainer>
+    </View>
   );
 }
 
