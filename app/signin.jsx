@@ -49,36 +49,39 @@ export default function SignInScreen() {
   };
 
   return (
-      <View style={styles.container}>
-        <CenteredContainer>
-          <Text style={styles.title}>pantry</Text>
-          <TextInput 
-            style={styles.input} 
-            value={email} onChangeText={setEmail} 
-            placeholder="Email" 
-            placeholderTextColor="#A9A9A9"
-            autoCapitalize="none" 
-          />
-          <TextInput 
-            style={styles.input} 
-            value={password} 
-            onChangeText={setPassword} 
-            placeholder="Password" 
-            placeholderTextColor="#A9A9A9"
-            secureTextEntry 
-          />
+    <View style={styles.container}>
+      <CenteredContainer>
+        <Text style={styles.title}>pantry</Text>
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        <TextInput
+          style={styles.input}
+          value={email} onChangeText={setEmail}
+          placeholder="Email"
+          placeholderTextColor="#A9A9A9"
+          autoCapitalize="none"
+        />
 
-          <TouchableOpacity style={styles.button} onPress={onSignIn} disabled={loading}>
-            {loading 
-              ? <Text style={styles.buttonText}>Signing In...</Text> 
-              : <Text style={styles.buttonText}>Sign In</Text>
-            }
-          </TouchableOpacity>
-          <Link href="/signup" style={styles.link}>Create an account</Link>
-        </CenteredContainer>
-      </View>
+        <TextInput 
+          style={styles.input} 
+          value={password} 
+          onChangeText={setPassword} 
+          placeholder="Password" 
+          placeholderTextColor="#A9A9A9"
+          secureTextEntry 
+        />
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        <TouchableOpacity style={styles.button} onPress={onSignIn} disabled={loading}>
+          {loading
+            ? <Text style={styles.buttonText}>Signing In...</Text>
+            : <Text style={styles.buttonText}>Sign In</Text>
+          }
+        </TouchableOpacity>
+
+        <Link href="/signup" style={styles.link}>Create an account</Link>
+      </CenteredContainer>
+    </View>
   );
 }
 

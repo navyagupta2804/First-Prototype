@@ -5,7 +5,7 @@ const CenteredContainer = ({ children, style }) => {
     <View style={[styles.wrapper, style]}>
       {children}
     </View>
-  );
+  )
 };
 
 const styles = StyleSheet.create({
@@ -13,9 +13,7 @@ const styles = StyleSheet.create({
     maxWidth: 550, // Maximum width for content
     width: '100%', // Take up 100% of available space up to maxWidth
     alignSelf: 'center', // Centers the block itself within its parent
-    
-    // Default Padding (You can override this with the 'style' prop if needed)
-    paddingVertical: 10,
+    paddingVertical: 10, // Default Padding (You can override this with the 'style' prop if needed)
   },
 });
 
