@@ -30,6 +30,7 @@ const HomeScreen = () => {
   
   // ---- Thanksgiving Challenge State ----
   const [completedTasks, setCompletedTasks] = useState([]);
+  const [customTaskList, setCustomTaskList] = useState([]);
   
   // 1. ---- User Data and Streak Status Subscription ----
   useEffect(() => {
@@ -40,10 +41,9 @@ const HomeScreen = () => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setUserData(data);
-        // Load completed Thanksgiving tasks
-        if (data.thanksgivingChallengeTasks) {
-          setCompletedTasks(data.thanksgivingChallengeTasks);
-        }
+
+        setCompletedTasks(data.thanksgivingChallengeTasks || []);
+        setCustomTaskList(data.customChallengeTaskList || []);
       }
     });
     return unsub;
@@ -105,6 +105,21 @@ const HomeScreen = () => {
     }
   };
 
+  const handleSaveCustomTasks = async (newTasksList) => {
+    if (!userId) return;
+
+    const userRef = doc(db, 'users', userId);
+
+    try {
+      await updateDoc(userRef, {
+        customChallengeTaskList: newTasksList,
+      });
+      console.log("Custom challenge task list saved successfully! UI update handled by listener.");
+    } catch (error) {
+      console.error("Error saving custom challenge tasks:", error);
+    }
+  };
+
   // ---- Thanksgiving Challenge Task Toggle Handler ----
   const handleTaskToggle = async (taskId) => {
     if (!userId) return;
@@ -134,6 +149,9 @@ const HomeScreen = () => {
     }
   };
 
+  const isCustomChallengeUser = userData.abTestGroup === "Group B"; // Group B is custom tasks
+  const currentChallengeMode = isCustomChallengeUser ? 'custom' : 'default';
+
   const showGoalSetter = requiresGoalSetting(userData);
   const renderPosts = ({ item }) => <PostCard item={item} />;
   const renderHeader = () => (
@@ -141,8 +159,11 @@ const HomeScreen = () => {
       <PageHeader />
       <PersonalGreeting/>
       <ThanksgivingChallenge 
+        challengeMode={currentChallengeMode} 
+        customTasks={customTaskList} 
         completedTasks={completedTasks}
         onTaskToggle={handleTaskToggle}
+        onSaveCustomTasks={handleSaveCustomTasks}
       />
       {showGoalSetter ? (
         <WeeklyGoalSetter onSubmitGoal={handleGoalSubmit} />
