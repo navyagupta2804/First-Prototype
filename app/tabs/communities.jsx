@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { arrayUnion, collection, doc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import { addDoc, arrayUnion, collection, doc, getDocs, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
@@ -12,7 +12,6 @@ import CommunityScreen from '../components/communities/CommunityScreen';
 
 const showToast = (message) => console.log('TOAST SUCCESS:', message);
 const showErrorToast = (message) => console.error('TOAST ERROR:', message);
-
 
 // Function to join community using the invite code
 const joinCommunityByCode = async (inviteCode, userId) => {
@@ -311,12 +310,12 @@ export default function CommunitiesScreen() {
   const renderCommunities = ({ item }) => {
     return (
       <CenteredContainer>
-          <CommunityCard
-            item={item}
-            userUid={user?.uid} 
-            handleAction={() => handleCardPress(item.id)}
-            isMyCommunitiesView={true} 
-          />
+        <CommunityCard
+          item={item}
+          userUid={user?.uid} 
+          handleAction={() => handleCardPress(item.id)}
+          isMyCommunitiesView={true} 
+        />
       </CenteredContainer>
     );
   };
@@ -389,7 +388,7 @@ export default function CommunitiesScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1, backgroundColor: '#fff', paddingTop: 20 },
+  screenContainer: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 24, },
   headerContainer: { 
     flexDirection: 'row',
     justifyContent:'space-between',
@@ -441,6 +440,8 @@ const modalStyles = StyleSheet.create({
     borderRadius: 20, 
     paddingTop: 20,
     flexGrow: 1,
+    width: '85%',
+    maxWidth: 400,
   },
   topContentWrapper: { height: '60%' },
   header: {

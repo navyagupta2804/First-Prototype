@@ -72,6 +72,8 @@ export default function CommunityScreen({ community, onClose, currentUserId }) {
   const [communityMembers, setCommunityMembers] = useState([]);
   const [membersCooked, setMembersCooked] = useState(0);
   const [communityFeed, setcommunityFeed] = useState([]);
+  const [communityDiscussions, setCommunityDiscussions] = useState([]);
+  const [discussionsLoading, setDiscussionsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Log');
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
 
@@ -79,7 +81,7 @@ export default function CommunityScreen({ community, onClose, currentUserId }) {
   const isCreator = community.creatorId === currentUserId;
   
   const tabs = ['Log', 'Discussions', 'Members'];
-  const currentCommunityId = community.uid;
+  const currentCommunityId = community.id;
   const totalMembers = community.memberUids.length; 
 
   const router = useRouter();
@@ -105,9 +107,35 @@ export default function CommunityScreen({ community, onClose, currentUserId }) {
     return unsub;
   }, [currentCommunityId]);
 
+  // // --- Community Discussions Subscription ----
+  // useEffect(() => {
+  //   if (!currentCommunityId) return;
+  //   setDiscussionsLoading(true);
+
+  //   const q = query(
+  //     collection(db, 'discussions'), 
+  //     where('communityId', '==', currentCommunityId),
+  //     orderBy('latestActivity', 'desc') // Order by latest activity
+  //   );
+
+  //   const unsub = onSnapshot(q, (snap) => {
+  //     const items = [];
+  //     snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      
+  //     setCommunityDiscussions(items);
+  //     setDiscussionsLoading(false); // Done loading
+  //   }, (error) => {
+  //     console.error("Error fetching discussion threads:", error);
+  //     setDiscussionsLoading(false); // Stop loading even on error
+  //   });
+
+  //   return unsub; // Cleanup subscription
+  // }, [currentCommunityId]);
+
   // ---- Community Members Subscription ----
   useEffect(() => {
     if (!currentCommunityId) return;
+    
     const q = query(
       collection(db, 'users'), 
       where('joinedCommunities', 'array-contains', currentCommunityId),
@@ -162,6 +190,12 @@ export default function CommunityScreen({ community, onClose, currentUserId }) {
         );
       case 'Discussions':
         return <Text style={styles.placeholderText}>Discussions tab content coming soon!</Text>;
+        // return (
+        //   <CommunityDiscussionThreads 
+        //     communityId={community.id} 
+        //     discussions={communityDiscussions} 
+        //   />
+        // );
       case 'Members':
         return (
           <CommunityMemberList communityMembers={communityMembers} />
