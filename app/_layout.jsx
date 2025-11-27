@@ -147,11 +147,13 @@ export default function RootLayout() {
   useEffect(() => {
     if (loading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const publicPages = ['signin', 'signup']; 
+    const currentSegment = segments[0];
+    const isPublicPage = publicPages.includes(currentSegment);
 
-    if (!user && !inAuthGroup) {
+    if (!user && !isPublicPage) {
       router.replace('/signin');
-    } else if (user && inAuthGroup) {
+    } else if (user && isPublicPage) {
       router.replace('/tabs/home');
     }
   }, [user, loading, segments]);
