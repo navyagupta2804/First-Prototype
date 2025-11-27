@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { arrayRemove, collection, doc, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,20 +12,81 @@ import CommunityActivityFeed from './CommunityActivityFeed';
 import CommunityHeader from './CommunityHeader';
 import CommunityMemberList from './CommunityMemberList';
 import CommunityProgressCard from './CommunityProgressCard';
+import CommunitySettingsModal from './CommunitySettingsModal';
+
+const showToast = (message) => console.log('TOAST SUCCESS:', message);
+const showErrorToast = (message) => console.error('TOAST ERROR:', message);
+
+const handleLeaveCommunity = async (userId, communityId, communityName, creatorId, onClose) => {
+  if (userId === creatorId) {
+    showErrorToast(`As the creator, you cannot leave ${communityName}.`);
+    return; 
+  }
+    
+  const isConfirmed = window.confirm(`Are you sure you want to leave ${communityName}?`);
+
+  if (isConfirmed) {
+    const userRef = doc(db, 'users', userId);
+    const communityRef = doc(db, 'communities', communityId);
+    
+    try {
+      await updateDoc(communityRef, { 
+        memberUids: arrayRemove(userId),
+        adminUids: arrayRemove(userId), 
+      });
+      await updateDoc(userRef, { joinedCommunities: arrayRemove(communityId) });
+      
+      showToast(`You have successfully left ${communityName}.`); 
+      onClose(); // Close the community screen after leaving
+    } catch (e) {
+      console.error('Error leaving community:', e);
+      showErrorToast('Could not leave community. Please try again.');
+    }
+  }
+};
+
+const handleStepDownAdmin = async (userId, communityId, communityName) => {
+  const isConfirmed = window.confirm(
+    `Are you sure you want to step down as an administrator of ${communityName}? You will remain a regular member.`
+  );
+
+  if (isConfirmed) {
+    const communityRef = doc(db, 'communities', communityId);
+    
+    try {
+      await updateDoc(communityRef, { 
+        adminUids: arrayRemove(userId),
+      });
+      
+      showToast(`You have stepped down as admin of ${communityName}.`);
+    } catch (e) {
+      console.error('Error stepping down:', e);
+      showErrorToast('Could not step down. Please try again.');
+    }
+  }
+};
 
 
-export default function CommunityScreen({ community, onClose }) {
+export default function CommunityScreen({ community, onClose, currentUserId }) {
   if (!community) return null;
   const [communityMembers, setCommunityMembers] = useState([]);
   const [membersCooked, setMembersCooked] = useState(0);
   const [communityFeed, setcommunityFeed] = useState([]);
   const [activeTab, setActiveTab] = useState('Log');
+  const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
+
+  const isAdmin = community.adminUids?.includes(currentUserId);
+  const isCreator = community.creatorId === currentUserId;
   
   const tabs = ['Log', 'Discussions', 'Members'];
   const currentCommunityId = community.uid;
   const totalMembers = community.memberUids.length; 
 
   const router = useRouter();
+
+  const handleHeaderAction = () => {
+    setIsSettingsModalVisible(true);
+  };
 
   // ---- Community Feed Subscription ----
   useEffect(() => {
@@ -126,7 +187,6 @@ export default function CommunityScreen({ community, onClose }) {
   };
 
 
-
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
@@ -134,6 +194,7 @@ export default function CommunityScreen({ community, onClose }) {
         communityName={community.name}
         memberCount={totalMembers}
         onClose={onClose}
+        onActionPress={handleHeaderAction}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>   
@@ -158,6 +219,21 @@ export default function CommunityScreen({ community, onClose }) {
           </View>
         </CenteredContainer>
       </ScrollView>
+
+      <CommunitySettingsModal
+        isVisible={isSettingsModalVisible}
+        onClose={() => setIsSettingsModalVisible(false)}
+        communityName={community.name}
+        inviteCode={community.inviteCode}
+        isCreator={isCreator}
+        isAdmin={isAdmin}
+        onLeaveCommunity={() => 
+            handleLeaveCommunity(currentUserId, community.id, community.name, community.creatorId, onClose)
+        }
+        onStepDownAdmin={() => 
+            handleStepDownAdmin(currentUserId, community.id, community.name)
+        }
+      />
     </SafeAreaView>
   );
 }

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CenteredContainer from '../common/CenteredContainer';
 
-const CommunityHeader = ({ communityName, memberCount, onClose }) => (
+const CommunityHeader = ({ communityName, memberCount, onClose, onActionPress }) => (
     <CenteredContainer>
         <View style={styles.header}>
             <View style={styles.backAndTitleColumn}>
@@ -12,7 +12,7 @@ const CommunityHeader = ({ communityName, memberCount, onClose }) => (
                 </TouchableOpacity>
                 <Text style={styles.headerMeta}>{memberCount} members cooking together</Text>
             </View>
-            <TouchableOpacity style={styles.optionsButton}>
+            <TouchableOpacity style={styles.optionsButton} onPress={onActionPress}>
                 <Ionicons name="ellipsis-vertical" size={24} color="#111" />
             </TouchableOpacity>
         </View>

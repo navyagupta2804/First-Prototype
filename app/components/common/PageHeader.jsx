@@ -14,10 +14,8 @@ const PageHeader = () => {
   useEffect(() => {
     if (!user) return;
 
-    console.log(db);
     const notificationsRef = collection(db, 'users', user.uid, 'notifications');
     const q = query(notificationsRef, where('read', '==', false));
-
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setUnreadCount(snapshot.size);
