@@ -34,6 +34,7 @@ const InitialSetupModal = ({ onSetupComplete }) => {
     try {
       await updateDoc(userRef, {
         userType: selectedProfession,
+        profession: selectedProfession,
         abTestGroup: randomGroup,
       });
       
